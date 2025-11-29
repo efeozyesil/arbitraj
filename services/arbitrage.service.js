@@ -152,8 +152,9 @@ class ArbitrageService {
         const logos = {
             binance: 'https://upload.wikimedia.org/wikipedia/commons/5/57/Binance_Logo.png',
             okx: 'https://cryptologos.cc/logos/okx-okb-logo.png',
-            hyperliquid: 'https://pbs.twimg.com/profile_images/1628133526462939138/4-1e0e9a_400x400.jpg'
+            hyperliquid: 'https://raw.githubusercontent.com/hyperliquid-dex/brand-assets/main/logo.png'
         };
+        // Fallback for Hyperliquid if the above fails: https://icons.llamao.fi/icons/protocols/hyperliquid?w=48&h=48
         return logos[slug] || '';
     }
 

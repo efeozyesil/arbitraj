@@ -39,7 +39,7 @@ class HyperliquidWebSocket extends BaseWebSocket {
     }
 
     onMessage(data) {
-        const msg = JSON.parse(data);
+        const msg = JSON.parse(data.toString());
 
         if (msg.channel === 'allMids') {
             const mids = msg.data;

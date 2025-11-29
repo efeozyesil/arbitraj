@@ -6,7 +6,7 @@ class BinanceWebSocket extends BaseWebSocket {
     }
 
     onMessage(data) {
-        const messages = JSON.parse(data);
+        const messages = JSON.parse(data.toString());
         if (!Array.isArray(messages)) return;
 
         messages.forEach(msg => {

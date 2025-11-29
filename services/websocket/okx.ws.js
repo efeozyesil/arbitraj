@@ -33,9 +33,10 @@ class OKXWebSocket extends BaseWebSocket {
     }
 
     onMessage(data) {
-        if (data === 'pong') return;
+        const dataStr = data.toString();
+        if (dataStr === 'pong') return;
 
-        const msg = JSON.parse(data);
+        const msg = JSON.parse(dataStr);
         if (!msg.data) return;
 
         const item = msg.data[0];
