@@ -4,14 +4,15 @@ class ArbitrageService {
         this.okx = okxService;
 
         // Trading fees (taker fees for market orders)
+        // TEMPORARILY SET TO 0 FOR TESTING
         this.fees = {
             binance: {
-                maker: 0.02,  // 0.02%
-                taker: 0.05   // 0.05%
+                maker: 0.00,  // 0.00%
+                taker: 0.00   // 0.00%
             },
             okx: {
-                maker: 0.02,  // 0.02%
-                taker: 0.05   // 0.05%
+                maker: 0.00,  // 0.00%
+                taker: 0.00   // 0.00%
             }
         };
     }
