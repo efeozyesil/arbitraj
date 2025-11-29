@@ -159,15 +159,15 @@ class ArbitrageService {
 
     getExchangeLogo(slug) {
         const logos = {
-            binance: '/logos/binance.png',
-            okx: '/logos/okx.png',
-            hyperliquid: '/logos/hyperliquid.png'
+            binance: '/logos/binance.svg',
+            okx: '/logos/okx.svg',
+            hyperliquid: '/logos/hyperliquid.svg'
         };
         return logos[slug] || '';
     }
 
-    // En büyük coinler (Binance, OKX ve Hyperliquid'de ortak olanlar)
-    getTopCoins() {
+    // Statik metod: Coin listesini dışarıdan almak için
+    static getCoinList() {
         return [
             {
                 binance: 'BTCUSDT',
@@ -250,7 +250,6 @@ class ArbitrageService {
                 logo: 'https://cryptologos.cc/logos/polkadot-new-dot-logo.png',
                 color: '#E6007A'
             },
-            // YENİ EKLENEN COINLER
             {
                 binance: 'LTCUSDT',
                 okx: 'LTC-USDT-SWAP',
@@ -342,6 +341,10 @@ class ArbitrageService {
                 color: '#2D374B'
             }
         ];
+    }
+
+    getTopCoins() {
+        return ArbitrageService.getCoinList();
     }
 }
 

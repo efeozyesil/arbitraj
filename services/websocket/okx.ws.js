@@ -3,11 +3,7 @@ const BaseWebSocket = require('./base.ws');
 class OKXWebSocket extends BaseWebSocket {
     constructor(symbols) {
         super('OKX', 'wss://ws.okx.com:8443/ws/v5/public');
-        this.symbols = symbols || [
-            'BTC-USDT-SWAP', 'ETH-USDT-SWAP', 'SOL-USDT-SWAP', 'BNB-USDT-SWAP',
-            'XRP-USDT-SWAP', 'ADA-USDT-SWAP', 'DOGE-USDT-SWAP', 'AVAX-USDT-SWAP',
-            'DOT-USDT-SWAP', 'MATIC-USDT-SWAP'
-        ];
+        this.symbols = symbols || [];
     }
 
     startPing() {

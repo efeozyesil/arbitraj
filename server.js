@@ -24,8 +24,12 @@ app.use(express.static(path.join(__dirname, 'public')));
 console.log('🚀 Starting Crypto Arbitrage Dashboard...');
 console.log('🔌 Connecting to Exchange WebSockets...');
 
+// Get all coins to subscribe
+const allCoins = ArbitrageService.getCoinList();
+const okxSymbols = allCoins.map(c => c.okx).filter(s => s);
+
 const binanceWS = new BinanceWebSocket();
-const okxWS = new OKXWebSocket();
+const okxWS = new OKXWebSocket(okxSymbols);
 const hyperliquidWS = new HyperliquidWebSocket();
 
 // Connect to Exchanges
