@@ -555,7 +555,13 @@
         let reconnectInterval;
 
         function connectWebSocket() {
-            ws = new WebSocket('ws://localhost:8080');
+            // Connect to WebSocket server
+            // Use the current hostname (works for both localhost and AWS IP)
+            const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsHost = window.location.hostname;
+            const wsPort = '8080';
+
+            ws = new WebSocket(`${wsProtocol}//${wsHost}:${wsPort}`);
 
             ws.onopen = () => {
                 console.log('WebSocket connected');
@@ -586,7 +592,7 @@
         function updateConnectionStatus(connected) {
             const statusDot = document.getElementById('wsStatus');
             const statusText = document.getElementById('wsStatusText');
-            
+
             if (connected) {
                 statusDot.className = 'status-dot connected';
                 statusText.textContent = 'Connected';
@@ -611,15 +617,15 @@
             const activeOpps = opportunities.filter(o => o.analysis.isOpportunity);
             document.getElementById('totalOpportunities').textContent = opportunities.length;
             document.getElementById('activeArbitrage').textContent = activeOpps.length;
-            
+
             if (activeOpps.length > 0) {
-                const best8h = activeOpps.reduce((max, o) => 
+                const best8h = activeOpps.reduce((max, o) =>
                     o.analysis.profitability8hNet > max.analysis.profitability8hNet ? o : max
                 );
-                document.getElementById('bestOpportunity').textContent = 
+                document.getElementById('bestOpportunity').textContent =
                     best8h.analysis.profitability8hNet.toFixed(4) + '%';
-                
-                document.getElementById('bestAnnual').textContent = 
+
+                document.getElementById('bestAnnual').textContent =
                     best8h.analysis.annualReturnNet.toFixed(2) + '%';
             } else {
                 document.getElementById('bestOpportunity').textContent = 'None';
@@ -629,15 +635,15 @@
             // Render opportunities
             const grid = document.getElementById('opportunitiesGrid');
             grid.innerHTML = opportunities.map(opp => createOpportunityCard(opp)).join('');
-            
+
             // Add click handlers for expand buttons
             document.querySelectorAll('.expand-button').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     e.stopPropagation();
                     const card = btn.closest('.opportunity-card');
                     card.classList.toggle('expanded');
-                    btn.textContent = card.classList.contains('expanded') 
-                        ? '▲ Hide Trading Steps' 
+                    btn.textContent = card.classList.contains('expanded')
+                        ? '▲ Hide Trading Steps'
                         : '▼ Show Trading Steps';
                 });
             });
@@ -646,7 +652,7 @@
         function createOpportunityCard(opp) {
             const hasOpportunity = opp.analysis.isOpportunity;
             const cardClass = hasOpportunity ? 'opportunity-card has-opportunity' : 'opportunity-card';
-            
+
             return `
                 <div class="${cardClass}">
                     <!-- Coin Header -->
@@ -668,7 +674,7 @@
                                 <img src="${opp.binance.logo}" alt="Binance" class="exchange-logo" onerror="this.style.display='none'">
                                 <span class="exchange-name">BINANCE</span>
                             </div>
-                            <div class="price-value">$${opp.binance.markPrice.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                            <div class="price-value">$${opp.binance.markPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
                             <div class="funding-rate">
                                 <span class="funding-label">FR (8h)</span>
                                 <span class="funding-value ${opp.binance.fundingRate >= 0 ? 'positive' : 'negative'}">
@@ -682,7 +688,7 @@
                                 <img src="${opp.okx.logo}" alt="OKX" class="exchange-logo" onerror="this.style.display='none'">
                                 <span class="exchange-name">OKX</span>
                             </div>
-                            <div class="price-value">$${opp.okx.markPrice.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                            <div class="price-value">$${opp.okx.markPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
                             <div class="funding-rate">
                                 <span class="funding-label">FR (8h)</span>
                                 <span class="funding-value ${opp.okx.fundingRate >= 0 ? 'positive' : 'negative'}">
