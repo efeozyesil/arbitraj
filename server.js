@@ -1,21 +1,25 @@
 require('dotenv').config();
 const express = require('express');
+const http = require('http');
 const cors = require('cors');
 const WebSocket = require('ws');
+const path = require('path');
 const BinanceService = require('./services/binance.service');
 const OKXService = require('./services/okx.service');
 const ArbitrageService = require('./services/arbitrage.service');
 
 const app = express();
+const server = http.createServer(app); // Create HTTP server
+const wss = new WebSocket.Server({ server }); // Attach WebSocket to HTTP server
+
 const PORT = process.env.PORT || 3000;
-const WS_PORT = process.env.WS_PORT || 8080;
 
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.use(express.static('public'));
+app.use(express.static(path.join(__dirname, 'public')));
 
-// Services initialization - Public API kullanımı (API key gerekmez)
+// Services initialization
 console.log('🚀 Starting Crypto Arbitrage Dashboard...');
 console.log('📊 Using PUBLIC APIs (no API keys required for viewing data)');
 
@@ -34,11 +38,11 @@ app.get('/api/opportunities', async (req, res) => {
     }
 });
 
-// WebSocket bağlantısı
+// WebSocket Connection
 wss.on('connection', (ws) => {
     console.log('✅ Client connected to WebSocket');
 
-    // İlk bağlantıda hemen veri gönder
+    // Send initial data immediately
     sendDataToClient(ws);
 
     ws.on('close', () => {
@@ -50,7 +54,7 @@ wss.on('connection', (ws) => {
     });
 });
 
-// Tüm clientlara veri gönder
+// Broadcast data to all clients
 async function broadcastData() {
     try {
         const opportunities = await arbitrageService.getArbitrageOpportunities();
@@ -71,7 +75,7 @@ async function broadcastData() {
     }
 }
 
-// Tek bir client'a veri gönder
+// Send data to a single client
 async function sendDataToClient(ws) {
     try {
         const opportunities = await arbitrageService.getArbitrageOpportunities();
@@ -88,10 +92,10 @@ async function sendDataToClient(ws) {
     }
 }
 
-// Periyodik güncelleme (Her 5 saniyede bir)
+// Periodic update (Every 5 seconds)
 setInterval(broadcastData, 5000);
 
-// Sunucuyu başlat
+// Start Server
 server.listen(PORT, () => {
     console.log(`🚀 Server running on http://localhost:${PORT}`);
     console.log(`🔌 WebSocket sharing same port`);
