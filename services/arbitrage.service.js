@@ -37,6 +37,11 @@ class ArbitrageService {
 
                 if (!dataA || !dataB) {
                     // Veri henüz gelmediyse atla
+                    // Spam önlemek için sadece %1 ihtimalle log bas
+                    if (Math.random() < 0.01) {
+                        if (!dataA) console.warn(`[${this.nameA}] Missing data for ${symbolA}`);
+                        if (!dataB) console.warn(`[${this.nameB}] Missing data for ${symbolB}`);
+                    }
                     return;
                 }
 

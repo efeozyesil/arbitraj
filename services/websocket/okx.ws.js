@@ -33,25 +33,34 @@ class OKXWebSocket extends BaseWebSocket {
     }
 
     onMessage(data) {
-        const dataStr = data.toString();
-        if (dataStr === 'pong') return;
+        let dataStr = '';
+        try {
+            dataStr = data.toString();
+            // Pong mesajı bazen farklı formatta gelebilir, içinde 'pong' geçiyorsa yut
+            if (dataStr.includes('pong')) return;
 
-        const msg = JSON.parse(dataStr);
-        if (!msg.data) return;
+            const msg = JSON.parse(dataStr);
+            if (!msg.data) return;
 
-        const item = msg.data[0];
-        const symbol = item.instId;
+            const item = msg.data[0];
+            const symbol = item.instId;
 
-        if (!this.data[symbol]) {
-            this.data[symbol] = { symbol: symbol };
-        }
+            if (!this.data[symbol]) {
+                this.data[symbol] = { symbol: symbol };
+            }
 
-        if (msg.arg.channel === 'mark-price') {
-            this.data[symbol].markPrice = parseFloat(item.markPx);
-            this.data[symbol].timestamp = parseInt(item.ts);
-        } else if (msg.arg.channel === 'funding-rate') {
-            this.data[symbol].fundingRate = parseFloat(item.fundingRate) * 100; // Convert to percentage
-            this.data[symbol].nextFundingTime = parseInt(item.nextFundingTime);
+            if (msg.arg.channel === 'mark-price') {
+                this.data[symbol].markPrice = parseFloat(item.markPx);
+                this.data[symbol].timestamp = parseInt(item.ts);
+            } else if (msg.arg.channel === 'funding-rate') {
+                this.data[symbol].fundingRate = parseFloat(item.fundingRate) * 100; // Convert to percentage
+                this.data[symbol].nextFundingTime = parseInt(item.nextFundingTime);
+            }
+        } catch (error) {
+            // Sadece pong olmayan hataları logla
+            if (!dataStr.includes('pong')) {
+                console.error(`[OKX] Message parsing error: ${error.message}`);
+            }
         }
     }
 }

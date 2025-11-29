@@ -39,26 +39,39 @@ class HyperliquidWebSocket extends BaseWebSocket {
     }
 
     onMessage(data) {
-        const msg = JSON.parse(data.toString());
+        try {
+            const msg = JSON.parse(data.toString());
 
-        if (msg.channel === 'allMids') {
-            const mids = msg.data;
+            if (msg.channel === 'allMids') {
+                const mids = msg.data;
 
-            Object.keys(mids).forEach(symbol => {
-                const price = parseFloat(mids[symbol]);
-                const fundingData = this.fundingRates[symbol] || { rate: 0, time: 0 };
+                // Debug log for first data
+                if (!this.hasReceivedData) {
+                    console.log('[Hyperliquid] First price data received. Sample keys:', Object.keys(mids).slice(0, 5));
+                    // Check specifically for MATIC/POL
+                    if (mids['MATIC']) console.log('[Hyperliquid] Found MATIC');
+                    if (mids['POL']) console.log('[Hyperliquid] Found POL');
+                    this.hasReceivedData = true;
+                }
 
-                // Hyperliquid funding is hourly, convert to 8h equivalent for comparison
-                const funding8h = fundingData.rate * 8;
+                Object.keys(mids).forEach(symbol => {
+                    const price = parseFloat(mids[symbol]);
+                    const fundingData = this.fundingRates[symbol] || { rate: 0, time: 0 };
 
-                this.data[symbol] = {
-                    symbol: symbol,
-                    markPrice: price, // Using mid price as proxy for mark price
-                    fundingRate: funding8h,
-                    nextFundingTime: fundingData.time + 3600000,
-                    timestamp: Date.now()
-                };
-            });
+                    // Hyperliquid funding is hourly, convert to 8h equivalent for comparison
+                    const funding8h = fundingData.rate * 8;
+
+                    this.data[symbol] = {
+                        symbol: symbol,
+                        markPrice: price, // Using mid price as proxy for mark price
+                        fundingRate: funding8h,
+                        nextFundingTime: fundingData.time + 3600000,
+                        timestamp: Date.now()
+                    };
+                });
+            }
+        } catch (error) {
+            console.error('[Hyperliquid] Message parsing error:', error.message);
         }
     }
 
