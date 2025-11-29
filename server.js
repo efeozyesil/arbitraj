@@ -28,14 +28,29 @@ const binanceService = new BinanceService(null, null);
 const okxService = new OKXService(null, null, null);
 const hyperliquidService = new HyperliquidService();
 
-// 3 ayrı arbitrage servisi (3 borsa çifti için)
-const arbitrageBinanceOKX = new ArbitrageService(binanceService, okxService);
-const arbitrageOKXHyperliquid = new ArbitrageService(okxService, hyperliquidService);
-const arbitrageBinanceHyperliquid = new ArbitrageService(binanceService, hyperliquidService);
+// 3 ayrı arbitrage servisi
+const arbitrageBinanceOKX = new ArbitrageService(
+    binanceService, okxService,
+    'binance', 'okx',
+    'Binance', 'OKX'
+);
+
+const arbitrageOKXHyperliquid = new ArbitrageService(
+    okxService, hyperliquidService,
+    'okx', 'hyperliquid',
+    'OKX', 'Hyperliquid'
+);
+
+const arbitrageBinanceHyperliquid = new ArbitrageService(
+    binanceService, hyperliquidService,
+    'binance', 'hyperliquid',
+    'Binance', 'Hyperliquid'
+);
 
 // REST API Endpoints
 app.get('/api/opportunities', async (req, res) => {
     try {
+        // Default olarak Binance-OKX döndür
         const opportunities = await arbitrageBinanceOKX.getArbitrageOpportunities();
         res.json(opportunities);
     } catch (error) {
@@ -82,12 +97,21 @@ wss.on('connection', (ws) => {
 // Broadcast data to all clients
 async function broadcastData() {
     try {
-        const opportunities = await arbitrageBinanceOKX.getArbitrageOpportunities();
+        // 3 servisten paralel veri çek
+        const [dataBinanceOKX, dataOKXHyperliquid, dataBinanceHyperliquid] = await Promise.all([
+            arbitrageBinanceOKX.getArbitrageOpportunities(),
+            arbitrageOKXHyperliquid.getArbitrageOpportunities(),
+            arbitrageBinanceHyperliquid.getArbitrageOpportunities()
+        ]);
 
         const data = JSON.stringify({
             type: 'ARBITRAGE_UPDATE',
             timestamp: new Date().toISOString(),
-            data: opportunities
+            data: {
+                'binance-okx': dataBinanceOKX,
+                'okx-hyperliquid': dataOKXHyperliquid,
+                'binance-hyperliquid': dataBinanceHyperliquid
+            }
         });
 
         wss.clients.forEach((client) => {
@@ -103,13 +127,19 @@ async function broadcastData() {
 // Send data to a single client
 async function sendDataToClient(ws) {
     try {
+        // İlk bağlantıda sadece ana veriyi gönder (hızlı açılması için)
+        // Sonraki update'de hepsi gidecek zaten
         const opportunities = await arbitrageBinanceOKX.getArbitrageOpportunities();
 
         if (ws.readyState === WebSocket.OPEN) {
             ws.send(JSON.stringify({
                 type: 'ARBITRAGE_UPDATE',
                 timestamp: new Date().toISOString(),
-                data: opportunities
+                data: {
+                    'binance-okx': opportunities,
+                    'okx-hyperliquid': [], // İlk yüklemede boş
+                    'binance-hyperliquid': [] // İlk yüklemede boş
+                }
             }));
         }
     } catch (error) {

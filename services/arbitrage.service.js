@@ -1,20 +1,274 @@
+const ArbitrageService = require('./arbitrage.service'); // Self reference removed in actual code, this is just the class definition
+
 class ArbitrageService {
-    constructor(binanceService, okxService) {
-        this.binance = binanceService;
-        this.okx = okxService;
+    /**
+     * @param {Object} serviceA - Birinci borsa servisi (örn: BinanceService)
+     * @param {Object} serviceB - İkinci borsa servisi (örn: OKXService)
+     * @param {string} slugA - Birinci borsa için coin objesindeki anahtar (örn: 'binance')
+     * @param {string} slugB - İkinci borsa için coin objesindeki anahtar (örn: 'okx')
+     * @param {string} nameA - Birinci borsanın görünen adı (örn: 'Binance')
+     * @param {string} nameB - İkinci borsanın görünen adı (örn: 'OKX')
+     */
+    constructor(serviceA, serviceB, slugA = 'binance', slugB = 'okx', nameA = 'Binance', nameB = 'OKX') {
+        this.exchangeA = serviceA;
+        this.exchangeB = serviceB;
+        this.slugA = slugA;
+        this.slugB = slugB;
+        this.nameA = nameA;
+        this.nameB = nameB;
 
         // Trading fees (taker fees for market orders)
         // TEMPORARILY SET TO 0 FOR TESTING
         this.fees = {
-            binance: {
-                maker: 0.00,  // 0.00%
-                taker: 0.00   // 0.00%
+            exchangeA: {
+                maker: 0.00,
+                taker: 0.00
             },
-            okx: {
-                maker: 0.00,  // 0.00%
-                taker: 0.00   // 0.00%
+            exchangeB: {
+                maker: 0.00,
+                taker: 0.00
             }
         };
+    }
+
+    // Yıllık getiri hesaplama (Basit faiz: Getiri * 3 günde 1 * 365)
+    // Funding rate 8 saatlik olduğu için günde 3 ödeme var
+    calculateAnnualReturn(ratePerPeriod) {
+        return ratePerPeriod * 3 * 365;
+    }
+
+    // Detaylı işlem adımları oluştur
+    generateTradingSteps(strategy, coin, rateA, rateB) {
+        const steps = [];
+
+        if (strategy === 'SHORT_A_LONG_B') {
+            // A Borsası SHORT, B Borsası LONG
+            steps.push({
+                step: 1,
+                exchange: this.nameA,
+                side: 'SHORT',
+                description: `Open Short position on ${this.nameA}`,
+                fee: this.fees.exchangeA.taker,
+                fundingReceive: rateA > 0 ? `Earns Funding (${rateA.toFixed(4)}%)` : null,
+                fundingPay: rateA < 0 ? `Pays Funding (${Math.abs(rateA).toFixed(4)}%)` : null
+            });
+            steps.push({
+                step: 2,
+                exchange: this.nameB,
+                side: 'LONG',
+                description: `Open Long position on ${this.nameB}`,
+                fee: this.fees.exchangeB.taker,
+                fundingReceive: rateB < 0 ? `Earns Funding (${Math.abs(rateB).toFixed(4)}%)` : null,
+                fundingPay: rateB > 0 ? `Pays Funding (${rateB.toFixed(4)}%)` : null
+            });
+        } else if (strategy === 'LONG_A_SHORT_B') {
+            // A Borsası LONG, B Borsası SHORT
+            steps.push({
+                step: 1,
+                exchange: this.nameA,
+                side: 'LONG',
+                description: `Open Long position on ${this.nameA}`,
+                fee: this.fees.exchangeA.taker,
+                fundingReceive: rateA < 0 ? `Earns Funding (${Math.abs(rateA).toFixed(4)}%)` : null,
+                fundingPay: rateA > 0 ? `Pays Funding (${rateA.toFixed(4)}%)` : null
+            });
+            steps.push({
+                step: 2,
+                exchange: this.nameB,
+                side: 'SHORT',
+                description: `Open Short position on ${this.nameB}`,
+                fee: this.fees.exchangeB.taker,
+                fundingReceive: rateB > 0 ? `Earns Funding (${rateB.toFixed(4)}%)` : null,
+                fundingPay: rateB < 0 ? `Pays Funding (${Math.abs(rateB).toFixed(4)}%)` : null
+            });
+        }
+
+        return steps;
+    }
+
+    // Her iki borsadan da veri çek ve karşılaştır
+    async getArbitrageOpportunities() {
+        const topCoins = this.getTopCoins();
+
+        try {
+            // Borsa A verilerini çek
+            // Hangi metodu çağıracağımızı belirle (Binance ve OKX/Hyperliquid metod isimleri farklı olabilir, 
+            // ama servislerde ortak bir arayüz kullanmaya çalıştık. 
+            // Binance: getMultiplePremiumIndex, OKX: getMultipleFundingData, Hyperliquid: getMultipleFundingData)
+
+            // Sembolleri al
+            const symbolsA = topCoins.map(c => c[this.slugA]).filter(s => s);
+            const symbolsB = topCoins.map(c => c[this.slugB]).filter(s => s);
+
+            // Verileri çek
+            // Not: Servislerin metod isimlerini standartlaştırmak en iyisi olurdu ama şimdilik check ediyoruz
+            let dataA, dataB;
+
+            if (this.slugA === 'binance') {
+                dataA = await this.exchangeA.getMultiplePremiumIndex(symbolsA);
+            } else {
+                dataA = await this.exchangeA.getMultipleFundingData(symbolsA);
+            }
+
+            if (this.slugB === 'binance') {
+                dataB = await this.exchangeB.getMultiplePremiumIndex(symbolsB);
+            } else {
+                dataB = await this.exchangeB.getMultipleFundingData(symbolsB);
+            }
+
+            // Verileri birleştir ve arbitraj fırsatlarını hesapla
+            const opportunities = topCoins.map(coin => {
+                const symbolA = coin[this.slugA];
+                const symbolB = coin[this.slugB];
+
+                if (!symbolA || !symbolB) return null;
+
+                const infoA = dataA.find(d => d.symbol === symbolA);
+                const infoB = dataB.find(d => d.symbol === symbolB);
+
+                if (!infoA || !infoB) {
+                    return null;
+                }
+
+                const fundingDiff = infoA.lastFundingRate - infoB.lastFundingRate;
+
+                // STRATEJI: Sadece funding rate farkına göre belirle
+                let strategy = 'NONE';
+                let entryPriceA, entryPriceB;
+                let executionCost = 0;
+
+                if (fundingDiff > 0) {
+                    // A funding > B funding
+                    // Strateji: A SHORT + B LONG
+                    strategy = 'SHORT_A_LONG_B';
+                    // SHORT için BID fiyatından sat, LONG için ASK fiyatından al
+                    entryPriceA = infoA.bidPrice;
+                    entryPriceB = infoB.askPrice;
+                } else if (fundingDiff < 0) {
+                    // B funding > A funding
+                    // Strateji: A LONG + B SHORT
+                    strategy = 'LONG_A_SHORT_B';
+                    // LONG için ASK fiyatından al, SHORT için BID fiyatından sat
+                    entryPriceA = infoA.askPrice;
+                    entryPriceB = infoB.bidPrice;
+                } else {
+                    entryPriceA = infoA.markPrice;
+                    entryPriceB = infoB.markPrice;
+                }
+
+                // Execution cost (Spread maliyet yüzdesi)
+                const avgPrice = (infoA.markPrice + infoB.markPrice) / 2;
+                if (strategy !== 'NONE') {
+                    // Fiyatlar farklı borsalarda farklı olabilir (örn: BTC 95000 vs 95100)
+                    // Spread maliyeti: |GirişA - GirişB| farkı değil, her birinin kendi spread'i önemlidir.
+                    // Ancak burada basitleştirilmiş bir model kullanıyoruz.
+                    // Gerçekçi spread maliyeti: (AskA - BidA)/MarkA + (AskB - BidB)/MarkB gibi olmalı.
+                    // Mevcut mantığı koruyarak: Fiyat farkı maliyeti
+                    executionCost = Math.abs(entryPriceA - entryPriceB) / avgPrice * 100;
+                }
+
+                // Fiyat farkı (informational)
+                const priceDiff = ((infoA.markPrice - infoB.markPrice) / infoB.markPrice) * 100;
+
+                // Fee hesaplamaları
+                const entryFees = this.fees.exchangeA.taker + this.fees.exchangeB.taker;
+                const exitFees = this.fees.exchangeA.taker + this.fees.exchangeB.taker;
+                const totalFees = entryFees + exitFees;
+
+                // Net kar (8 saatlik)
+                const profitability8h = Math.abs(fundingDiff);
+                // Not: Execution cost (fiyat farkı) funding arbitrajında tek seferlik bir maliyettir, 
+                // funding geliri ise süreklidir. 8 saatlik net kar hesabında execution cost'u düşmek 
+                // sadece 8 saat tutulacaksa doğrudur. Uzun vadede execution cost etkisi azalır.
+                // Şimdilik muhafazakar hesaplama için düşüyoruz.
+                const netProfit = profitability8h - executionCost - totalFees;
+
+                // Yıllık getiri
+                const annualReturn = this.calculateAnnualReturn(profitability8h);
+                const annualReturnNet = this.calculateAnnualReturn(netProfit);
+
+                // Detaylı işlem adımları
+                const tradingSteps = strategy !== 'NONE'
+                    ? this.generateTradingSteps(strategy, coin.symbol, infoA.lastFundingRate, infoB.lastFundingRate)
+                    : [];
+
+                return {
+                    // Coin metadata
+                    name: coin.name,
+                    symbol: coin.symbol,
+                    logo: coin.logo,
+                    color: coin.color,
+
+                    // Exchange A data
+                    exchangeA: {
+                        name: this.nameA,
+                        symbol: infoA.symbol,
+                        markPrice: infoA.markPrice,
+                        bidPrice: infoA.bidPrice,
+                        askPrice: infoA.askPrice,
+                        indexPrice: infoA.indexPrice,
+                        fundingRate: infoA.lastFundingRate,
+                        nextFundingTime: infoA.nextFundingTime,
+                        logo: this.getExchangeLogo(this.slugA)
+                    },
+
+                    // Exchange B data
+                    exchangeB: {
+                        name: this.nameB,
+                        symbol: infoB.symbol,
+                        markPrice: infoB.markPrice,
+                        bidPrice: infoB.bidPrice,
+                        askPrice: infoB.askPrice,
+                        indexPrice: infoB.indexPrice,
+                        fundingRate: infoB.lastFundingRate,
+                        nextFundingTime: infoB.nextFundingTime,
+                        logo: this.getExchangeLogo(this.slugB)
+                    },
+
+                    // Analysis
+                    analysis: {
+                        fundingDifference: fundingDiff,
+                        priceDifference: priceDiff,
+                        executionCost: executionCost,
+                        profitability8h: profitability8h,
+                        profitability8hNet: netProfit,
+                        annualReturn: annualReturn,
+                        annualReturnNet: annualReturnNet,
+                        strategy: strategy,
+                        isOpportunity: strategy !== 'NONE' && netProfit > 0
+                    },
+
+                    // Fees
+                    fees: {
+                        exchangeATaker: this.fees.exchangeA.taker,
+                        exchangeBTaker: this.fees.exchangeB.taker,
+                        entryFees: entryFees,
+                        exitFees: exitFees,
+                        totalFees: totalFees
+                    },
+
+                    // Trading steps
+                    tradingSteps: tradingSteps,
+
+                    timestamp: new Date()
+                };
+            });
+
+            return opportunities.filter(opp => opp !== null);
+
+        } catch (error) {
+            console.error('Arbitrage calculation error:', error);
+            return [];
+        }
+    }
+
+    getExchangeLogo(slug) {
+        const logos = {
+            binance: 'https://public.bnbstatic.com/static/images/common/favicon.ico',
+            okx: 'https://static.okx.com/cdn/assets/imgs/MjAyMQ/OKX-LOGO-ICON.png',
+            hyperliquid: 'https://hyperliquid.xyz/favicon.ico'
+        };
+        return logos[slug] || '';
     }
 
     // En büyük 10 coin'i belirle (market cap'e göre) - Logo URL'leri ile
@@ -111,274 +365,6 @@ class ArbitrageService {
                 color: '#8247E5'
             }
         ];
-    }
-
-    // Yıllık getiri hesaplama (8 saatlik funding'den)
-    calculateAnnualReturn(fundingRate8h) {
-        // 8 saatte bir funding var, günde 3 kez (24/8 = 3)
-        // Yılda 365 * 3 = 1095 funding period
-        const annualReturn = fundingRate8h * 1095;
-        return annualReturn;
-    }
-
-    // Net kar hesaplama (trading fee'leri dahil)
-    calculateNetProfit(fundingDiff, entryFees, exitFees) {
-        // Entry: Her iki borsada da pozisyon açma (taker fee)
-        // Exit: Her iki borsada da pozisyon kapatma (taker fee)
-        const totalFees = entryFees + exitFees;
-        const netProfit = fundingDiff - totalFees;
-        return netProfit;
-    }
-
-    // Detaylı işlem adımları oluşturma
-    generateTradingSteps(strategy, coin, binanceFR, okxFR) {
-        const steps = [];
-
-        if (strategy === 'BINANCE_SHORT_OKX_LONG') {
-            steps.push({
-                step: 1,
-                action: 'OPEN',
-                exchange: 'Binance',
-                side: 'SELL (SHORT)',
-                description: `Open SHORT position on Binance`,
-                fee: this.fees.binance.taker,
-                feeType: 'Entry Fee'
-            });
-            steps.push({
-                step: 2,
-                action: 'OPEN',
-                exchange: 'OKX',
-                side: 'BUY (LONG)',
-                description: `Open LONG position on OKX`,
-                fee: this.fees.okx.taker,
-                feeType: 'Entry Fee'
-            });
-            steps.push({
-                step: 3,
-                action: 'HOLD',
-                exchange: 'Both',
-                side: 'WAIT',
-                description: `Wait for funding settlement (every 8h)`,
-                fee: 0,
-                feeType: 'Funding Payment',
-                fundingReceive: `Receive ${Math.abs(binanceFR).toFixed(4)}% on Binance SHORT`,
-                fundingPay: `Pay ${Math.abs(okxFR).toFixed(4)}% on OKX LONG`
-            });
-            steps.push({
-                step: 4,
-                action: 'CLOSE',
-                exchange: 'Binance',
-                side: 'BUY (Close SHORT)',
-                description: `Close SHORT position on Binance`,
-                fee: this.fees.binance.taker,
-                feeType: 'Exit Fee'
-            });
-            steps.push({
-                step: 5,
-                action: 'CLOSE',
-                exchange: 'OKX',
-                side: 'SELL (Close LONG)',
-                description: `Close LONG position on OKX`,
-                fee: this.fees.okx.taker,
-                feeType: 'Exit Fee'
-            });
-        } else if (strategy === 'BINANCE_LONG_OKX_SHORT') {
-            steps.push({
-                step: 1,
-                action: 'OPEN',
-                exchange: 'Binance',
-                side: 'BUY (LONG)',
-                description: `Open LONG position on Binance`,
-                fee: this.fees.binance.taker,
-                feeType: 'Entry Fee'
-            });
-            steps.push({
-                step: 2,
-                action: 'OPEN',
-                exchange: 'OKX',
-                side: 'SELL (SHORT)',
-                description: `Open SHORT position on OKX`,
-                fee: this.fees.okx.taker,
-                feeType: 'Entry Fee'
-            });
-            steps.push({
-                step: 3,
-                action: 'HOLD',
-                exchange: 'Both',
-                side: 'WAIT',
-                description: `Wait for funding settlement (every 8h)`,
-                fee: 0,
-                feeType: 'Funding Payment',
-                fundingPay: `Pay ${Math.abs(binanceFR).toFixed(4)}% on Binance LONG`,
-                fundingReceive: `Receive ${Math.abs(okxFR).toFixed(4)}% on OKX SHORT`
-            });
-            steps.push({
-                step: 4,
-                action: 'CLOSE',
-                exchange: 'Binance',
-                side: 'SELL (Close LONG)',
-                description: `Close LONG position on Binance`,
-                fee: this.fees.binance.taker,
-                feeType: 'Exit Fee'
-            });
-            steps.push({
-                step: 5,
-                action: 'CLOSE',
-                exchange: 'OKX',
-                side: 'BUY (Close SHORT)',
-                description: `Close SHORT position on OKX`,
-                fee: this.fees.okx.taker,
-                feeType: 'Exit Fee'
-            });
-        }
-
-        return steps;
-    }
-    // Her iki borsadan da veri çek ve karşılaştır
-    async getArbitrageOpportunities() {
-        const topCoins = this.getTopCoins();
-
-        try {
-            // Binance verilerini çek
-            const binanceSymbols = topCoins.map(c => c.binance);
-            const binanceData = await this.binance.getMultiplePremiumIndex(binanceSymbols);
-
-            // OKX verilerini çek
-            const okxSymbols = topCoins.map(c => c.okx);
-            const okxData = await this.okx.getMultipleFundingData(okxSymbols);
-
-            // Verileri birleştir ve arbitraj fırsatlarını hesapla
-            const opportunities = topCoins.map(coin => {
-                const binanceInfo = binanceData.find(d => d.symbol === coin.binance);
-                const okxInfo = okxData.find(d => d.symbol === coin.okx);
-
-                if (!binanceInfo || !okxInfo) {
-                    return null;
-                }
-
-                const fundingDiff = binanceInfo.lastFundingRate - okxInfo.lastFundingRate;
-
-                // STRATEJI: Sadece funding rate farkına göre belirle (fee 0 olduğu için)
-                // Hangi tarafın funding rate'i yüksekse, orada SHORT aç (funding al)
-                // Diğer tarafta LONG aç (funding öde ama daha az)
-                let strategy = 'NONE';
-                let entryPriceBinance, entryPriceOKX;
-                let executionCost = 0; // Bid/Ask spread'den kaynaklanan maliyet
-
-                if (fundingDiff > 0) {
-                    // Binance funding > OKX funding
-                    // Strateji: Binance SHORT + OKX LONG
-                    strategy = 'BINANCE_SHORT_OKX_LONG';
-                    // SHORT için BID fiyatından sat, LONG için ASK fiyatından al
-                    entryPriceBinance = binanceInfo.bidPrice;
-                    entryPriceOKX = okxInfo.askPrice;
-                } else if (fundingDiff < 0) {
-                    // OKX funding > Binance funding
-                    // Strateji: Binance LONG + OKX SHORT
-                    strategy = 'BINANCE_LONG_OKX_SHORT';
-                    // LONG için ASK fiyatından al, SHORT için BID fiyatından sat
-                    entryPriceBinance = binanceInfo.askPrice;
-                    entryPriceOKX = okxInfo.bidPrice;
-                } else {
-                    // Funding eşit, arbitraj yok
-                    entryPriceBinance = binanceInfo.markPrice;
-                    entryPriceOKX = okxInfo.markPrice;
-                }
-
-                // Execution cost (Spread maliyet yüzdesi)
-                // Eğer fiyatlar birbirinden farklıysa, bu farka göre ekstra maliyet var
-                const avgPrice = (binanceInfo.markPrice + okxInfo.markPrice) / 2;
-                if (strategy !== 'NONE') {
-                    executionCost = Math.abs(entryPriceBinance - entryPriceOKX) / avgPrice * 100;
-                }
-
-                // Fiyat farkı (informational)
-                const priceDiff = ((binanceInfo.markPrice - okxInfo.markPrice) / okxInfo.markPrice) * 100;
-
-                // Fee hesaplamaları
-                const entryFees = this.fees.binance.taker + this.fees.okx.taker;
-                const exitFees = this.fees.binance.taker + this.fees.okx.taker;
-                const totalFees = entryFees + exitFees;
-
-                // Net kar (8 saatlik): Funding rate farkı - Execution cost - Fees
-                const profitability8h = Math.abs(fundingDiff);
-                const netProfit = profitability8h - executionCost - totalFees;
-
-                // Yıllık getiri hesaplama
-                const annualReturn = this.calculateAnnualReturn(profitability8h);
-                const annualReturnNet = this.calculateAnnualReturn(netProfit);
-
-                // Detaylı işlem adımları
-                const tradingSteps = strategy !== 'NONE'
-                    ? this.generateTradingSteps(strategy, coin.symbol, binanceInfo.lastFundingRate, okxInfo.lastFundingRate)
-                    : [];
-
-                return {
-                    // Coin metadata
-                    name: coin.name,
-                    symbol: coin.symbol,
-                    logo: coin.logo,
-                    color: coin.color,
-
-                    // Binance data
-                    binance: {
-                        symbol: binanceInfo.symbol,
-                        markPrice: binanceInfo.markPrice,
-                        bidPrice: binanceInfo.bidPrice,
-                        askPrice: binanceInfo.askPrice,
-                        indexPrice: binanceInfo.indexPrice,
-                        fundingRate: binanceInfo.lastFundingRate,
-                        nextFundingTime: binanceInfo.nextFundingTime,
-                        logo: 'https://public.bnbstatic.com/static/images/common/favicon.ico'
-                    },
-
-                    // OKX data
-                    okx: {
-                        symbol: okxInfo.symbol,
-                        markPrice: okxInfo.markPrice,
-                        bidPrice: okxInfo.bidPrice,
-                        askPrice: okxInfo.askPrice,
-                        indexPrice: okxInfo.indexPrice,
-                        fundingRate: okxInfo.lastFundingRate,
-                        nextFundingTime: okxInfo.nextFundingTime,
-                        logo: 'https://static.okx.com/cdn/assets/imgs/MjAyMQ/OKX-LOGO-ICON.png'
-                    },
-
-                    // Analysis
-                    analysis: {
-                        fundingDifference: fundingDiff,
-                        priceDifference: priceDiff,
-                        executionCost: executionCost,
-                        profitability8h: profitability8h,
-                        profitability8hNet: netProfit,
-                        annualReturn: annualReturn,
-                        annualReturnNet: annualReturnNet,
-                        strategy: strategy,
-                        isOpportunity: strategy !== 'NONE' && netProfit > 0
-                    },
-
-                    // Fees
-                    fees: {
-                        binanceTaker: this.fees.binance.taker,
-                        okxTaker: this.fees.okx.taker,
-                        entryFees: entryFees,
-                        exitFees: exitFees,
-                        totalFees: totalFees
-                    },
-
-                    // Trading steps
-                    tradingSteps: tradingSteps,
-
-                    timestamp: new Date()
-                };
-            });
-
-            return opportunities.filter(opp => opp !== null);
-
-        } catch (error) {
-            console.error('Error getting arbitrage opportunities:', error);
-            throw error;
-        }
     }
 }
 

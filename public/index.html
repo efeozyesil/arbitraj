@@ -84,6 +84,47 @@
             box-shadow: 0 0 10px #ef4444;
         }
 
+        /* Tab System */
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .tab {
+            padding: 0.75rem 1.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: none;
+            border-radius: 8px 8px 0 0;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .tab:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        }
+
         /* Stats Cards */
         .stats-grid {
             display: grid;
@@ -520,6 +561,13 @@
             </div>
         </div>
 
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('binance-okx')">Binance ↔ OKX</button>
+            <button class="tab" onclick="switchTab('okx-hyperliquid')">OKX ↔ Hyperliquid</button>
+            <button class="tab" onclick="switchTab('binance-hyperliquid')">Binance ↔ Hyperliquid</button>
+        </div>
+
         <!-- Stats -->
         <div class="stats-grid">
             <div class="stat-card">
@@ -553,6 +601,25 @@
     <script>
         let ws;
         let reconnectInterval;
+        let currentTab = 'binance-okx';
+        let allData = {
+            'binance-okx': [],
+            'okx-hyperliquid': [],
+            'binance-hyperliquid': []
+        };
+
+        function switchTab(tabId) {
+            currentTab = tabId;
+
+            // Update tab styles
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // Render data for selected tab
+            updateDashboard(allData[currentTab]);
+        }
 
         function connectWebSocket() {
             // Connect to WebSocket server
@@ -572,7 +639,11 @@
             ws.onmessage = (event) => {
                 const message = JSON.parse(event.data);
                 if (message.type === 'ARBITRAGE_UPDATE') {
-                    updateDashboard(message.data);
+                    // Store all data
+                    allData = message.data;
+
+                    // Update dashboard with current tab's data
+                    updateDashboard(allData[currentTab]);
                     updateLastUpdate();
                 }
             };
@@ -609,6 +680,8 @@
         }
 
         function updateDashboard(opportunities) {
+            if (!opportunities) return;
+
             // Hide loading
             document.getElementById('loading').style.display = 'none';
             document.getElementById('opportunitiesGrid').style.display = 'grid';
@@ -695,36 +768,36 @@
                     <div class="exchange-row">
                         <div class="exchange-box">
                             <div class="exchange-header">
-                                <img src="${opp.binance.logo}" alt="Binance" class="exchange-logo" onerror="this.style.display='none'">
-                                <span class="exchange-name">BINANCE</span>
+                                <img src="${opp.exchangeA.logo}" alt="${opp.exchangeA.name}" class="exchange-logo" onerror="this.style.display='none'">
+                                <span class="exchange-name">${opp.exchangeA.name.toUpperCase()}</span>
                             </div>
-                            <div class="price-value">$${opp.binance.markPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 8 })}</div>
+                            <div class="price-value">$${opp.exchangeA.markPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 8 })}</div>
                             <div style="font-size: 0.65rem; color: rgba(255, 255, 255, 0.5); margin-bottom: 0.3rem;">
-                                Bid: $${opp.binance.bidPrice.toLocaleString('en-US', { maximumFractionDigits: 8 })} | 
-                                Ask: $${opp.binance.askPrice.toLocaleString('en-US', { maximumFractionDigits: 8 })}
+                                Bid: $${opp.exchangeA.bidPrice.toLocaleString('en-US', { maximumFractionDigits: 8 })} | 
+                                Ask: $${opp.exchangeA.askPrice.toLocaleString('en-US', { maximumFractionDigits: 8 })}
                             </div>
                             <div class="funding-rate">
                                 <span class="funding-label">FR (8h)</span>
-                                <span class="funding-value ${opp.binance.fundingRate >= 0 ? 'positive' : 'negative'}">
-                                    ${opp.binance.fundingRate >= 0 ? '+' : ''}${opp.binance.fundingRate.toFixed(4)}%
+                                <span class="funding-value ${opp.exchangeA.fundingRate >= 0 ? 'positive' : 'negative'}">
+                                    ${opp.exchangeA.fundingRate >= 0 ? '+' : ''}${opp.exchangeA.fundingRate.toFixed(4)}%
                                 </span>
                             </div>
                         </div>
 
                         <div class="exchange-box">
                             <div class="exchange-header">
-                                <img src="${opp.okx.logo}" alt="OKX" class="exchange-logo" onerror="this.style.display='none'">
-                                <span class="exchange-name">OKX</span>
+                                <img src="${opp.exchangeB.logo}" alt="${opp.exchangeB.name}" class="exchange-logo" onerror="this.style.display='none'">
+                                <span class="exchange-name">${opp.exchangeB.name.toUpperCase()}</span>
                             </div>
-                            <div class="price-value">$${opp.okx.markPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 8 })}</div>
+                            <div class="price-value">$${opp.exchangeB.markPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 8 })}</div>
                             <div style="font-size: 0.65rem; color: rgba(255, 255, 255, 0.5); margin-bottom: 0.3rem;">
-                                Bid: $${opp.okx.bidPrice.toLocaleString('en-US', { maximumFractionDigits: 8 })} | 
-                                Ask: $${opp.okx.askPrice.toLocaleString('en-US', { maximumFractionDigits: 8 })}
+                                Bid: $${opp.exchangeB.bidPrice.toLocaleString('en-US', { maximumFractionDigits: 8 })} | 
+                                Ask: $${opp.exchangeB.askPrice.toLocaleString('en-US', { maximumFractionDigits: 8 })}
                             </div>
                             <div class="funding-rate">
                                 <span class="funding-label">FR (8h)</span>
-                                <span class="funding-value ${opp.okx.fundingRate >= 0 ? 'positive' : 'negative'}">
-                                    ${opp.okx.fundingRate >= 0 ? '+' : ''}${opp.okx.fundingRate.toFixed(4)}%
+                                <span class="funding-value ${opp.exchangeB.fundingRate >= 0 ? 'positive' : 'negative'}">
+                                    ${opp.exchangeB.fundingRate >= 0 ? '+' : ''}${opp.exchangeB.fundingRate.toFixed(4)}%
                                 </span>
                             </div>
                         </div>
