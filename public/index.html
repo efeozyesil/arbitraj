@@ -883,19 +883,19 @@
         }
 
         function updateStats(opportunities) {
-            const activeOpps = opportunities.filter(o => o.analysis.isOpportunity);
+            const activeOpps = opportunities.filter(o => o.analysis && o.analysis.isOpportunity);
             document.getElementById('totalOpportunities').textContent = opportunities.length;
             document.getElementById('activeArbitrage').textContent = activeOpps.length;
 
             if (activeOpps.length > 0) {
                 const best8h = activeOpps.reduce((max, o) =>
-                    o.analysis.profitability8hNet > max.analysis.profitability8hNet ? o : max
+                    o.analysis.annualAPR > max.analysis.annualAPR ? o : max
                 );
                 document.getElementById('bestOpportunity').textContent =
-                    best8h.analysis.profitability8hNet.toFixed(4) + '%';
+                    best8h.analysis.fundingPnL8h.toFixed(4) + '$';
 
                 document.getElementById('bestAnnual').textContent =
-                    best8h.analysis.annualReturnNet.toFixed(2) + '%';
+                    best8h.analysis.annualAPR.toFixed(2) + '%';
             } else {
                 document.getElementById('bestOpportunity').textContent = 'None';
                 document.getElementById('bestAnnual').textContent = 'None';
