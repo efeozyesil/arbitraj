@@ -33,22 +33,46 @@ class BinanceService {
   // Birden fazla coin için funding rate ve fiyat
   async getMultiplePremiumIndex(symbols) {
     try {
-      const promises = symbols.map(symbol => this.getPremiumIndex(symbol));
-      const results = await Promise.all(promises);
-      
-      return results
+      // Önce premium index bilgilerini çek
+      const premiumPromises = symbols.map(symbol => this.getPremiumIndex(symbol));
+      const premiumResults = await Promise.all(premiumPromises);
+
+      // Sonra bid/ask fiyatlarını çek
+      const tickerPromises = symbols.map(symbol => this.getBookTicker(symbol));
+      const tickerResults = await Promise.all(tickerPromises);
+
+      return premiumResults
         .filter(result => result !== null)
-        .map(data => ({
-          symbol: data.symbol,
-          markPrice: parseFloat(data.markPrice),
-          indexPrice: parseFloat(data.indexPrice),
-          lastFundingRate: parseFloat(data.lastFundingRate) * 100, // Yüzde olarak
-          nextFundingTime: new Date(data.nextFundingTime),
-          exchange: 'Binance'
-        }));
+        .map(data => {
+          const ticker = tickerResults.find(t => t && t.symbol === data.symbol);
+          return {
+            symbol: data.symbol,
+            markPrice: parseFloat(data.markPrice),
+            indexPrice: parseFloat(data.indexPrice),
+            bidPrice: ticker ? parseFloat(ticker.bidPrice) : parseFloat(data.markPrice),
+            askPrice: ticker ? parseFloat(ticker.askPrice) : parseFloat(data.markPrice),
+            lastFundingRate: parseFloat(data.lastFundingRate) * 100, // Yüzde olarak
+            nextFundingTime: new Date(data.nextFundingTime),
+            exchange: 'Binance'
+          };
+        });
     } catch (error) {
       console.error('Binance multiple fetch error:', error.message);
       return [];
+    }
+  }
+
+  // Bid/Ask fiyatları
+  async getBookTicker(symbol) {
+    try {
+      const endpoint = '/fapi/v1/ticker/bookTicker';
+      const response = await axios.get(`${this.baseURL}${endpoint}`, {
+        params: { symbol }
+      });
+      return response.data;
+    } catch (error) {
+      console.error(`Binance book ticker error for ${symbol}:`, error.message);
+      return null;
     }
   }
 
@@ -57,7 +81,7 @@ class BinanceService {
     try {
       const endpoint = '/fapi/v1/exchangeInfo';
       const response = await axios.get(`${this.baseURL}${endpoint}`);
-      
+
       return response.data.symbols
         .filter(s => s.contractType === 'PERPETUAL' && s.status === 'TRADING')
         .map(s => s.symbol);

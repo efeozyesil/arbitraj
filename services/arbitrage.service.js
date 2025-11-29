@@ -247,32 +247,55 @@ class ArbitrageService {
                 }
 
                 const fundingDiff = binanceInfo.lastFundingRate - okxInfo.lastFundingRate;
-                const priceDiff = ((binanceInfo.markPrice - okxInfo.markPrice) / okxInfo.markPrice) * 100;
 
-                // Arbitraj stratejisi belirleme
+                // STRATEJI: Sadece funding rate farkına göre belirle (fee 0 olduğu için)
+                // Hangi tarafın funding rate'i yüksekse, orada SHORT aç (funding al)
+                // Diğer tarafta LONG aç (funding öde ama daha az)
                 let strategy = 'NONE';
-                let profitability = Math.abs(fundingDiff);
+                let entryPriceBinance, entryPriceOKX;
+                let executionCost = 0; // Bid/Ask spread'den kaynaklanan maliyet
 
-                if (Math.abs(fundingDiff) >= 0.01) { // En az 0.01% fark varsa
-                    if (fundingDiff > 0) {
-                        // Binance funding rate daha yüksek -> Binance'de SHORT, OKX'te LONG
-                        strategy = 'BINANCE_SHORT_OKX_LONG';
-                    } else {
-                        // OKX funding rate daha yüksek -> Binance'de LONG, OKX'te SHORT
-                        strategy = 'BINANCE_LONG_OKX_SHORT';
-                    }
+                if (fundingDiff > 0) {
+                    // Binance funding > OKX funding
+                    // Strateji: Binance SHORT + OKX LONG
+                    strategy = 'BINANCE_SHORT_OKX_LONG';
+                    // SHORT için BID fiyatından sat, LONG için ASK fiyatından al
+                    entryPriceBinance = binanceInfo.bidPrice;
+                    entryPriceOKX = okxInfo.askPrice;
+                } else if (fundingDiff < 0) {
+                    // OKX funding > Binance funding
+                    // Strateji: Binance LONG + OKX SHORT
+                    strategy = 'BINANCE_LONG_OKX_SHORT';
+                    // LONG için ASK fiyatından al, SHORT için BID fiyatından sat
+                    entryPriceBinance = binanceInfo.askPrice;
+                    entryPriceOKX = okxInfo.bidPrice;
+                } else {
+                    // Funding eşit, arbitraj yok
+                    entryPriceBinance = binanceInfo.markPrice;
+                    entryPriceOKX = okxInfo.markPrice;
                 }
 
-                // Fee hesaplamaları
-                const entryFees = this.fees.binance.taker + this.fees.okx.taker; // 0.05% + 0.05% = 0.10%
-                const exitFees = this.fees.binance.taker + this.fees.okx.taker;  // 0.05% + 0.05% = 0.10%
-                const totalFees = entryFees + exitFees; // 0.20% total
+                // Execution cost (Spread maliyet yüzdesi)
+                // Eğer fiyatlar birbirinden farklıysa, bu farka göre ekstra maliyet var
+                const avgPrice = (binanceInfo.markPrice + okxInfo.markPrice) / 2;
+                if (strategy !== 'NONE') {
+                    executionCost = Math.abs(entryPriceBinance - entryPriceOKX) / avgPrice * 100;
+                }
 
-                // Net kar (fee'ler dahil)
-                const netProfit = profitability - totalFees;
+                // Fiyat farkı (informational)
+                const priceDiff = ((binanceInfo.markPrice - okxInfo.markPrice) / okxInfo.markPrice) * 100;
+
+                // Fee hesaplamaları
+                const entryFees = this.fees.binance.taker + this.fees.okx.taker;
+                const exitFees = this.fees.binance.taker + this.fees.okx.taker;
+                const totalFees = entryFees + exitFees;
+
+                // Net kar (8 saatlik): Funding rate farkı - Execution cost - Fees
+                const profitability8h = Math.abs(fundingDiff);
+                const netProfit = profitability8h - executionCost - totalFees;
 
                 // Yıllık getiri hesaplama
-                const annualReturn = this.calculateAnnualReturn(profitability);
+                const annualReturn = this.calculateAnnualReturn(profitability8h);
                 const annualReturnNet = this.calculateAnnualReturn(netProfit);
 
                 // Detaylı işlem adımları
@@ -291,6 +314,8 @@ class ArbitrageService {
                     binance: {
                         symbol: binanceInfo.symbol,
                         markPrice: binanceInfo.markPrice,
+                        bidPrice: binanceInfo.bidPrice,
+                        askPrice: binanceInfo.askPrice,
                         indexPrice: binanceInfo.indexPrice,
                         fundingRate: binanceInfo.lastFundingRate,
                         nextFundingTime: binanceInfo.nextFundingTime,
@@ -301,6 +326,8 @@ class ArbitrageService {
                     okx: {
                         symbol: okxInfo.symbol,
                         markPrice: okxInfo.markPrice,
+                        bidPrice: okxInfo.bidPrice,
+                        askPrice: okxInfo.askPrice,
                         indexPrice: okxInfo.indexPrice,
                         fundingRate: okxInfo.lastFundingRate,
                         nextFundingTime: okxInfo.nextFundingTime,
@@ -311,12 +338,13 @@ class ArbitrageService {
                     analysis: {
                         fundingDifference: fundingDiff,
                         priceDifference: priceDiff,
-                        profitability8h: profitability,
+                        executionCost: executionCost,
+                        profitability8h: profitability8h,
                         profitability8hNet: netProfit,
                         annualReturn: annualReturn,
                         annualReturnNet: annualReturnNet,
                         strategy: strategy,
-                        isOpportunity: strategy !== 'NONE'
+                        isOpportunity: strategy !== 'NONE' && netProfit > 0
                     },
 
                     // Fees

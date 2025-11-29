@@ -674,7 +674,11 @@
                                 <img src="${opp.binance.logo}" alt="Binance" class="exchange-logo" onerror="this.style.display='none'">
                                 <span class="exchange-name">BINANCE</span>
                             </div>
-                            <div class="price-value">$${opp.binance.markPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                            <div class="price-value">$${opp.binance.markPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 8 })}</div>
+                            <div style="font-size: 0.65rem; color: rgba(255, 255, 255, 0.5); margin-bottom: 0.3rem;">
+                                Bid: $${opp.binance.bidPrice.toLocaleString('en-US', { maximumFractionDigits: 8 })} | 
+                                Ask: $${opp.binance.askPrice.toLocaleString('en-US', { maximumFractionDigits: 8 })}
+                            </div>
                             <div class="funding-rate">
                                 <span class="funding-label">FR (8h)</span>
                                 <span class="funding-value ${opp.binance.fundingRate >= 0 ? 'positive' : 'negative'}">
@@ -688,7 +692,11 @@
                                 <img src="${opp.okx.logo}" alt="OKX" class="exchange-logo" onerror="this.style.display='none'">
                                 <span class="exchange-name">OKX</span>
                             </div>
-                            <div class="price-value">$${opp.okx.markPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                            <div class="price-value">$${opp.okx.markPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 8 })}</div>
+                            <div style="font-size: 0.65rem; color: rgba(255, 255, 255, 0.5); margin-bottom: 0.3rem;">
+                                Bid: $${opp.okx.bidPrice.toLocaleString('en-US', { maximumFractionDigits: 8 })} | 
+                                Ask: $${opp.okx.askPrice.toLocaleString('en-US', { maximumFractionDigits: 8 })}
+                            </div>
                             <div class="funding-rate">
                                 <span class="funding-label">FR (8h)</span>
                                 <span class="funding-value ${opp.okx.fundingRate >= 0 ? 'positive' : 'negative'}">
