@@ -41,6 +41,8 @@ class HyperliquidService {
             // Tüm piyasa verilerini tek seferde çek
             const response = await axios.post(`${this.baseURL}/info`, {
                 type: 'metaAndAssetCtxs'
+            }, {
+                headers: { 'Content-Type': 'application/json' }
             });
 
             if (!response.data || !response.data[0] || !response.data[1]) {
@@ -60,14 +62,10 @@ class HyperliquidService {
                 if (coinIndex !== -1 && contexts[coinIndex]) {
                     const ctx = contexts[coinIndex];
 
-                    // Funding rate: Hyperliquid'de saatlik veriliyor, biz 8 saatlik (standart) kullanıyoruz
-                    // Ancak karşılaştırma için yıllıklandırmak veya aynı periyoda getirmek lazım.
-                    // Diğer borsalar 8 saatlik veriyor. Hyperliquid saatlik.
-                    // ArbitrageService'de fundingDiff hesaplarken bunu dikkate almalıyız.
-                    // Şimdilik ham veriyi (saatlik) gönderiyoruz, ama yüzdeye çeviriyoruz.
-                    // DİKKAT: Diğer borsalar 8 saatlik veriyor. Bunu 8 ile çarpmak gerekebilir mi?
-                    // Genelde funding rate'ler "periyodluk" verilir.
-                    // Hyperliquid funding rate'i saatliktir.
+                    // Funding rate: Hyperliquid saatlik veriyor.
+                    // Diğer borsalarla (8 saatlik) kıyaslamak için 8 ile çarpıyoruz.
+                    const hourlyFunding = parseFloat(ctx.funding);
+                    const funding8h = hourlyFunding * 8 * 100; // Yüzdeye çevir ve 8 ile çarp
 
                     results.push({
                         symbol: symbol,
@@ -75,10 +73,12 @@ class HyperliquidService {
                         indexPrice: parseFloat(ctx.midPx || ctx.markPx),
                         bidPrice: parseFloat(ctx.bidPx || ctx.markPx),
                         askPrice: parseFloat(ctx.askPx || ctx.markPx),
-                        lastFundingRate: parseFloat(ctx.funding) * 100, // Yüzde olarak (Saatlik)
+                        lastFundingRate: funding8h,
                         nextFundingTime: new Date(Date.now() + 3600000), // Tahmini 1 saat sonra
                         exchange: 'Hyperliquid'
                     });
+                } else {
+                    console.warn(`Hyperliquid symbol not found: ${symbol}`);
                 }
             });
 

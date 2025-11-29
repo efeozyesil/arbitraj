@@ -114,6 +114,20 @@ class ArbitrageService {
                 dataB = await this.exchangeB.getMultipleFundingData(symbolsB);
             }
 
+            // DEBUG LOGS
+            // console.log(`[${this.nameA}-${this.nameB}] Fetching data...`);
+            // console.log(`Symbols A: ${symbolsA.length}, Data A: ${dataA?.length}`);
+            // console.log(`Symbols B: ${symbolsB.length}, Data B: ${dataB?.length}`);
+
+            if (!dataA || dataA.length === 0) {
+                console.error(`[${this.nameA}-${this.nameB}] No data received from ${this.nameA}`);
+                return [];
+            }
+            if (!dataB || dataB.length === 0) {
+                console.error(`[${this.nameA}-${this.nameB}] No data received from ${this.nameB}`);
+                return [];
+            }
+
             // Verileri birleştir ve arbitraj fırsatlarını hesapla
             const opportunities = topCoins.map(coin => {
                 const symbolA = coin[this.slugA];
