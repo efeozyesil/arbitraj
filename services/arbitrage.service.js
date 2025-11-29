@@ -1,289 +1,162 @@
 class ArbitrageService {
     /**
-     * @param {Object} serviceA - Birinci borsa servisi (örn: BinanceService)
-     * @param {Object} serviceB - İkinci borsa servisi (örn: OKXService)
-     * @param {string} slugA - Birinci borsa için coin objesindeki anahtar (örn: 'binance')
-     * @param {string} slugB - İkinci borsa için coin objesindeki anahtar (örn: 'okx')
-     * @param {string} nameA - Birinci borsanın görünen adı (örn: 'Binance')
-     * @param {string} nameB - İkinci borsanın görünen adı (örn: 'OKX')
+     * @param {Object} exchangeWS_A - Birinci borsa WebSocket servisi
+     * @param {Object} exchangeWS_B - İkinci borsa WebSocket servisi
+     * @param {string} slugA - Birinci borsa slug (örn: 'binance')
+     * @param {string} slugB - İkinci borsa slug (örn: 'okx')
+     * @param {string} nameA - Birinci borsa görünen adı
+     * @param {string} nameB - İkinci borsa görünen adı
      */
-    constructor(serviceA, serviceB, slugA = 'binance', slugB = 'okx', nameA = 'Binance', nameB = 'OKX') {
-        this.exchangeA = serviceA;
-        this.exchangeB = serviceB;
+    constructor(exchangeWS_A, exchangeWS_B, slugA, slugB, nameA, nameB) {
+        this.wsA = exchangeWS_A;
+        this.wsB = exchangeWS_B;
         this.slugA = slugA;
         this.slugB = slugB;
         this.nameA = nameA;
         this.nameB = nameB;
 
-        // Trading fees (taker fees for market orders)
-        // TEMPORARILY SET TO 0 FOR TESTING
+        // İşlem ücretleri (Maker/Taker) - Şimdilik 0
         this.fees = {
-            exchangeA: {
-                maker: 0.00,
-                taker: 0.00
-            },
-            exchangeB: {
-                maker: 0.00,
-                taker: 0.00
-            }
+            exchangeA: { maker: 0.0000, taker: 0.0000 },
+            exchangeB: { maker: 0.0000, taker: 0.0000 }
         };
     }
 
-    // Yıllık getiri hesaplama (Basit faiz: Getiri * 3 günde 1 * 365)
-    // Funding rate 8 saatlik olduğu için günde 3 ödeme var
-    calculateAnnualReturn(ratePerPeriod) {
-        return ratePerPeriod * 3 * 365;
-    }
-
-    // Detaylı işlem adımları oluştur
-    generateTradingSteps(strategy, coin, rateA, rateB) {
-        const steps = [];
-
-        if (strategy === 'SHORT_A_LONG_B') {
-            // A Borsası SHORT, B Borsası LONG
-            steps.push({
-                step: 1,
-                exchange: this.nameA,
-                side: 'SHORT',
-                description: `Open Short position on ${this.nameA}`,
-                fee: this.fees.exchangeA.taker,
-                fundingReceive: rateA > 0 ? `Earns Funding (${rateA.toFixed(4)}%)` : null,
-                fundingPay: rateA < 0 ? `Pays Funding (${Math.abs(rateA).toFixed(4)}%)` : null
-            });
-            steps.push({
-                step: 2,
-                exchange: this.nameB,
-                side: 'LONG',
-                description: `Open Long position on ${this.nameB}`,
-                fee: this.fees.exchangeB.taker,
-                fundingReceive: rateB < 0 ? `Earns Funding (${Math.abs(rateB).toFixed(4)}%)` : null,
-                fundingPay: rateB > 0 ? `Pays Funding (${rateB.toFixed(4)}%)` : null
-            });
-        } else if (strategy === 'LONG_A_SHORT_B') {
-            // A Borsası LONG, B Borsası SHORT
-            steps.push({
-                step: 1,
-                exchange: this.nameA,
-                side: 'LONG',
-                description: `Open Long position on ${this.nameA}`,
-                fee: this.fees.exchangeA.taker,
-                fundingReceive: rateA < 0 ? `Earns Funding (${Math.abs(rateA).toFixed(4)}%)` : null,
-                fundingPay: rateA > 0 ? `Pays Funding (${rateA.toFixed(4)}%)` : null
-            });
-            steps.push({
-                step: 2,
-                exchange: this.nameB,
-                side: 'SHORT',
-                description: `Open Short position on ${this.nameB}`,
-                fee: this.fees.exchangeB.taker,
-                fundingReceive: rateB > 0 ? `Earns Funding (${rateB.toFixed(4)}%)` : null,
-                fundingPay: rateB < 0 ? `Pays Funding (${Math.abs(rateB).toFixed(4)}%)` : null
-            });
-        }
-
-        return steps;
-    }
-
-    // Her iki borsadan da veri çek ve karşılaştır
-    async getArbitrageOpportunities() {
-        const topCoins = this.getTopCoins();
-
+    getArbitrageOpportunities() {
         try {
-            // Borsa A verilerini çek
-            // Hangi metodu çağıracağımızı belirle (Binance ve OKX/Hyperliquid metod isimleri farklı olabilir, 
-            // ama servislerde ortak bir arayüz kullanmaya çalıştık. 
-            // Binance: getMultiplePremiumIndex, OKX: getMultipleFundingData, Hyperliquid: getMultipleFundingData)
+            const topCoins = this.getTopCoins();
+            const opportunities = [];
 
-            // Sembolleri al
-            const symbolsA = topCoins.map(c => c[this.slugA]).filter(s => s);
-            const symbolsB = topCoins.map(c => c[this.slugB]).filter(s => s);
-
-            // Verileri çek
-            // Not: Servislerin metod isimlerini standartlaştırmak en iyisi olurdu ama şimdilik check ediyoruz
-            let dataA, dataB;
-
-            if (this.slugA === 'binance') {
-                dataA = await this.exchangeA.getMultiplePremiumIndex(symbolsA);
-            } else {
-                dataA = await this.exchangeA.getMultipleFundingData(symbolsA);
-            }
-
-            if (this.slugB === 'binance') {
-                dataB = await this.exchangeB.getMultiplePremiumIndex(symbolsB);
-            } else {
-                dataB = await this.exchangeB.getMultipleFundingData(symbolsB);
-            }
-
-            // DEBUG LOGS
-            // console.log(`[${this.nameA}-${this.nameB}] Fetching data...`);
-            // console.log(`Symbols A: ${symbolsA.length}, Data A: ${dataA?.length}`);
-            // console.log(`Symbols B: ${symbolsB.length}, Data B: ${dataB?.length}`);
-
-            if (!dataA || dataA.length === 0) {
-                console.error(`[${this.nameA}-${this.nameB}] No data received from ${this.nameA}`);
-                return [];
-            }
-            if (!dataB || dataB.length === 0) {
-                console.error(`[${this.nameA}-${this.nameB}] No data received from ${this.nameB}`);
-                return [];
-            }
-
-            // Verileri birleştir ve arbitraj fırsatlarını hesapla
-            const opportunities = topCoins.map(coin => {
+            topCoins.forEach(coin => {
                 const symbolA = coin[this.slugA];
                 const symbolB = coin[this.slugB];
 
-                if (!symbolA || !symbolB) return null;
+                // WebSocket cache'den veriyi al
+                const dataA = this.wsA.getData(symbolA);
+                const dataB = this.wsB.getData(symbolB);
 
-                const infoA = dataA.find(d => d.symbol === symbolA);
-                const infoB = dataB.find(d => d.symbol === symbolB);
-
-                if (!infoA || !infoB) {
-                    return null;
+                if (!dataA || !dataB) {
+                    // Veri henüz gelmediyse atla
+                    return;
                 }
 
-                const fundingDiff = infoA.lastFundingRate - infoB.lastFundingRate;
+                // Fiyat ve Funding Rate farklarını hesapla
+                // Not: WS verisinde bid/ask olmayabilir (özellikle Binance mark price stream'inde).
+                // Bu yüzden mark price üzerinden hesaplama yapacağız.
 
-                // STRATEJI: Sadece funding rate farkına göre belirle
-                let strategy = 'NONE';
-                let entryPriceA, entryPriceB;
-                let executionCost = 0;
+                const fundingDiff = dataB.fundingRate - dataA.fundingRate;
 
-                if (fundingDiff > 0) {
-                    // A funding > B funding
-                    // Strateji: A SHORT + B LONG
-                    strategy = 'SHORT_A_LONG_B';
-                    // SHORT için BID fiyatından sat, LONG için ASK fiyatından al
-                    entryPriceA = infoA.bidPrice;
-                    entryPriceB = infoB.askPrice;
-                } else if (fundingDiff < 0) {
-                    // B funding > A funding
-                    // Strateji: A LONG + B SHORT
-                    strategy = 'LONG_A_SHORT_B';
-                    // LONG için ASK fiyatından al, SHORT için BID fiyatından sat
-                    entryPriceA = infoA.askPrice;
-                    entryPriceB = infoB.bidPrice;
-                } else {
-                    entryPriceA = infoA.markPrice;
-                    entryPriceB = infoB.markPrice;
-                }
+                // Arbitraj Analizi
+                const analysis = this.analyzeArbitrage(
+                    dataA.markPrice, dataB.markPrice,
+                    dataA.markPrice, dataA.markPrice, // Bid/Ask yoksa Mark kullan
+                    dataB.markPrice, dataB.markPrice,
+                    dataA.fundingRate, dataB.fundingRate
+                );
 
-                // Execution cost (Spread maliyet yüzdesi)
-                const avgPrice = (infoA.markPrice + infoB.markPrice) / 2;
-                if (strategy !== 'NONE') {
-                    // Fiyatlar farklı borsalarda farklı olabilir (örn: BTC 95000 vs 95100)
-                    // Spread maliyeti: |GirişA - GirişB| farkı değil, her birinin kendi spread'i önemlidir.
-                    // Ancak burada basitleştirilmiş bir model kullanıyoruz.
-                    // Gerçekçi spread maliyeti: (AskA - BidA)/MarkA + (AskB - BidB)/MarkB gibi olmalı.
-                    // Mevcut mantığı koruyarak: Fiyat farkı maliyeti
-                    executionCost = Math.abs(entryPriceA - entryPriceB) / avgPrice * 100;
-                }
-
-                // Fiyat farkı (informational)
-                const priceDiff = ((infoA.markPrice - infoB.markPrice) / infoB.markPrice) * 100;
-
-                // Fee hesaplamaları
-                const entryFees = this.fees.exchangeA.taker + this.fees.exchangeB.taker;
-                const exitFees = this.fees.exchangeA.taker + this.fees.exchangeB.taker;
-                const totalFees = entryFees + exitFees;
-
-                // Net kar (8 saatlik)
-                const profitability8h = Math.abs(fundingDiff);
-                // Not: Execution cost (fiyat farkı) funding arbitrajında tek seferlik bir maliyettir, 
-                // funding geliri ise süreklidir. 8 saatlik net kar hesabında execution cost'u düşmek 
-                // sadece 8 saat tutulacaksa doğrudur. Uzun vadede execution cost etkisi azalır.
-                // Şimdilik muhafazakar hesaplama için düşüyoruz.
-                const netProfit = profitability8h - executionCost - totalFees;
-
-                // Yıllık getiri
-                const annualReturn = this.calculateAnnualReturn(profitability8h);
-                const annualReturnNet = this.calculateAnnualReturn(netProfit);
-
-                // Detaylı işlem adımları
-                const tradingSteps = strategy !== 'NONE'
-                    ? this.generateTradingSteps(strategy, coin.symbol, infoA.lastFundingRate, infoB.lastFundingRate)
-                    : [];
-
-                return {
-                    // Coin metadata
-                    name: coin.name,
+                opportunities.push({
                     symbol: coin.symbol,
+                    name: coin.name,
                     logo: coin.logo,
                     color: coin.color,
-
-                    // Exchange A data
                     exchangeA: {
                         name: this.nameA,
-                        symbol: infoA.symbol,
-                        markPrice: infoA.markPrice,
-                        bidPrice: infoA.bidPrice,
-                        askPrice: infoA.askPrice,
-                        indexPrice: infoA.indexPrice,
-                        fundingRate: infoA.lastFundingRate,
-                        nextFundingTime: infoA.nextFundingTime,
-                        logo: this.getExchangeLogo(this.slugA)
+                        logo: this.getExchangeLogo(this.slugA),
+                        markPrice: dataA.markPrice,
+                        bidPrice: dataA.markPrice,
+                        askPrice: dataA.markPrice,
+                        fundingRate: dataA.fundingRate,
+                        nextFundingTime: dataA.nextFundingTime
                     },
-
-                    // Exchange B data
                     exchangeB: {
                         name: this.nameB,
-                        symbol: infoB.symbol,
-                        markPrice: infoB.markPrice,
-                        bidPrice: infoB.bidPrice,
-                        askPrice: infoB.askPrice,
-                        indexPrice: infoB.indexPrice,
-                        fundingRate: infoB.lastFundingRate,
-                        nextFundingTime: infoB.nextFundingTime,
-                        logo: this.getExchangeLogo(this.slugB)
+                        logo: this.getExchangeLogo(this.slugB),
+                        markPrice: dataB.markPrice,
+                        bidPrice: dataB.markPrice,
+                        askPrice: dataB.markPrice,
+                        fundingRate: dataB.fundingRate,
+                        nextFundingTime: dataB.nextFundingTime
                     },
-
-                    // Analysis
-                    analysis: {
-                        fundingDifference: fundingDiff,
-                        priceDifference: priceDiff,
-                        executionCost: executionCost,
-                        profitability8h: profitability8h,
-                        profitability8hNet: netProfit,
-                        annualReturn: annualReturn,
-                        annualReturnNet: annualReturnNet,
-                        strategy: strategy,
-                        isOpportunity: strategy !== 'NONE' && netProfit > 0
-                    },
-
-                    // Fees
-                    fees: {
-                        exchangeATaker: this.fees.exchangeA.taker,
-                        exchangeBTaker: this.fees.exchangeB.taker,
-                        entryFees: entryFees,
-                        exitFees: exitFees,
-                        totalFees: totalFees
-                    },
-
-                    // Trading steps
-                    tradingSteps: tradingSteps,
-
-                    timestamp: new Date()
-                };
+                    analysis: analysis
+                });
             });
 
-            return opportunities.filter(opp => opp !== null);
+            // Kârlılığa göre sırala
+            return opportunities.sort((a, b) => b.analysis.profitability8hNet - a.analysis.profitability8hNet);
 
         } catch (error) {
-            console.error('Arbitrage calculation error:', error);
+            console.error(`[${this.nameA}-${this.nameB}] Arbitrage calculation error:`, error.message);
             return [];
         }
     }
 
+    analyzeArbitrage(markA, markB, bidA, askA, bidB, askB, fundingA, fundingB) {
+        // Strateji 1: A'da Long, B'de Short (Funding A < Funding B)
+        // A shortlanınca funding öder/alır, B longlanınca funding öder/alır.
+
+        const fundingDiff = fundingB - fundingA; // Pozitifse B Short / A Long avantajlı
+
+        let strategy = '';
+        let netFundingIncome = 0;
+        let entryCost = 0;
+        let exitCost = 0;
+
+        // İşlem ücretleri (Taker giriş, Taker çıkış varsayımı)
+        const totalFeeRate = this.fees.exchangeA.taker + this.fees.exchangeB.taker;
+
+        if (fundingDiff > 0) {
+            // Strateji: Long A, Short B
+            strategy = 'LONG_A_SHORT_B';
+            netFundingIncome = fundingDiff;
+
+            // Giriş Maliyeti: A'dan al (Ask), B'ye sat (Bid)
+            // Fiyat farkı zararı (Spread) + Komisyonlar
+            const priceSpreadLoss = ((askA - bidB) / askA) * 100;
+            entryCost = priceSpreadLoss + (totalFeeRate * 100);
+
+        } else {
+            // Strateji: Short A, Long B
+            strategy = 'SHORT_A_LONG_B';
+            netFundingIncome = -fundingDiff; // A - B pozitif olur
+
+            // Giriş Maliyeti: B'den al (Ask), A'ya sat (Bid)
+            const priceSpreadLoss = ((askB - bidA) / askB) * 100;
+            entryCost = priceSpreadLoss + (totalFeeRate * 100);
+        }
+
+        // Çıkış maliyeti (Pozisyon kapatma) - Girişle benzer varsayılır
+        exitCost = entryCost;
+
+        // Net Kârlılık (8 saatlik periyot için)
+        const profitability8hNet = netFundingIncome - entryCost - exitCost;
+
+        // Yıllıklandırılmış Getiri (Basit faiz)
+        const annualReturnNet = profitability8hNet * 3 * 365;
+
+        // Fırsat mı? (Eşik değer: %0.01 net kâr)
+        const isOpportunity = profitability8hNet > 0.001;
+
+        return {
+            strategy,
+            fundingDifference: fundingDiff,
+            netFundingIncome,
+            entryCost,
+            exitCost,
+            profitability8hNet,
+            annualReturnNet,
+            isOpportunity
+        };
+    }
+
     getExchangeLogo(slug) {
         const logos = {
-            binance: 'https://public.bnbstatic.com/static/images/common/favicon.ico',
-            okx: 'https://static.okx.com/cdn/assets/imgs/MjAyMQ/OKX-LOGO-ICON.png',
-            hyperliquid: 'https://hyperliquid.xyz/favicon.ico'
+            binance: 'https://upload.wikimedia.org/wikipedia/commons/5/57/Binance_Logo.png',
+            okx: 'https://cryptologos.cc/logos/okx-okb-logo.png',
+            hyperliquid: 'https://pbs.twimg.com/profile_images/1628133526462939138/4-1e0e9a_400x400.jpg'
         };
         return logos[slug] || '';
     }
 
-    // En büyük 10 coin'i belirle (market cap'e göre) - Logo URL'leri ile
     getTopCoins() {
         return [
             {
@@ -370,7 +243,7 @@ class ArbitrageService {
             {
                 binance: 'MATICUSDT',
                 okx: 'MATIC-USDT-SWAP',
-                hyperliquid: 'MATIC',
+                hyperliquid: 'POL', // MATIC -> POL (Polygon 2.0)
                 name: 'Polygon',
                 symbol: 'MATIC',
                 logo: 'https://cryptologos.cc/logos/polygon-matic-logo.png',

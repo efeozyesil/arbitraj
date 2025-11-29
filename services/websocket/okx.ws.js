@@ -1,0 +1,58 @@
+const BaseWebSocket = require('./base.ws');
+
+class OKXWebSocket extends BaseWebSocket {
+    constructor(symbols) {
+        super('OKX', 'wss://ws.okx.com:8443/ws/v5/public');
+        this.symbols = symbols || [
+            'BTC-USDT-SWAP', 'ETH-USDT-SWAP', 'SOL-USDT-SWAP', 'BNB-USDT-SWAP',
+            'XRP-USDT-SWAP', 'ADA-USDT-SWAP', 'DOGE-USDT-SWAP', 'AVAX-USDT-SWAP',
+            'DOT-USDT-SWAP', 'MATIC-USDT-SWAP'
+        ];
+    }
+
+    startPing() {
+        this.pingInterval = setInterval(() => {
+            if (this.ws && this.ws.readyState === 1) {
+                this.ws.send('ping');
+            }
+        }, 20000); // 20s ping
+    }
+
+    onOpen() {
+        const args = [];
+        this.symbols.forEach(symbol => {
+            args.push({ channel: 'mark-price', instId: symbol });
+            args.push({ channel: 'funding-rate', instId: symbol });
+        });
+
+        const msg = {
+            op: 'subscribe',
+            args: args
+        };
+        this.ws.send(JSON.stringify(msg));
+    }
+
+    onMessage(data) {
+        if (data === 'pong') return;
+
+        const msg = JSON.parse(data);
+        if (!msg.data) return;
+
+        const item = msg.data[0];
+        const symbol = item.instId;
+
+        if (!this.data[symbol]) {
+            this.data[symbol] = { symbol: symbol };
+        }
+
+        if (msg.arg.channel === 'mark-price') {
+            this.data[symbol].markPrice = parseFloat(item.markPx);
+            this.data[symbol].timestamp = parseInt(item.ts);
+        } else if (msg.arg.channel === 'funding-rate') {
+            this.data[symbol].fundingRate = parseFloat(item.fundingRate) * 100; // Convert to percentage
+            this.data[symbol].nextFundingTime = parseInt(item.nextFundingTime);
+        }
+    }
+}
+
+module.exports = OKXWebSocket;

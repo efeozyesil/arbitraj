@@ -1,84 +1,64 @@
-require('dotenv').config();
 const express = require('express');
 const http = require('http');
-const cors = require('cors');
 const WebSocket = require('ws');
 const path = require('path');
-const BinanceService = require('./services/binance.service');
-const OKXService = require('./services/okx.service');
-const HyperliquidService = require('./services/hyperliquid.service');
+require('dotenv').config();
+
+// WebSocket Services
+const BinanceWebSocket = require('./services/websocket/binance.ws');
+const OKXWebSocket = require('./services/websocket/okx.ws');
+const HyperliquidWebSocket = require('./services/websocket/hyperliquid.ws');
+
 const ArbitrageService = require('./services/arbitrage.service');
 
 const app = express();
-const server = http.createServer(app); // Create HTTP server
-const wss = new WebSocket.Server({ server }); // Attach WebSocket to HTTP server
+const server = http.createServer(app);
+const wss = new WebSocket.Server({ server });
 
 const PORT = process.env.PORT || 3000;
 
-// Middleware
-app.use(cors());
-app.use(express.json());
+// Statik dosyalar
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Services initialization
+// Initialize WebSocket Services
 console.log('🚀 Starting Crypto Arbitrage Dashboard...');
-console.log('📊 Using PUBLIC APIs (no API keys required for viewing data)');
+console.log('🔌 Connecting to Exchange WebSockets...');
 
-const binanceService = new BinanceService(null, null);
-const okxService = new OKXService(null, null, null);
-const hyperliquidService = new HyperliquidService();
+const binanceWS = new BinanceWebSocket();
+const okxWS = new OKXWebSocket();
+const hyperliquidWS = new HyperliquidWebSocket();
 
-// 3 ayrı arbitrage servisi
+// Connect to Exchanges
+binanceWS.connect();
+okxWS.connect();
+hyperliquidWS.connect();
+
+// Initialize Arbitrage Services with WS instances
 const arbitrageBinanceOKX = new ArbitrageService(
-    binanceService, okxService,
+    binanceWS, okxWS,
     'binance', 'okx',
     'Binance', 'OKX'
 );
 
 const arbitrageOKXHyperliquid = new ArbitrageService(
-    okxService, hyperliquidService,
+    okxWS, hyperliquidWS,
     'okx', 'hyperliquid',
     'OKX', 'Hyperliquid'
 );
 
 const arbitrageBinanceHyperliquid = new ArbitrageService(
-    binanceService, hyperliquidService,
+    binanceWS, hyperliquidWS,
     'binance', 'hyperliquid',
     'Binance', 'Hyperliquid'
 );
 
-// REST API Endpoints
-app.get('/api/opportunities', async (req, res) => {
-    try {
-        // Default olarak Binance-OKX döndür
-        const opportunities = await arbitrageBinanceOKX.getArbitrageOpportunities();
-        res.json(opportunities);
-    } catch (error) {
-        console.error('Error fetching arbitrage opportunities:', error);
-        res.status(500).json({ error: 'Failed to fetch opportunities' });
-    }
+// API Endpoints
+app.get('/api/arbitrage', (req, res) => {
+    const opportunities = arbitrageBinanceOKX.getArbitrageOpportunities();
+    res.json(opportunities);
 });
 
-// Hyperliquid test endpoint
-app.get('/api/test-hyperliquid', async (req, res) => {
-    try {
-        const testCoins = ['BTC', 'ETH', 'SOL'];
-        const data = await hyperliquidService.getMultipleFundingData(testCoins);
-        res.json({
-            success: true,
-            data: data,
-            message: 'Hyperliquid API çalışıyor!'
-        });
-    } catch (error) {
-        console.error('Hyperliquid test error:', error);
-        res.status(500).json({
-            success: false,
-            error: error.message
-        });
-    }
-});
-
-// WebSocket Connection
+// WebSocket Connection Handling (Frontend Clients)
 wss.on('connection', (ws) => {
     console.log('✅ Client connected to WebSocket');
 
@@ -88,69 +68,55 @@ wss.on('connection', (ws) => {
     ws.on('close', () => {
         console.log('Client disconnected');
     });
-
-    ws.on('error', (error) => {
-        console.error('WebSocket error:', error);
-    });
 });
 
-// Broadcast data to all clients
-async function broadcastData() {
-    try {
-        // 3 servisten paralel veri çek
-        const [dataBinanceOKX, dataOKXHyperliquid, dataBinanceHyperliquid] = await Promise.all([
-            arbitrageBinanceOKX.getArbitrageOpportunities(),
-            arbitrageOKXHyperliquid.getArbitrageOpportunities(),
-            arbitrageBinanceHyperliquid.getArbitrageOpportunities()
-        ]);
+// Broadcast data to all connected clients
+function broadcastData() {
+    // Get opportunities from cache (Sync operation now)
+    const opportunitiesBinanceOKX = arbitrageBinanceOKX.getArbitrageOpportunities();
+    const opportunitiesOKXHyperliquid = arbitrageOKXHyperliquid.getArbitrageOpportunities();
+    const opportunitiesBinanceHyperliquid = arbitrageBinanceHyperliquid.getArbitrageOpportunities();
 
-        const data = JSON.stringify({
-            type: 'ARBITRAGE_UPDATE',
-            timestamp: new Date().toISOString(),
-            data: {
-                'binance-okx': dataBinanceOKX,
-                'okx-hyperliquid': dataOKXHyperliquid,
-                'binance-hyperliquid': dataBinanceHyperliquid
-            }
-        });
+    const combinedData = {
+        'binance-okx': opportunitiesBinanceOKX,
+        'okx-hyperliquid': opportunitiesOKXHyperliquid,
+        'binance-hyperliquid': opportunitiesBinanceHyperliquid
+    };
 
-        wss.clients.forEach((client) => {
-            if (client.readyState === WebSocket.OPEN) {
-                client.send(data);
-            }
-        });
-    } catch (error) {
-        console.error('Error broadcasting data:', error);
-    }
-}
+    const message = JSON.stringify({
+        type: 'ARBITRAGE_UPDATE',
+        data: combinedData,
+        timestamp: Date.now()
+    });
 
-// Send data to a single client
-async function sendDataToClient(ws) {
-    try {
-        // İlk bağlantıda sadece ana veriyi gönder (hızlı açılması için)
-        // Sonraki update'de hepsi gidecek zaten
-        const opportunities = await arbitrageBinanceOKX.getArbitrageOpportunities();
-
-        if (ws.readyState === WebSocket.OPEN) {
-            ws.send(JSON.stringify({
-                type: 'ARBITRAGE_UPDATE',
-                timestamp: new Date().toISOString(),
-                data: {
-                    'binance-okx': opportunities,
-                    'okx-hyperliquid': [], // İlk yüklemede boş
-                    'binance-hyperliquid': [] // İlk yüklemede boş
-                }
-            }));
+    wss.clients.forEach((client) => {
+        if (client.readyState === WebSocket.OPEN) {
+            client.send(message);
         }
-    } catch (error) {
-        console.error('Error sending data to client:', error);
-    }
+    });
 }
 
-// Broadcast data every 3 seconds
-setInterval(broadcastData, 3000);
+function sendDataToClient(ws) {
+    const opportunitiesBinanceOKX = arbitrageBinanceOKX.getArbitrageOpportunities();
+    const opportunitiesOKXHyperliquid = arbitrageOKXHyperliquid.getArbitrageOpportunities();
+    const opportunitiesBinanceHyperliquid = arbitrageBinanceHyperliquid.getArbitrageOpportunities();
 
-// Start Server
+    const combinedData = {
+        'binance-okx': opportunitiesBinanceOKX,
+        'okx-hyperliquid': opportunitiesOKXHyperliquid,
+        'binance-hyperliquid': opportunitiesBinanceHyperliquid
+    };
+
+    ws.send(JSON.stringify({
+        type: 'ARBITRAGE_UPDATE',
+        data: combinedData,
+        timestamp: Date.now()
+    }));
+}
+
+// Broadcast data every 1 second (Much faster now!)
+setInterval(broadcastData, 1000);
+
 server.listen(PORT, () => {
     console.log(`🚀 Server running on http://localhost:${PORT}`);
     console.log(`🔌 WebSocket sharing same port`);
