@@ -1,5 +1,3 @@
-const ArbitrageService = require('./arbitrage.service'); // Self reference removed in actual code, this is just the class definition
-
 class ArbitrageService {
     /**
      * @param {Object} serviceA - Birinci borsa servisi (örn: BinanceService)
