@@ -678,12 +678,12 @@
             <table class="opp-table">
                 <thead>
                     <tr>
-                        <th onclick="sortTable('symbol')">Pair <span class="sort-icon">↕</span></th>
-                        <th onclick="sortTable('long')">Long Exchange <span class="sort-icon">↕</span></th>
-                        <th onclick="sortTable('short')">Short Exchange <span class="sort-icon">↕</span></th>
-                        <th onclick="sortTable('funding')">Funding Diff <span class="sort-icon">↕</span></th>
-                        <th onclick="sortTable('profit8h')">8h Profit <span class="sort-icon">↕</span></th>
-                        <th onclick="sortTable('annual')">Annual Profit <span class="sort-icon">↕</span></th>
+                        <th onclick="sortTable('symbol')">Symbol <span class="sort-icon">↕</span></th>
+                        <th onclick="sortTable('long')">Long <span class="sort-icon">↕</span></th>
+                        <th onclick="sortTable('short')">Short <span class="sort-icon">↕</span></th>
+                        <th onclick="sortTable('pricePnL')">Price PnL (100$) <span class="sort-icon">↕</span></th>
+                        <th onclick="sortTable('fundingPnL')">Fund PnL (8h) <span class="sort-icon">↕</span></th>
+                        <th onclick="sortTable('apr')">APR <span class="sort-icon">↕</span></th>
                     </tr>
                 </thead>
                 <tbody id="tableBody">
@@ -764,46 +764,32 @@
             });
 
             tbody.innerHTML = opportunities.map(opp => {
-                const isProfitable = opp.analysis.isOpportunity;
-                const rowStyle = isProfitable ? 'background: rgba(16, 185, 129, 0.05);' : '';
-
-                let longEx, shortEx;
-                if (opp.analysis.strategy === 'SHORT_A_LONG_B') {
-                    longEx = opp.exchangeB;
-                    shortEx = opp.exchangeA;
-                } else if (opp.analysis.strategy === 'LONG_A_SHORT_B') {
-                    longEx = opp.exchangeA;
-                    shortEx = opp.exchangeB;
-                } else {
-                    // No arb strategy, just show A and B generic
-                    longEx = opp.exchangeA;
-                    shortEx = opp.exchangeB;
-                }
-
                 return `
-                    <tr style="${rowStyle}">
-                        <td style="display:flex; align-items:center; gap:8px;">
-                            <img src="${opp.logo}" width="20" height="20" style="border-radius:50%">
-                            <span style="font-weight:bold; color:${opp.color}">${opp.symbol}</span>
+                    <tr onclick="showDetails('${opp.symbol}')">
+                        <td style="font-weight:bold; display:flex; align-items:center; gap:8px;">
+                            <img src="${opp.logo}" style="width:20px; height:20px; border-radius:50%;" onerror="this.style.display='none'">
+                            ${opp.symbol}
                         </td>
                         <td>
-                            <div class="exchange-badge">
-                                <img src="${longEx.logo}"> ${longEx.name}
-                            </div>
+                            <span class="exchange-badge">
+                                <img src="${opp.exchangeA.logo}" onerror="this.style.display='none'">
+                                ${getLongExchange(opp)}
+                            </span>
                         </td>
                         <td>
-                            <div class="exchange-badge">
-                                <img src="${shortEx.logo}"> ${shortEx.name}
-                            </div>
+                            <span class="exchange-badge">
+                                <img src="${opp.exchangeB.logo}" onerror="this.style.display='none'">
+                                ${getShortExchange(opp)}
+                            </span>
                         </td>
-                        <td class="${opp.analysis.fundingDifference > 0 ? 'positive' : 'negative'}">
-                            ${opp.analysis.fundingDifference >= 0 ? '+' : ''}${opp.analysis.fundingDifference.toFixed(4)}%
+                        <td class="${opp.analysis.priceDifferencePnL >= 0 ? 'positive' : 'negative'}">
+                            $${opp.analysis.priceDifferencePnL.toFixed(2)}
                         </td>
-                        <td class="${opp.analysis.profitability8hNet > 0 ? 'positive' : 'negative'}" style="font-weight:bold">
-                            ${opp.analysis.profitability8hNet.toFixed(4)}%
+                        <td class="${opp.analysis.fundingPnL8h >= 0 ? 'positive' : 'negative'}" style="font-weight:bold">
+                            $${opp.analysis.fundingPnL8h.toFixed(4)}
                         </td>
-                        <td class="${opp.analysis.annualReturnNet > 0 ? 'positive' : 'negative'}">
-                            ${opp.analysis.annualReturnNet.toFixed(2)}%
+                        <td class="${opp.analysis.annualAPR > 0 ? 'positive' : 'negative'}">
+                            ${opp.analysis.annualAPR.toFixed(2)}%
                         </td>
                     </tr>
                 `;
@@ -1018,27 +1004,27 @@
                     <!-- Analysis Grid -->
                     <div class="analysis-grid">
                         <div class="analysis-item">
-                            <div class="analysis-label">FR Difference</div>
-                            <div class="analysis-value ${opp.analysis.fundingDifference >= 0 ? 'positive' : 'negative'}">
-                                ${opp.analysis.fundingDifference >= 0 ? '+' : ''}${opp.analysis.fundingDifference.toFixed(4)}%
+                            <div class="analysis-label">Price PnL (100$)</div>
+                            <div class="analysis-value ${opp.analysis.priceDifferencePnL >= 0 ? 'positive' : 'negative'}">
+                                ${opp.analysis.priceDifferencePnL >= 0 ? '+' : ''}$${opp.analysis.priceDifferencePnL.toFixed(2)}
                             </div>
                         </div>
                         <div class="analysis-item">
-                            <div class="analysis-label">Price Diff</div>
-                            <div class="analysis-value">
-                                ${opp.analysis.priceDifference ? (opp.analysis.priceDifference >= 0 ? '+' : '') + opp.analysis.priceDifference.toFixed(4) + '%' : 'N/A'}
+                            <div class="analysis-label">Funding PnL (8h/100$)</div>
+                            <div class="analysis-value ${opp.analysis.fundingPnL8h >= 0 ? 'positive' : 'negative'}">
+                                ${opp.analysis.fundingPnL8h >= 0 ? '+' : ''}$${opp.analysis.fundingPnL8h.toFixed(4)}
                             </div>
                         </div>
                         <div class="analysis-item">
-                            <div class="analysis-label">8h Profit (Net)</div>
+                            <div class="analysis-label">Annual APR</div>
                             <div class="analysis-value highlight">
-                                ${opp.analysis.profitability8hNet.toFixed(4)}%
+                                ${opp.analysis.annualAPR.toFixed(2)}%
                             </div>
                         </div>
                         <div class="analysis-item">
-                            <div class="analysis-label">Annual Return (Net)</div>
+                            <div class="analysis-label">Annual PnL (100$)</div>
                             <div class="analysis-value annual">
-                                ${opp.analysis.annualReturnNet.toFixed(2)}%
+                                $${opp.analysis.annualFundingPnL.toFixed(2)}
                             </div>
                         </div>
                     </div>
