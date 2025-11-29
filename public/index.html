@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crypto Arbitrage Dashboard - Binance vs OKX</title>
+    <meta name="description"
+        content="Real-time cryptocurrency arbitrage opportunities between Binance and OKX exchanges">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+            min-height: 100vh;
+            color: #ffffff;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            padding: 1.5rem;
+        }
+
+        /* Header */
+        .header {
+            margin-bottom: 2rem;
+            animation: fadeInDown 0.6s ease-out;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+        }
+
+        .status-bar {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.4rem 0.8rem;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 0.875rem;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.connected {
+            background: #10b981;
+            box-shadow: 0 0 10px #10b981;
+        }
+
+        .status-dot.disconnected {
+            background: #ef4444;
+            box-shadow: 0 0 10px #ef4444;
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+            animation: fadeInUp 0.6s ease-out 0.2s both;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border-radius: 12px;
+            padding: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(102, 126, 234, 0.5);
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 0.3rem;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Opportunities Grid - Kompakt */
+        .opportunities-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+            gap: 1rem;
+            animation: fadeInUp 0.6s ease-out 0.4s both;
+        }
+
+        .opportunity-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border-radius: 16px;
+            padding: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .opportunity-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .opportunity-card:hover::before {
+            opacity: 1;
+        }
+
+        .opportunity-card.has-opportunity {
+            border-color: rgba(16, 185, 129, 0.3);
+            background: rgba(16, 185, 129, 0.05);
+        }
+
+        .opportunity-card.has-opportunity::before {
+            background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+            opacity: 1;
+        }
+
+        /* Coin Header - Kompakt */
+        .coin-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .coin-logo {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 4px;
+        }
+
+        .coin-info {
+            flex: 1;
+        }
+
+        .coin-name {
+            font-size: 1rem;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+        .coin-symbol {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .opportunity-badge {
+            padding: 0.3rem 0.6rem;
+            border-radius: 12px;
+            font-size: 0.65rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+
+        .opportunity-badge.active {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            animation: glow 2s infinite;
+        }
+
+        .opportunity-badge.inactive {
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        /* Exchange Data - Kompakt */
+        .exchange-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .exchange-box {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            padding: 0.6rem;
+        }
+
+        .exchange-header {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            margin-bottom: 0.4rem;
+        }
+
+        .exchange-logo {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+        }
+
+        .exchange-name {
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .price-value {
+            font-size: 0.95rem;
+            font-weight: 700;
+            font-family: 'Courier New', monospace;
+            margin-bottom: 0.3rem;
+        }
+
+        .funding-rate {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 0.3rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .funding-label {
+            font-size: 0.65rem;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .funding-value {
+            font-size: 0.8rem;
+            font-weight: 700;
+            font-family: 'Courier New', monospace;
+        }
+
+        .funding-value.positive {
+            color: #10b981;
+        }
+
+        .funding-value.negative {
+            color: #ef4444;
+        }
+
+        /* Analysis Section - Kompakt */
+        .analysis-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.4rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .analysis-item {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 6px;
+            padding: 0.5rem;
+        }
+
+        .analysis-label {
+            font-size: 0.65rem;
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: 0.2rem;
+        }
+
+        .analysis-value {
+            font-size: 0.85rem;
+            font-weight: 600;
+            font-family: 'Courier New', monospace;
+        }
+
+        .analysis-value.highlight {
+            font-size: 1rem;
+            color: #fbbf24;
+        }
+
+        .analysis-value.annual {
+            color: #a78bfa;
+        }
+
+        /* Trading Steps - Expandable */
+        .trading-steps {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 0.75rem;
+            margin-top: 0.75rem;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .opportunity-card.expanded .trading-steps {
+            max-height: 500px;
+        }
+
+        .steps-header {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .step-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+            padding: 0.4rem;
+            margin-bottom: 0.3rem;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 6px;
+            border-left: 2px solid rgba(102, 126, 234, 0.5);
+        }
+
+        .step-number {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .step-content {
+            flex: 1;
+        }
+
+        .step-action {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 0.2rem;
+        }
+
+        .step-details {
+            font-size: 0.65rem;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .step-fee {
+            font-size: 0.65rem;
+            color: #fbbf24;
+            margin-top: 0.2rem;
+        }
+
+        .expand-button {
+            width: 100%;
+            padding: 0.5rem;
+            background: rgba(102, 126, 234, 0.2);
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            border-radius: 6px;
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 0.5rem;
+        }
+
+        .expand-button:hover {
+            background: rgba(102, 126, 234, 0.3);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            font-size: 1.25rem;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .spinner {
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        /* Animations */
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        @keyframes glow {
+
+            0%,
+            100% {
+                box-shadow: 0 0 15px rgba(16, 185, 129, 0.5);
+            }
+
+            50% {
+                box-shadow: 0 0 25px rgba(16, 185, 129, 0.8);
+            }
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.75rem;
+            }
+
+            .opportunities-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .analysis-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🚀 Crypto Arbitrage Dashboard</h1>
+            <div class="status-bar">
+                <div class="status-indicator">
+                    <div class="status-dot" id="wsStatus"></div>
+                    <span id="wsStatusText">Connecting...</span>
+                </div>
+                <div class="status-indicator">
+                    <span>Last Update: <span id="lastUpdate">-</span></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Total Coins</div>
+                <div class="stat-value" id="totalOpportunities">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Active Opportunities</div>
+                <div class="stat-value" id="activeArbitrage">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Best 8h Return</div>
+                <div class="stat-value" id="bestOpportunity">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Best Annual Return</div>
+                <div class="stat-value" id="bestAnnual">-</div>
+            </div>
+        </div>
+
+        <!-- Loading -->
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <div>Loading arbitrage data...</div>
+        </div>
+
+        <!-- Opportunities Grid -->
+        <div class="opportunities-grid" id="opportunitiesGrid" style="display: none;"></div>
+    </div>
+
+    <script>
+        let ws;
+        let reconnectInterval;
+
+        function connectWebSocket() {
+            ws = new WebSocket('ws://localhost:8080');
+
+            ws.onopen = () => {
+                console.log('WebSocket connected');
+                updateConnectionStatus(true);
+                clearInterval(reconnectInterval);
+            };
+
+            ws.onmessage = (event) => {
+                const message = JSON.parse(event.data);
+                if (message.type === 'ARBITRAGE_UPDATE') {
+                    updateDashboard(message.data);
+                    updateLastUpdate();
+                }
+            };
+
+            ws.onclose = () => {
+                console.log('WebSocket disconnected');
+                updateConnectionStatus(false);
+                reconnectInterval = setInterval(connectWebSocket, 5000);
+            };
+
+            ws.onerror = (error) => {
+                console.error('WebSocket error:', error);
+                updateConnectionStatus(false);
+            };
+        }
+
+        function updateConnectionStatus(connected) {
+            const statusDot = document.getElementById('wsStatus');
+            const statusText = document.getElementById('wsStatusText');
+            
+            if (connected) {
+                statusDot.className = 'status-dot connected';
+                statusText.textContent = 'Connected';
+            } else {
+                statusDot.className = 'status-dot disconnected';
+                statusText.textContent = 'Disconnected';
+            }
+        }
+
+        function updateLastUpdate() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('tr-TR');
+            document.getElementById('lastUpdate').textContent = timeString;
+        }
+
+        function updateDashboard(opportunities) {
+            // Hide loading
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('opportunitiesGrid').style.display = 'grid';
+
+            // Update stats
+            const activeOpps = opportunities.filter(o => o.analysis.isOpportunity);
+            document.getElementById('totalOpportunities').textContent = opportunities.length;
+            document.getElementById('activeArbitrage').textContent = activeOpps.length;
+            
+            if (activeOpps.length > 0) {
+                const best8h = activeOpps.reduce((max, o) => 
+                    o.analysis.profitability8hNet > max.analysis.profitability8hNet ? o : max
+                );
+                document.getElementById('bestOpportunity').textContent = 
+                    best8h.analysis.profitability8hNet.toFixed(4) + '%';
+                
+                document.getElementById('bestAnnual').textContent = 
+                    best8h.analysis.annualReturnNet.toFixed(2) + '%';
+            } else {
+                document.getElementById('bestOpportunity').textContent = 'None';
+                document.getElementById('bestAnnual').textContent = 'None';
+            }
+
+            // Render opportunities
+            const grid = document.getElementById('opportunitiesGrid');
+            grid.innerHTML = opportunities.map(opp => createOpportunityCard(opp)).join('');
+            
+            // Add click handlers for expand buttons
+            document.querySelectorAll('.expand-button').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const card = btn.closest('.opportunity-card');
+                    card.classList.toggle('expanded');
+                    btn.textContent = card.classList.contains('expanded') 
+                        ? '▲ Hide Trading Steps' 
+                        : '▼ Show Trading Steps';
+                });
+            });
+        }
+
+        function createOpportunityCard(opp) {
+            const hasOpportunity = opp.analysis.isOpportunity;
+            const cardClass = hasOpportunity ? 'opportunity-card has-opportunity' : 'opportunity-card';
+            
+            return `
+                <div class="${cardClass}">
+                    <!-- Coin Header -->
+                    <div class="coin-header">
+                        <img src="${opp.logo}" alt="${opp.name}" class="coin-logo" onerror="this.style.display='none'">
+                        <div class="coin-info">
+                            <div class="coin-name">${opp.name}</div>
+                            <div class="coin-symbol">${opp.symbol}</div>
+                        </div>
+                        <div class="opportunity-badge ${hasOpportunity ? 'active' : 'inactive'}">
+                            ${hasOpportunity ? '🎯 LIVE' : 'NO SIGNAL'}
+                        </div>
+                    </div>
+
+                    <!-- Exchange Data -->
+                    <div class="exchange-row">
+                        <div class="exchange-box">
+                            <div class="exchange-header">
+                                <img src="${opp.binance.logo}" alt="Binance" class="exchange-logo" onerror="this.style.display='none'">
+                                <span class="exchange-name">BINANCE</span>
+                            </div>
+                            <div class="price-value">$${opp.binance.markPrice.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                            <div class="funding-rate">
+                                <span class="funding-label">FR (8h)</span>
+                                <span class="funding-value ${opp.binance.fundingRate >= 0 ? 'positive' : 'negative'}">
+                                    ${opp.binance.fundingRate >= 0 ? '+' : ''}${opp.binance.fundingRate.toFixed(4)}%
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="exchange-box">
+                            <div class="exchange-header">
+                                <img src="${opp.okx.logo}" alt="OKX" class="exchange-logo" onerror="this.style.display='none'">
+                                <span class="exchange-name">OKX</span>
+                            </div>
+                            <div class="price-value">$${opp.okx.markPrice.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                            <div class="funding-rate">
+                                <span class="funding-label">FR (8h)</span>
+                                <span class="funding-value ${opp.okx.fundingRate >= 0 ? 'positive' : 'negative'}">
+                                    ${opp.okx.fundingRate >= 0 ? '+' : ''}${opp.okx.fundingRate.toFixed(4)}%
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Analysis Grid -->
+                    <div class="analysis-grid">
+                        <div class="analysis-item">
+                            <div class="analysis-label">FR Difference</div>
+                            <div class="analysis-value ${opp.analysis.fundingDifference >= 0 ? 'positive' : 'negative'}">
+                                ${opp.analysis.fundingDifference >= 0 ? '+' : ''}${opp.analysis.fundingDifference.toFixed(4)}%
+                            </div>
+                        </div>
+                        <div class="analysis-item">
+                            <div class="analysis-label">Price Diff</div>
+                            <div class="analysis-value">
+                                ${opp.analysis.priceDifference >= 0 ? '+' : ''}${opp.analysis.priceDifference.toFixed(4)}%
+                            </div>
+                        </div>
+                        <div class="analysis-item">
+                            <div class="analysis-label">8h Profit (Net)</div>
+                            <div class="analysis-value highlight">
+                                ${opp.analysis.profitability8hNet.toFixed(4)}%
+                            </div>
+                        </div>
+                        <div class="analysis-item">
+                            <div class="analysis-label">Annual Return (Net)</div>
+                            <div class="analysis-value annual">
+                                ${opp.analysis.annualReturnNet.toFixed(2)}%
+                            </div>
+                        </div>
+                    </div>
+
+                    ${hasOpportunity ? `
+                        <button class="expand-button">▼ Show Trading Steps</button>
+                        <div class="trading-steps">
+                            <div class="steps-header">
+                                📋 Trading Strategy: ${formatStrategy(opp.analysis.strategy)}
+                            </div>
+                            ${opp.tradingSteps.map(step => `
+                                <div class="step-item">
+                                    <div class="step-number">${step.step}</div>
+                                    <div class="step-content">
+                                        <div class="step-action">
+                                            ${step.exchange} - ${step.side}
+                                        </div>
+                                        <div class="step-details">${step.description}</div>
+                                        ${step.fee > 0 ? `<div class="step-fee">Fee: ${step.fee}%</div>` : ''}
+                                        ${step.fundingReceive ? `<div class="step-details" style="color: #10b981;">✓ ${step.fundingReceive}</div>` : ''}
+                                        ${step.fundingPay ? `<div class="step-details" style="color: #ef4444;">✗ ${step.fundingPay}</div>` : ''}
+                                    </div>
+                                </div>
+                            `).join('')}
+                            <div style="margin-top: 0.5rem; padding: 0.5rem; background: rgba(251, 191, 36, 0.1); border-radius: 6px; font-size: 0.7rem; color: rgba(255, 255, 255, 0.8);">
+                                💡 Total Fees: ${opp.fees.totalFees.toFixed(2)}% | Net Profit per 8h: ${opp.analysis.profitability8hNet.toFixed(4)}%
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+        }
+
+        function formatStrategy(strategy) {
+            if (strategy === 'BINANCE_SHORT_OKX_LONG') {
+                return 'SHORT Binance + LONG OKX';
+            } else if (strategy === 'BINANCE_LONG_OKX_SHORT') {
+                return 'LONG Binance + SHORT OKX';
+            }
+            return 'No Strategy';
+        }
+
+        // Initialize
+        connectWebSocket();
+    </script>
+</body>
+
+</html>
