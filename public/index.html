@@ -632,9 +632,33 @@
                 document.getElementById('bestAnnual').textContent = 'None';
             }
 
+            // Hangi kartlar açık olduğunu kaydet (refresh öncesi)
+            const expandedCards = new Set();
+            document.querySelectorAll('.opportunity-card.expanded').forEach(card => {
+                const symbolElement = card.querySelector('.coin-symbol');
+                if (symbolElement) {
+                    expandedCards.add(symbolElement.textContent);
+                }
+            });
+
             // Render opportunities
             const grid = document.getElementById('opportunitiesGrid');
             grid.innerHTML = opportunities.map(opp => createOpportunityCard(opp)).join('');
+
+            // Önceden açık olan kartları tekrar aç
+            opportunities.forEach(opp => {
+                if (expandedCards.has(opp.symbol)) {
+                    const cards = document.querySelectorAll('.opportunity-card');
+                    cards.forEach(card => {
+                        const symbolElement = card.querySelector('.coin-symbol');
+                        if (symbolElement && symbolElement.textContent === opp.symbol) {
+                            card.classList.add('expanded');
+                            const btn = card.querySelector('.expand-button');
+                            if (btn) btn.textContent = '▲ Hide Trading Steps';
+                        }
+                    });
+                }
+            });
 
             // Add click handlers for expand buttons
             document.querySelectorAll('.expand-button').forEach(btn => {
