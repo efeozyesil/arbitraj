@@ -147,8 +147,8 @@ async function sendDataToClient(ws) {
     }
 }
 
-// Periodic update (Every 5 seconds)
-setInterval(broadcastData, 5000);
+// Broadcast data every 3 seconds
+setInterval(broadcastData, 3000);
 
 // Start Server
 server.listen(PORT, () => {

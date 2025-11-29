@@ -327,6 +327,81 @@
             color: #ef4444;
         }
 
+        /* Table Styles */
+        .opp-table-container {
+            width: 100%;
+            overflow-x: auto;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .opp-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        .opp-table th {
+            text-align: left;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            color: rgba(255, 255, 255, 0.6);
+            font-weight: 600;
+            cursor: pointer;
+            user-select: none;
+            transition: color 0.2s;
+        }
+
+        .opp-table th:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .opp-table td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .opp-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .opp-table tr:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .positive {
+            color: #10B981;
+        }
+
+        .negative {
+            color: #EF4444;
+        }
+
+        .exchange-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.05);
+            font-size: 0.8rem;
+        }
+
+        .exchange-badge img {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+        }
+
+        .sort-icon {
+            font-size: 0.7rem;
+            margin-left: 4px;
+            opacity: 0.5;
+        }
+
         /* Analysis Section - Kompakt */
         .analysis-grid {
             display: grid;
@@ -563,7 +638,8 @@
 
         <!-- Tabs -->
         <div class="tabs">
-            <button class="tab active" onclick="switchTab('binance-okx')">Binance ↔ OKX</button>
+            <button class="tab active" onclick="switchTab('all')">ALL OPPORTUNITIES</button>
+            <button class="tab" onclick="switchTab('binance-okx')">Binance ↔ OKX</button>
             <button class="tab" onclick="switchTab('okx-hyperliquid')">OKX ↔ Hyperliquid</button>
             <button class="tab" onclick="switchTab('binance-hyperliquid')">Binance ↔ Hyperliquid</button>
         </div>
@@ -594,19 +670,39 @@
             <div>Loading arbitrage data...</div>
         </div>
 
-        <!-- Opportunities Grid -->
+        <!-- Opportunities Grid (Cards) -->
         <div class="opportunities-grid" id="opportunitiesGrid" style="display: none;"></div>
+
+        <!-- Opportunities Table (List) -->
+        <div class="opp-table-container" id="opportunitiesTable" style="display: none;">
+            <table class="opp-table">
+                <thead>
+                    <tr>
+                        <th onclick="sortTable('symbol')">Pair <span class="sort-icon">↕</span></th>
+                        <th onclick="sortTable('long')">Long Exchange <span class="sort-icon">↕</span></th>
+                        <th onclick="sortTable('short')">Short Exchange <span class="sort-icon">↕</span></th>
+                        <th onclick="sortTable('funding')">Funding Diff <span class="sort-icon">↕</span></th>
+                        <th onclick="sortTable('profit8h')">8h Profit <span class="sort-icon">↕</span></th>
+                        <th onclick="sortTable('annual')">Annual Profit <span class="sort-icon">↕</span></th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <!-- Rows will be injected here -->
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <script>
         let ws;
         let reconnectInterval;
-        let currentTab = 'binance-okx';
+        let currentTab = 'all'; // Default tab is ALL
         let allData = {
             'binance-okx': [],
             'okx-hyperliquid': [],
             'binance-hyperliquid': []
         };
+        let sortConfig = { key: 'profit8h', direction: 'desc' };
 
         function switchTab(tabId) {
             currentTab = tabId;
@@ -614,16 +710,133 @@
             // Update tab styles
             document.querySelectorAll('.tab').forEach(tab => {
                 tab.classList.remove('active');
+                if (tab.textContent.toLowerCase().includes(tabId.replace('-', ' ')) ||
+                    (tabId === 'all' && tab.textContent.includes('ALL'))) {
+                    tab.classList.add('active');
+                }
             });
-            event.target.classList.add('active');
 
-            // Render data for selected tab
-            updateDashboard(allData[currentTab]);
+            // Handle ALL tab vs others
+            if (currentTab === 'all') {
+                document.getElementById('opportunitiesGrid').style.display = 'none';
+                document.getElementById('opportunitiesTable').style.display = 'block';
+                renderAllTable();
+            } else {
+                document.getElementById('opportunitiesGrid').style.display = 'grid';
+                document.getElementById('opportunitiesTable').style.display = 'none';
+                updateDashboard(allData[currentTab]);
+            }
+        }
+
+        function getAllOpportunities() {
+            // Flatten all data sources into one array
+            let combined = [];
+            Object.values(allData).forEach(list => {
+                if (list && Array.isArray(list)) combined.push(...list);
+            });
+            return combined;
+        }
+
+        function renderAllTable() {
+            const opportunities = getAllOpportunities();
+            const tbody = document.getElementById('tableBody');
+
+            // Filter only active opportunities or show all? Let's show all but sort by profit
+            // Sort data
+            opportunities.sort((a, b) => {
+                let valA, valB;
+
+                switch (sortConfig.key) {
+                    case 'symbol': valA = a.symbol; valB = b.symbol; break;
+                    case 'long': valA = getLongExchange(a); valB = getLongExchange(b); break;
+                    case 'short': valA = getShortExchange(a); valB = getShortExchange(b); break;
+                    case 'funding': valA = Math.abs(a.analysis.fundingDifference); valB = Math.abs(b.analysis.fundingDifference); break;
+                    case 'profit8h': valA = a.analysis.profitability8hNet; valB = b.analysis.profitability8hNet; break;
+                    case 'annual': valA = a.analysis.annualReturnNet; valB = b.analysis.annualReturnNet; break;
+                    default: valA = a.analysis.profitability8hNet; valB = b.analysis.profitability8hNet;
+                }
+
+                if (typeof valA === 'string') {
+                    return sortConfig.direction === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+                } else {
+                    return sortConfig.direction === 'asc' ? valA - valB : valB - valA;
+                }
+            });
+
+            tbody.innerHTML = opportunities.map(opp => {
+                const isProfitable = opp.analysis.isOpportunity;
+                const rowStyle = isProfitable ? 'background: rgba(16, 185, 129, 0.05);' : '';
+
+                let longEx, shortEx;
+                if (opp.analysis.strategy === 'SHORT_A_LONG_B') {
+                    longEx = opp.exchangeB;
+                    shortEx = opp.exchangeA;
+                } else if (opp.analysis.strategy === 'LONG_A_SHORT_B') {
+                    longEx = opp.exchangeA;
+                    shortEx = opp.exchangeB;
+                } else {
+                    // No arb strategy, just show A and B generic
+                    longEx = opp.exchangeA;
+                    shortEx = opp.exchangeB;
+                }
+
+                return `
+                    <tr style="${rowStyle}">
+                        <td style="display:flex; align-items:center; gap:8px;">
+                            <img src="${opp.logo}" width="20" height="20" style="border-radius:50%">
+                            <span style="font-weight:bold; color:${opp.color}">${opp.symbol}</span>
+                        </td>
+                        <td>
+                            <div class="exchange-badge">
+                                <img src="${longEx.logo}"> ${longEx.name}
+                            </div>
+                        </td>
+                        <td>
+                            <div class="exchange-badge">
+                                <img src="${shortEx.logo}"> ${shortEx.name}
+                            </div>
+                        </td>
+                        <td class="${opp.analysis.fundingDifference > 0 ? 'positive' : 'negative'}">
+                            ${opp.analysis.fundingDifference >= 0 ? '+' : ''}${opp.analysis.fundingDifference.toFixed(4)}%
+                        </td>
+                        <td class="${opp.analysis.profitability8hNet > 0 ? 'positive' : 'negative'}" style="font-weight:bold">
+                            ${opp.analysis.profitability8hNet.toFixed(4)}%
+                        </td>
+                        <td class="${opp.analysis.annualReturnNet > 0 ? 'positive' : 'negative'}">
+                            ${opp.analysis.annualReturnNet.toFixed(2)}%
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            // Update Stats for ALL view
+            updateStats(opportunities);
+        }
+
+        function getLongExchange(opp) {
+            if (opp.analysis.strategy === 'SHORT_A_LONG_B') return opp.exchangeB.name;
+            if (opp.analysis.strategy === 'LONG_A_SHORT_B') return opp.exchangeA.name;
+            return opp.exchangeA.name; // Default if no clear strategy
+        }
+
+        function getShortExchange(opp) {
+            if (opp.analysis.strategy === 'SHORT_A_LONG_B') return opp.exchangeA.name;
+            if (opp.analysis.strategy === 'LONG_A_SHORT_B') return opp.exchangeB.name;
+            return opp.exchangeB.name; // Default if no clear strategy
+        }
+
+        function sortTable(key) {
+            if (sortConfig.key === key) {
+                sortConfig.direction = sortConfig.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortConfig.key = key;
+                sortConfig.direction = (key === 'symbol' || key === 'long' || key === 'short') ? 'asc' : 'desc'; // Default asc for strings, desc for numbers
+            }
+            renderAllTable();
         }
 
         function connectWebSocket() {
             // Connect to WebSocket server
-            // Use the current hostname and port (works for both localhost and AWS)
             const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
             const wsHost = window.location.hostname;
             const wsPort = window.location.port ? `:${window.location.port}` : '';
@@ -642,8 +855,12 @@
                     // Store all data
                     allData = message.data;
 
-                    // Update dashboard with current tab's data
-                    updateDashboard(allData[currentTab]);
+                    // Update view based on current tab
+                    if (currentTab === 'all') {
+                        renderAllTable();
+                    } else {
+                        updateDashboard(allData[currentTab]);
+                    }
                     updateLastUpdate();
                 }
             };
@@ -679,14 +896,7 @@
             document.getElementById('lastUpdate').textContent = timeString;
         }
 
-        function updateDashboard(opportunities) {
-            if (!opportunities) return;
-
-            // Hide loading
-            document.getElementById('loading').style.display = 'none';
-            document.getElementById('opportunitiesGrid').style.display = 'grid';
-
-            // Update stats
+        function updateStats(opportunities) {
             const activeOpps = opportunities.filter(o => o.analysis.isOpportunity);
             document.getElementById('totalOpportunities').textContent = opportunities.length;
             document.getElementById('activeArbitrage').textContent = activeOpps.length;
@@ -704,6 +914,16 @@
                 document.getElementById('bestOpportunity').textContent = 'None';
                 document.getElementById('bestAnnual').textContent = 'None';
             }
+        }
+
+        function updateDashboard(opportunities) {
+            if (!opportunities) return;
+
+            // Hide loading
+            document.getElementById('loading').style.display = 'none';
+
+            // Update stats
+            updateStats(opportunities);
 
             // Hangi kartlar açık olduğunu kaydet (refresh öncesi)
             const expandedCards = new Set();
