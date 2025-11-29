@@ -39,21 +39,18 @@ hyperliquidWS.connect();
 
 // Initialize Arbitrage Services with WS instances
 const arbitrageBinanceOKX = new ArbitrageService(
-    binanceWS, okxWS,
-    'binance', 'okx',
-    'Binance', 'OKX'
+    { name: 'Binance', slug: 'binance', ws: binanceWS },
+    { name: 'OKX', slug: 'okx', ws: okxWS }
 );
 
 const arbitrageOKXHyperliquid = new ArbitrageService(
-    okxWS, hyperliquidWS,
-    'okx', 'hyperliquid',
-    'OKX', 'Hyperliquid'
+    { name: 'OKX', slug: 'okx', ws: okxWS },
+    { name: 'Hyperliquid', slug: 'hyperliquid', ws: hyperliquidWS }
 );
 
 const arbitrageBinanceHyperliquid = new ArbitrageService(
-    binanceWS, hyperliquidWS,
-    'binance', 'hyperliquid',
-    'Binance', 'Hyperliquid'
+    { name: 'Binance', slug: 'binance', ws: binanceWS },
+    { name: 'Hyperliquid', slug: 'hyperliquid', ws: hyperliquidWS }
 );
 
 // API Endpoints
