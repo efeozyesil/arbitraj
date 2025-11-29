@@ -42,6 +42,11 @@ class ArbitrageService {
                 // Arbitraj Analizi
                 const analysis = this.analyzeArbitrage(dataA, dataB, symbolA, symbolB);
 
+                // Eğer analiz null veya fırsat yoksa atla
+                if (!analysis || !analysis.isOpportunity) {
+                    return;
+                }
+
                 opportunities.push({
                     symbol: coin.symbol,
                     name: coin.name,
