@@ -155,13 +155,14 @@ class ArbitrageService {
 
     getExchangeLogo(slug) {
         const logos = {
-            binance: 'https://upload.wikimedia.org/wikipedia/commons/5/57/Binance_Logo.png',
-            okx: 'https://www.okx.com/cdn/assets/imgs/226/5D67868F421C2605.png',
-            hyperliquid: 'https://hyperliquid.xyz/favicon.ico'
+            binance: '/logos/binance.png',
+            okx: '/logos/okx.png',
+            hyperliquid: '/logos/hyperliquid.png'
         };
         return logos[slug] || '';
     }
 
+    // En büyük coinler (Binance, OKX ve Hyperliquid'de ortak olanlar)
     getTopCoins() {
         return [
             {
@@ -245,14 +246,96 @@ class ArbitrageService {
                 logo: 'https://cryptologos.cc/logos/polkadot-new-dot-logo.png',
                 color: '#E6007A'
             },
+            // YENİ EKLENEN COINLER
             {
-                binance: 'MATICUSDT',
-                okx: 'MATIC-USDT-SWAP',
-                hyperliquid: 'POL', // MATIC -> POL (Polygon 2.0)
-                name: 'Polygon',
-                symbol: 'MATIC',
-                logo: 'https://cryptologos.cc/logos/polygon-matic-logo.png',
-                color: '#8247E5'
+                binance: 'LTCUSDT',
+                okx: 'LTC-USDT-SWAP',
+                hyperliquid: 'LTC',
+                name: 'Litecoin',
+                symbol: 'LTC',
+                logo: 'https://cryptologos.cc/logos/litecoin-ltc-logo.png',
+                color: '#345D9D'
+            },
+            {
+                binance: 'LINKUSDT',
+                okx: 'LINK-USDT-SWAP',
+                hyperliquid: 'LINK',
+                name: 'Chainlink',
+                symbol: 'LINK',
+                logo: 'https://cryptologos.cc/logos/chainlink-link-logo.png',
+                color: '#2A5ADA'
+            },
+            {
+                binance: 'BCHUSDT',
+                okx: 'BCH-USDT-SWAP',
+                hyperliquid: 'BCH',
+                name: 'Bitcoin Cash',
+                symbol: 'BCH',
+                logo: 'https://cryptologos.cc/logos/bitcoin-cash-bch-logo.png',
+                color: '#0AC18E'
+            },
+            {
+                binance: 'ATOMUSDT',
+                okx: 'ATOM-USDT-SWAP',
+                hyperliquid: 'ATOM',
+                name: 'Cosmos',
+                symbol: 'ATOM',
+                logo: 'https://cryptologos.cc/logos/cosmos-atom-logo.png',
+                color: '#2E3148'
+            },
+            {
+                binance: 'NEARUSDT',
+                okx: 'NEAR-USDT-SWAP',
+                hyperliquid: 'NEAR',
+                name: 'NEAR Protocol',
+                symbol: 'NEAR',
+                logo: 'https://cryptologos.cc/logos/near-protocol-near-logo.png',
+                color: '#000000'
+            },
+            {
+                binance: 'UNIUSDT',
+                okx: 'UNI-USDT-SWAP',
+                hyperliquid: 'UNI',
+                name: 'Uniswap',
+                symbol: 'UNI',
+                logo: 'https://cryptologos.cc/logos/uniswap-uni-logo.png',
+                color: '#FF007A'
+            },
+            {
+                binance: 'FILUSDT',
+                okx: 'FIL-USDT-SWAP',
+                hyperliquid: 'FIL',
+                name: 'Filecoin',
+                symbol: 'FIL',
+                logo: 'https://cryptologos.cc/logos/filecoin-fil-logo.png',
+                color: '#0090FF'
+            },
+            {
+                binance: 'APTUSDT',
+                okx: 'APT-USDT-SWAP',
+                hyperliquid: 'APT',
+                name: 'Aptos',
+                symbol: 'APT',
+                logo: 'https://cryptologos.cc/logos/aptos-apt-logo.png',
+                color: '#000000'
+            },
+            {
+                binance: 'SUIUSDT',
+                okx: 'SUI-USDT-SWAP',
+                hyperliquid: 'SUI',
+                name: 'Sui',
+                symbol: 'SUI',
+                logo: 'https://cryptologos.cc/logos/sui-sui-logo.png',
+                color: '#4DA2FF'
+            },
+            {
+                binance: 'ARBUSDT',
+                okx: 'ARB-USDT-SWAP',
+                hyperliquid: 'ARB',
+                name: 'Arbitrum',
+                symbol: 'ARB',
+                logo: 'https://cryptologos.cc/logos/arbitrum-arb-logo.png',
+                color: '#2D374B'
             }
         ];
     }
