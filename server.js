@@ -60,7 +60,7 @@ async function broadcastData() {
         const opportunities = await arbitrageService.getArbitrageOpportunities();
 
         const data = JSON.stringify({
-            type: 'UPDATE',
+            type: 'ARBITRAGE_UPDATE',
             timestamp: new Date().toISOString(),
             data: opportunities
         });
@@ -82,7 +82,7 @@ async function sendDataToClient(ws) {
 
         if (ws.readyState === WebSocket.OPEN) {
             ws.send(JSON.stringify({
-                type: 'UPDATE',
+                type: 'ARBITRAGE_UPDATE',
                 timestamp: new Date().toISOString(),
                 data: opportunities
             }));
