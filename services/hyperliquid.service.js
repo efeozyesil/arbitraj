@@ -38,88 +38,65 @@ class HyperliquidService {
     // Birden fazla coin için funding rate ve fiyat
     async getMultipleFundingData(symbols) {
         try {
-            // symbols: ['BTC', 'ETH', 'SOL', ...]
-            const promises = symbols.map(async (symbol) => {
-                const [fundingData, priceData] = await Promise.all([
-                    this.getFundingRate(symbol),
-                    this.getAssetContext(symbol)
-                ]);
-
-                if (!fundingData || !priceData) return null;
-
-                return {
-                    symbol: symbol,
-                    markPrice: parseFloat(priceData.markPx),
-                    indexPrice: parseFloat(priceData.midPx || priceData.markPx), // Hyperliquid uses midPx
-                    bidPrice: parseFloat(priceData.bidPx || priceData.markPx),
-                    askPrice: parseFloat(priceData.askPx || priceData.markPx),
-                    lastFundingRate: parseFloat(fundingData.funding) * 100, // Yüzde olarak
-                    nextFundingTime: new Date(fundingData.time + 3600000), // 1 saat sonra (Hyperliquid saatlik)
-                    exchange: 'Hyperliquid'
-                };
+            // Tüm piyasa verilerini tek seferde çek
+            const response = await axios.post(`${this.baseURL}/info`, {
+                type: 'metaAndAssetCtxs'
             });
 
-            const results = await Promise.all(promises);
-            return results.filter(result => result !== null);
+            if (!response.data || !response.data[0] || !response.data[1]) {
+                console.error('Hyperliquid invalid response format');
+                return [];
+            }
+
+            const universe = response.data[0].universe;
+            const contexts = response.data[1];
+
+            const results = [];
+
+            // İstenen semboller için veriyi bul
+            symbols.forEach(symbol => {
+                const coinIndex = universe.findIndex(u => u.name === symbol);
+
+                if (coinIndex !== -1 && contexts[coinIndex]) {
+                    const ctx = contexts[coinIndex];
+
+                    // Funding rate: Hyperliquid'de saatlik veriliyor, biz 8 saatlik (standart) kullanıyoruz
+                    // Ancak karşılaştırma için yıllıklandırmak veya aynı periyoda getirmek lazım.
+                    // Diğer borsalar 8 saatlik veriyor. Hyperliquid saatlik.
+                    // ArbitrageService'de fundingDiff hesaplarken bunu dikkate almalıyız.
+                    // Şimdilik ham veriyi (saatlik) gönderiyoruz, ama yüzdeye çeviriyoruz.
+                    // DİKKAT: Diğer borsalar 8 saatlik veriyor. Bunu 8 ile çarpmak gerekebilir mi?
+                    // Genelde funding rate'ler "periyodluk" verilir.
+                    // Hyperliquid funding rate'i saatliktir.
+
+                    results.push({
+                        symbol: symbol,
+                        markPrice: parseFloat(ctx.markPx),
+                        indexPrice: parseFloat(ctx.midPx || ctx.markPx),
+                        bidPrice: parseFloat(ctx.bidPx || ctx.markPx),
+                        askPrice: parseFloat(ctx.askPx || ctx.markPx),
+                        lastFundingRate: parseFloat(ctx.funding) * 100, // Yüzde olarak (Saatlik)
+                        nextFundingTime: new Date(Date.now() + 3600000), // Tahmini 1 saat sonra
+                        exchange: 'Hyperliquid'
+                    });
+                }
+            });
+
+            return results;
         } catch (error) {
             console.error('Hyperliquid multiple fetch error:', error.message);
             return [];
         }
     }
 
-    // Tek bir coin için funding rate  
+    // Tek bir coin için funding rate (Artık kullanılmıyor ama geriye uyumluluk için kalsın)
     async getFundingRate(coin) {
-        try {
-            // Son 1 saatlik funding history al
-            const endTime = Date.now();
-            const startTime = endTime - 3600000; // 1 saat önce
-
-            const response = await axios.post(`${this.baseURL}/info`, {
-                type: 'fundingHistory',
-                coin: coin,
-                startTime: startTime,
-                endTime: endTime
-            });
-
-            if (response.data && response.data.length > 0) {
-                // En son funding rate'i al
-                return response.data[response.data.length - 1];
-            }
-            return null;
-        } catch (error) {
-            console.error(`Hyperliquid funding rate error for ${coin}:`, error.message);
-            return null;
-        }
+        return null;
     }
 
-    // Tek bir coin için fiyat ve context bilgisi
+    // Tek bir coin için fiyat ve context bilgisi (Artık kullanılmıyor)
     async getAssetContext(coin) {
-        try {
-            const response = await axios.post(`${this.baseURL}/info`, {
-                type: 'metaAndAssetCtxs'
-            });
-
-            if (response.data && response.data[0] && response.data[0].universe) {
-                // Coin'in index'ini bul
-                const coinIndex = response.data[0].universe.findIndex(u => u.name === coin);
-
-                if (coinIndex !== -1 && response.data[1] && response.data[1][coinIndex]) {
-                    const ctx = response.data[1][coinIndex];
-                    return {
-                        markPx: ctx.markPx,
-                        midPx: ctx.midPx,
-                        bidPx: ctx.bidPx,
-                        askPx: ctx.askPx,
-                        openInterest: ctx.openInterest,
-                        funding: ctx.funding
-                    };
-                }
-            }
-            return null;
-        } catch (error) {
-            console.error(`Hyperliquid asset context error for ${coin}:`, error.message);
-            return null;
-        }
+        return null;
     }
 }
 
