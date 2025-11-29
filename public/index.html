@@ -992,10 +992,6 @@
                                 <span class="exchange-name">${opp.exchangeA.name.toUpperCase()}</span>
                             </div>
                             <div class="price-value">$${opp.exchangeA.markPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 8 })}</div>
-                            <div style="font-size: 0.65rem; color: rgba(255, 255, 255, 0.5); margin-bottom: 0.3rem;">
-                                Bid: $${opp.exchangeA.bidPrice.toLocaleString('en-US', { maximumFractionDigits: 8 })} | 
-                                Ask: $${opp.exchangeA.askPrice.toLocaleString('en-US', { maximumFractionDigits: 8 })}
-                            </div>
                             <div class="funding-rate">
                                 <span class="funding-label">FR (8h)</span>
                                 <span class="funding-value ${opp.exchangeA.fundingRate >= 0 ? 'positive' : 'negative'}">
@@ -1010,10 +1006,6 @@
                                 <span class="exchange-name">${opp.exchangeB.name.toUpperCase()}</span>
                             </div>
                             <div class="price-value">$${opp.exchangeB.markPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 8 })}</div>
-                            <div style="font-size: 0.65rem; color: rgba(255, 255, 255, 0.5); margin-bottom: 0.3rem;">
-                                Bid: $${opp.exchangeB.bidPrice.toLocaleString('en-US', { maximumFractionDigits: 8 })} | 
-                                Ask: $${opp.exchangeB.askPrice.toLocaleString('en-US', { maximumFractionDigits: 8 })}
-                            </div>
                             <div class="funding-rate">
                                 <span class="funding-label">FR (8h)</span>
                                 <span class="funding-value ${opp.exchangeB.fundingRate >= 0 ? 'positive' : 'negative'}">
@@ -1034,7 +1026,7 @@
                         <div class="analysis-item">
                             <div class="analysis-label">Price Diff</div>
                             <div class="analysis-value">
-                                ${opp.analysis.priceDifference >= 0 ? '+' : ''}${opp.analysis.priceDifference.toFixed(4)}%
+                                ${opp.analysis.priceDifference ? (opp.analysis.priceDifference >= 0 ? '+' : '') + opp.analysis.priceDifference.toFixed(4) + '%' : 'N/A'}
                             </div>
                         </div>
                         <div class="analysis-item">
@@ -1050,39 +1042,19 @@
                             </div>
                         </div>
                     </div>
-
-                    <button class="expand-button">▼ Show Trading Steps</button>
-                    <div class="trading-steps">
-                        <div class="steps-header">
-                            📋 Trading Strategy: ${formatStrategy(opp.analysis.strategy)}
-                        </div>
-                        ${opp.tradingSteps.map(step => `
-                            <div class="step-item">
-                                <div class="step-number">${step.step}</div>
-                                <div class="step-content">
-                                    <div class="step-action">
-                                        ${step.exchange} - ${step.side}
-                                    </div>
-                                    <div class="step-details">${step.description}</div>
-                                    ${step.fee > 0 ? `<div class="step-fee">Fee: ${step.fee}%</div>` : ''}
-                                    ${step.fundingReceive ? `<div class="step-details" style="color: #10b981;">✓ ${step.fundingReceive}</div>` : ''}
-                                    ${step.fundingPay ? `<div class="step-details" style="color: #ef4444;">✗ ${step.fundingPay}</div>` : ''}
-                                </div>
-                            </div>
-                        `).join('')}
-                        <div style="margin-top: 0.5rem; padding: 0.5rem; background: rgba(251, 191, 36, 0.1); border-radius: 6px; font-size: 0.7rem; color: rgba(255, 255, 255, 0.8);">
-                            💡 Total Fees: ${opp.fees.totalFees.toFixed(2)}% | Net Profit per 8h: ${opp.analysis.profitability8hNet.toFixed(4)}%
-                        </div>
+                    
+                    <div style="margin-top: 0.5rem; padding: 0.5rem; background: rgba(255, 255, 255, 0.05); border-radius: 6px; font-size: 0.75rem; text-align: center; color: rgba(255, 255, 255, 0.8);">
+                        ${formatStrategy(opp.analysis.strategy, opp.exchangeA.name, opp.exchangeB.name)}
                     </div>
                 </div>
             `;
         }
 
-        function formatStrategy(strategy) {
-            if (strategy === 'BINANCE_SHORT_OKX_LONG') {
-                return 'SHORT Binance + LONG OKX';
-            } else if (strategy === 'BINANCE_LONG_OKX_SHORT') {
-                return 'LONG Binance + SHORT OKX';
+        function formatStrategy(strategy, exchangeA, exchangeB) {
+            if (strategy === 'LONG_A_SHORT_B') {
+                return `LONG ${exchangeA} + SHORT ${exchangeB}`;
+            } else if (strategy === 'SHORT_A_LONG_B') {
+                return `SHORT ${exchangeA} + LONG ${exchangeB}`;
             }
             return 'No Strategy';
         }

@@ -141,9 +141,13 @@ class ArbitrageService {
         // Fırsat mı? (Eşik değer: %0.01 net kâr)
         const isOpportunity = profitability8hNet > 0.001;
 
+        // Fiyat farkı (yüzdesel)
+        const priceDifference = ((markB - markA) / markA) * 100;
+
         return {
             strategy,
             fundingDifference: fundingDiff,
+            priceDifference,
             netFundingIncome,
             entryCost,
             exitCost,
