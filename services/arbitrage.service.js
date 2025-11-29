@@ -23,6 +23,7 @@ class ArbitrageService {
             {
                 binance: 'BTCUSDT',
                 okx: 'BTC-USDT-SWAP',
+                hyperliquid: 'BTC',
                 name: 'Bitcoin',
                 symbol: 'BTC',
                 logo: 'https://cryptologos.cc/logos/bitcoin-btc-logo.png',
@@ -31,6 +32,7 @@ class ArbitrageService {
             {
                 binance: 'ETHUSDT',
                 okx: 'ETH-USDT-SWAP',
+                hyperliquid: 'ETH',
                 name: 'Ethereum',
                 symbol: 'ETH',
                 logo: 'https://cryptologos.cc/logos/ethereum-eth-logo.png',
@@ -39,6 +41,7 @@ class ArbitrageService {
             {
                 binance: 'BNBUSDT',
                 okx: 'BNB-USDT-SWAP',
+                hyperliquid: 'BNB',
                 name: 'BNB',
                 symbol: 'BNB',
                 logo: 'https://cryptologos.cc/logos/bnb-bnb-logo.png',
@@ -47,6 +50,7 @@ class ArbitrageService {
             {
                 binance: 'SOLUSDT',
                 okx: 'SOL-USDT-SWAP',
+                hyperliquid: 'SOL',
                 name: 'Solana',
                 symbol: 'SOL',
                 logo: 'https://cryptologos.cc/logos/solana-sol-logo.png',
@@ -55,6 +59,7 @@ class ArbitrageService {
             {
                 binance: 'XRPUSDT',
                 okx: 'XRP-USDT-SWAP',
+                hyperliquid: 'XRP',
                 name: 'Ripple',
                 symbol: 'XRP',
                 logo: 'https://cryptologos.cc/logos/xrp-xrp-logo.png',
@@ -63,6 +68,7 @@ class ArbitrageService {
             {
                 binance: 'ADAUSDT',
                 okx: 'ADA-USDT-SWAP',
+                hyperliquid: 'ADA',
                 name: 'Cardano',
                 symbol: 'ADA',
                 logo: 'https://cryptologos.cc/logos/cardano-ada-logo.png',
@@ -71,6 +77,7 @@ class ArbitrageService {
             {
                 binance: 'DOGEUSDT',
                 okx: 'DOGE-USDT-SWAP',
+                hyperliquid: 'DOGE',
                 name: 'Dogecoin',
                 symbol: 'DOGE',
                 logo: 'https://cryptologos.cc/logos/dogecoin-doge-logo.png',
@@ -79,6 +86,7 @@ class ArbitrageService {
             {
                 binance: 'AVAXUSDT',
                 okx: 'AVAX-USDT-SWAP',
+                hyperliquid: 'AVAX',
                 name: 'Avalanche',
                 symbol: 'AVAX',
                 logo: 'https://cryptologos.cc/logos/avalanche-avax-logo.png',
@@ -87,6 +95,7 @@ class ArbitrageService {
             {
                 binance: 'DOTUSDT',
                 okx: 'DOT-USDT-SWAP',
+                hyperliquid: 'DOT',
                 name: 'Polkadot',
                 symbol: 'DOT',
                 logo: 'https://cryptologos.cc/logos/polkadot-new-dot-logo.png',
@@ -95,6 +104,7 @@ class ArbitrageService {
             {
                 binance: 'MATICUSDT',
                 okx: 'MATIC-USDT-SWAP',
+                hyperliquid: 'MATIC',
                 name: 'Polygon',
                 symbol: 'MATIC',
                 logo: 'https://cryptologos.cc/logos/polygon-matic-logo.png',

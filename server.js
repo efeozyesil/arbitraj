@@ -6,6 +6,7 @@ const WebSocket = require('ws');
 const path = require('path');
 const BinanceService = require('./services/binance.service');
 const OKXService = require('./services/okx.service');
+const HyperliquidService = require('./services/hyperliquid.service');
 const ArbitrageService = require('./services/arbitrage.service');
 
 const app = express();
@@ -25,16 +26,40 @@ console.log('📊 Using PUBLIC APIs (no API keys required for viewing data)');
 
 const binanceService = new BinanceService(null, null);
 const okxService = new OKXService(null, null, null);
-const arbitrageService = new ArbitrageService(binanceService, okxService);
+const hyperliquidService = new HyperliquidService();
+
+// 3 ayrı arbitrage servisi (3 borsa çifti için)
+const arbitrageBinanceOKX = new ArbitrageService(binanceService, okxService);
+const arbitrageOKXHyperliquid = new ArbitrageService(okxService, hyperliquidService);
+const arbitrageBinanceHyperliquid = new ArbitrageService(binanceService, hyperliquidService);
 
 // REST API Endpoints
 app.get('/api/opportunities', async (req, res) => {
     try {
-        const opportunities = await arbitrageService.getArbitrageOpportunities();
+        const opportunities = await arbitrageBinanceOKX.getArbitrageOpportunities();
         res.json(opportunities);
     } catch (error) {
         console.error('Error fetching arbitrage opportunities:', error);
         res.status(500).json({ error: 'Failed to fetch opportunities' });
+    }
+});
+
+// Hyperliquid test endpoint
+app.get('/api/test-hyperliquid', async (req, res) => {
+    try {
+        const testCoins = ['BTC', 'ETH', 'SOL'];
+        const data = await hyperliquidService.getMultipleFundingData(testCoins);
+        res.json({
+            success: true,
+            data: data,
+            message: 'Hyperliquid API çalışıyor!'
+        });
+    } catch (error) {
+        console.error('Hyperliquid test error:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
     }
 });
 
@@ -57,7 +82,7 @@ wss.on('connection', (ws) => {
 // Broadcast data to all clients
 async function broadcastData() {
     try {
-        const opportunities = await arbitrageService.getArbitrageOpportunities();
+        const opportunities = await arbitrageBinanceOKX.getArbitrageOpportunities();
 
         const data = JSON.stringify({
             type: 'ARBITRAGE_UPDATE',
@@ -78,7 +103,7 @@ async function broadcastData() {
 // Send data to a single client
 async function sendDataToClient(ws) {
     try {
-        const opportunities = await arbitrageService.getArbitrageOpportunities();
+        const opportunities = await arbitrageBinanceOKX.getArbitrageOpportunities();
 
         if (ws.readyState === WebSocket.OPEN) {
             ws.send(JSON.stringify({
