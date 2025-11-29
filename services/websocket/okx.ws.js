@@ -57,10 +57,8 @@ class OKXWebSocket extends BaseWebSocket {
                 this.data[symbol].nextFundingTime = parseInt(item.nextFundingTime);
             }
         } catch (error) {
-            // Sadece pong olmayan hataları logla
-            if (!dataStr.includes('pong')) {
-                console.error(`[OKX] Message parsing error: ${error.message}`);
-            }
+            // Sadece pong olmayan ve JSON parse edilemeyen hataları sessizce geç
+            // console.debug(`[OKX] Non-JSON message received: ${dataStr.substring(0, 20)}...`);
         }
     }
 }

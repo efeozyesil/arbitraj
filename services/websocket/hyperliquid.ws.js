@@ -43,31 +43,41 @@ class HyperliquidWebSocket extends BaseWebSocket {
             const msg = JSON.parse(data.toString());
 
             if (msg.channel === 'allMids') {
-                const mids = msg.data;
+                // DÜZELTME: Veri msg.data.mids içinde geliyor
+                const mids = msg.data.mids || msg.data;
 
                 // Debug log for first data
                 if (!this.hasReceivedData) {
-                    console.log('[Hyperliquid] First price data received. Sample keys:', Object.keys(mids).slice(0, 5));
-                    // Check specifically for MATIC/POL
-                    if (mids['MATIC']) console.log('[Hyperliquid] Found MATIC');
-                    if (mids['POL']) console.log('[Hyperliquid] Found POL');
+                    console.log('[Hyperliquid] Data structure fixed. Sample symbols:', Object.keys(mids).slice(0, 5));
                     this.hasReceivedData = true;
                 }
 
                 Object.keys(mids).forEach(symbol => {
                     const price = parseFloat(mids[symbol]);
+
+                    // MATIC / POL dönüşümü
+                    // Eğer sembol POL ise ve biz MATIC arıyorsak, veya tam tersi
+                    let normalizedSymbol = symbol;
+                    if (symbol === 'POL') normalizedSymbol = 'MATIC'; // Sistemde MATIC olarak kullanıyoruz
+                    if (symbol === 'MATIC') normalizedSymbol = 'MATIC';
+
                     const fundingData = this.fundingRates[symbol] || { rate: 0, time: 0 };
 
                     // Hyperliquid funding is hourly, convert to 8h equivalent for comparison
                     const funding8h = fundingData.rate * 8;
 
-                    this.data[symbol] = {
-                        symbol: symbol,
+                    this.data[normalizedSymbol] = {
+                        symbol: normalizedSymbol,
                         markPrice: price, // Using mid price as proxy for mark price
                         fundingRate: funding8h,
                         nextFundingTime: fundingData.time + 3600000,
                         timestamp: Date.now()
                     };
+
+                    // POL geldiyse MATIC olarak da kaydet (yedek)
+                    if (symbol === 'POL') {
+                        this.data['MATIC'] = this.data[normalizedSymbol];
+                    }
                 });
             }
         } catch (error) {
