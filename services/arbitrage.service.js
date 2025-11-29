@@ -166,7 +166,7 @@ class ArbitrageService {
             strategy,
             tradeSize,
             priceDifferencePercent: priceDiffPercent,
-            priceDifferencePnL,
+            priceDifferencePnL: priceDiffPnL,
             fundingDifferencePercent: netFundingRate8h,
             fundingPnL8h: fundingPnL8hDollar,
             annualFundingPnL,
