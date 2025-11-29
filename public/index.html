@@ -556,12 +556,12 @@
 
         function connectWebSocket() {
             // Connect to WebSocket server
-            // Use the current hostname (works for both localhost and AWS IP)
+            // Use the current hostname and port (works for both localhost and AWS)
             const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
             const wsHost = window.location.hostname;
-            const wsPort = '8080';
+            const wsPort = window.location.port ? `:${window.location.port}` : '';
 
-            ws = new WebSocket(`${wsProtocol}//${wsHost}:${wsPort}`);
+            ws = new WebSocket(`${wsProtocol}//${wsHost}${wsPort}`);
 
             ws.onopen = () => {
                 console.log('WebSocket connected');
