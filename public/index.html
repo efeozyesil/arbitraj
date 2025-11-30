@@ -227,229 +227,490 @@
         }
 
         /* Opportunities Grid - Kompakt */
+        /* Updated Grid Layout (2 columns on desktop) */
         .opportunities-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(500px, 1fr));
             gap: 1rem;
             animation: fadeInUp 0.6s ease-out 0.4s both;
         }
 
-        /* All Data Table Styles */
+        /* Trading Steps - Hidden by default */
+        .trading-steps {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 0.75rem;
+            margin-top: 0.75rem;
+            display: none;
+            /* Hidden by default */
+            transition: all 0.3s ease;
+        }
+
+        .opportunity-card.expanded .trading-steps {
+            display: block;
+            /* Show when expanded */
+            animation: fadeInDown 0.3s ease;
+        }
+
+        /* ... other styles ... */
+    </style>
+</head>
+
+<body>
+    <!-- ... (HTML content) ... -->
+
+    <!-- Opportunities Table (List) -->
+    <div class="opp-table-container" id="opportunitiesTable" style="display: none;">
+        <table class="opp-table">
+            <thead>
+                <tr>
+                    <th onclick="sortTable('symbol')">Symbol <span class="sort-icon">↕</span></th>
+                    <th onclick="sortTable('long')">Long <span class="sort-icon">↕</span></th>
+                    <th onclick="sortTable('short')">Short <span class="sort-icon">↕</span></th>
+                    <th onclick="sortTable('pricePnL')">Price PnL (100$) <span class="sort-icon">↕</span></th>
+                    <th onclick="sortTable('totalNetProfit')">Net Profit (8h) <span class="sort-icon">↕</span></th>
+                    <th onclick="sortTable('apr')">APR <span class="sort-icon">↕</span></th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+                <!-- Rows will be injected here -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ... (All Data Table) ... -->
+
+    <script>
+        // ... (Variables) ...
+        let sortConfig = { key: 'totalNetProfit', direction: 'desc' }; // Default sort by Net Profit
+
+        // ... (switchTab, getAllOpportunities) ...
+
+        function renderAllTable() {
+            const opportunities = getAllOpportunities();
+            const tbody = document.getElementById('tableBody');
+
+            if (!opportunities || opportunities.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:2rem;">Waiting for data...</td></tr>';
+                return;
+            }
+
+            // Sort data
+            opportunities.sort((a, b) => {
+                let valA, valB;
+
+                switch (sortConfig.key) {
+                    case 'symbol': valA = a.symbol; valB = b.symbol; break;
+                    case 'long': valA = getLongExchange(a); valB = getLongExchange(b); break;
+                    case 'short': valA = getShortExchange(a); valB = getShortExchange(b); break;
+                    case 'pricePnL': valA = a.analysis.priceDifferencePnL || 0; valB = b.analysis.priceDifferencePnL || 0; break;
+                    case 'totalNetProfit': valA = a.analysis.totalNetProfit8h || 0; valB = b.analysis.totalNetProfit8h || 0; break;
+                    case 'apr': valA = a.analysis.annualAPR || 0; valB = b.analysis.annualAPR || 0; break;
+                    default: valA = a.analysis.totalNetProfit8h || 0; valB = b.analysis.totalNetProfit8h || 0;
+                }
+
+                if (typeof valA === 'string') {
+                    return sortConfig.direction === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+                } else {
+                    return sortConfig.direction === 'asc' ? valA - valB : valB - valA;
+                }
+            });
+
+            tbody.innerHTML = opportunities.map(opp => {
+                const longExchange = getLongExchange(opp);
+                const shortExchange = getShortExchange(opp);
+                const longLogo = getLongExchangeLogo(opp);
+                const shortLogo = getShortExchangeLogo(opp);
+
+                return `
+                    <tr onclick="showDetails('${opp.symbol}')">
+                        <td style="font-weight:bold; display:flex; align-items:center; gap:8px;">
+                            <img src="${opp.logo}" style="width:20px; height:20px; border-radius:50%;" onerror="this.style.display='none'">
+                            ${opp.symbol}
+                        </td>
+                        <td>
+                            <span class="exchange-badge">
+                                <img src="${longLogo}" onerror="this.style.display='none'">
+                                ${longExchange}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="exchange-badge">
+                                <img src="${shortLogo}" onerror="this.style.display='none'">
+                                ${shortExchange}
+                            </span>
+                        </td>
+                        <td class="${opp.analysis.priceDifferencePnL >= 0 ? 'positive' : 'negative'}">
+                            $${opp.analysis.priceDifferencePnL.toFixed(2)}
+                        </td>
+                        <td class="${(opp.analysis.totalNetProfit8h || 0) >= 0 ? 'positive' : 'negative'}" style="font-weight:bold">
+                            $${(opp.analysis.totalNetProfit8h || 0).toFixed(4)}
+                        </td>
+                        <td class="${opp.analysis.annualAPR > 0 ? 'positive' : 'negative'}">
+                            ${opp.analysis.annualAPR.toFixed(2)}%
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            // Update Stats for ALL view
+            updateStats(opportunities);
+        }
+
+        // ... (formatPrice, renderAllDataTable, helper functions) ...
+
+        function createOpportunityCard(opp) {
+            const hasOpportunity = opp.analysis.isOpportunity;
+            const cardClass = hasOpportunity ? 'opportunity-card has-opportunity' : 'opportunity-card';
+
+            // Determine strategy details
+            let longExchange, shortExchange;
+            if (opp.analysis.strategy === 'LONG_A_SHORT_B') {
+                longExchange = opp.exchangeA;
+                shortExchange = opp.exchangeB;
+            } else {
+                longExchange = opp.exchangeB;
+                shortExchange = opp.exchangeA;
+            }
+
+            return `
+                <div class="${cardClass}">
+                    <!-- Header: Coin Info & Badge -->
+                    <div class="coin-header">
+                        <div style="display:flex; align-items:center; gap:10px; flex:1;">
+                            <img src="${opp.logo}" alt="${opp.name}" class="coin-logo" onerror="this.style.display='none'">
+                            <div>
+                                <div class="coin-name">${opp.name}</div>
+                                <div class="coin-symbol">${opp.symbol}</div>
+                            </div>
+                        </div>
+                        <div class="opportunity-badge ${hasOpportunity ? 'active' : 'inactive'}">
+                            ${hasOpportunity ? '🎯 LIVE' : 'NO SIGNAL'}
+                        </div>
+                    </div>
+
+                    <!-- Main Data Grid -->
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:10px;">
+                        <!-- Long Side -->
+                        <div class="exchange-box" style="border-left: 2px solid #10b981;">
+                            <div class="exchange-header">
+                                <span style="font-size:0.7rem; color:#10b981; font-weight:bold;">LONG</span>
+                                <img src="${longExchange.logo}" class="exchange-logo" style="margin-left:auto;">
+                                <span class="exchange-name">${longExchange.name}</span>
+                            </div>
+                            <div class="price-value">$${formatPrice(longExchange.markPrice)}</div>
+                            <div class="funding-rate">
+                                <span class="funding-label">Funding</span>
+                                <span class="funding-value ${longExchange.fundingRate >= 0 ? 'positive' : 'negative'}">
+                                    ${parseFloat(longExchange.fundingRate).toFixed(4)}%
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Short Side -->
+                        <div class="exchange-box" style="border-left: 2px solid #ef4444;">
+                            <div class="exchange-header">
+                                <span style="font-size:0.7rem; color:#ef4444; font-weight:bold;">SHORT</span>
+                                <img src="${shortExchange.logo}" class="exchange-logo" style="margin-left:auto;">
+                                <span class="exchange-name">${shortExchange.name}</span>
+                            </div>
+                            <div class="price-value">$${formatPrice(shortExchange.markPrice)}</div>
+                            <div class="funding-rate">
+                                <span class="funding-label">Funding</span>
+                                <span class="funding-value ${shortExchange.fundingRate >= 0 ? 'positive' : 'negative'}">
+                                    ${parseFloat(shortExchange.fundingRate).toFixed(4)}%
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Analysis & Action -->
+                    <div style="background:rgba(0,0,0,0.2); border-radius:8px; padding:10px;">
+                        <!-- Step-by-step Profit Calculation -->
+                        <div style="margin-bottom:8px; font-size:0.8rem; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:8px;">
+                            <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                                <span style="color:rgba(255,255,255,0.6);">Price Diff (100$)</span>
+                                <span class="${opp.analysis.priceDifferencePnL >= 0 ? 'positive' : 'negative'}">
+                                    $${opp.analysis.priceDifferencePnL.toFixed(2)}
+                                </span>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                                <span style="color:rgba(255,255,255,0.6);">Funding (8h)</span>
+                                <span class="${opp.analysis.fundingPnL8h >= 0 ? 'positive' : 'negative'}">
+                                    $${opp.analysis.fundingPnL8h.toFixed(4)}
+                                </span>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; font-weight:bold; margin-top:4px;">
+                                <span style="color:white;">Net Profit (8h)</span>
+                                <span class="${(opp.analysis.totalNetProfit8h || 0) >= 0 ? 'positive' : 'negative'}">
+                                    $${(opp.analysis.totalNetProfit8h || 0).toFixed(4)}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:0.8rem;">
+                            <span style="color:rgba(255,255,255,0.6);">Annual APR (Funding Only)</span>
+                            <span class="${opp.analysis.annualAPR > 0 ? 'positive' : 'negative'}" style="font-weight:bold;">
+                                ${opp.analysis.annualAPR.toFixed(2)}%
+                            </span>
+                        </div>
+                        
+                        <!-- Action Instruction -->
+                        <div style="margin-top:10px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.1); font-size:0.75rem; text-align:center;">
+                            <div style="margin-bottom:4px; color:rgba(255,255,255,0.8);">Recommended Action (100$ Size)</div>
+                            <div style="display:flex; justify-content:center; gap:10px; align-items:center;">
+                                <span style="color:#10b981; font-weight:bold;">LONG $100 ${longExchange.name}</span>
+                                <span style="opacity:0.5;">+</span>
+                                <span style="color:#ef4444; font-weight:bold;">SHORT $100 ${shortExchange.name}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="expand-button">▼ Show Details</button>
+                    
+                    <!-- Hidden Details (Trading Steps) -->
+                    <div class="trading-steps">
+                        <div class="steps-header">EXECUTION STEPS</div>
+                        <div class="step-item">
+                            <div class="step-number">1</div>
+                            <div class="step-content">
+                                <div class="step-action">Open LONG on ${longExchange.name}</div>
+                                <div class="step-details">Buy $100 worth of ${opp.symbol} Perpetual</div>
+                            </div>
+                        </div>
+                        <div class="step-item">
+                            <div class="step-number">2</div>
+                            <div class="step-content">
+                                <div class="step-action">Open SHORT on ${shortExchange.name}</div>
+                                <div class="step-details">Sell $100 worth of ${opp.symbol} Perpetual</div>
+                            </div>
+                        </div>
+                        <div class="step-item">
+                            <div class="step-number">3</div>
+                            <div class="step-content">
+                                <div class="step-action">Wait for Funding</div>
+                                <div class="step-details">Collect funding payments every 8 hours</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
         #allDataTable table {
-            border-collapse: collapse;
-            width: 100%;
-            font-size: 0.8rem;
+            border - collapse: collapse;
+            width: 100 %;
+            font - size: 0.8rem;
         }
 
         #allDataTable th,
-        #allDataTable td {
+            #allDataTable td {
             border: 1px solid rgba(255, 255, 255, 0.2);
             padding: 8px;
-            text-align: right;
+            text - align: right;
         }
 
         #allDataTable th {
             background: rgba(255, 255, 255, 0.1);
-            text-align: center;
+            text - align: center;
         }
 
-        #allDataTable td:first-child {
-            text-align: left;
+        #allDataTable td: first - child {
+            text - align: left;
             position: sticky;
             left: 0;
             background: #1a1b26;
             /* Match body bg */
-            z-index: 1;
+            z - index: 1;
         }
 
         /* Mobile adjustments */
-        @media (max-width: 768px) {
-            .tab-all {
-                font-size: 0.8rem;
+        @media(max - width: 768px) {
+            .tab - all {
+                font - size: 0.8rem;
                 padding: 0.75rem 0.5rem;
             }
 
             #allDataTable {
-                font-size: 0.7rem;
+                font - size: 0.7rem;
             }
 
             #allDataTable th,
-            #allDataTable td {
+                #allDataTable td {
                 padding: 4px;
             }
         }
 
         /* Restored Styles */
-        .opportunity-card {
+        .opportunity - card {
             position: relative;
         }
 
         /* Removed ::before styles */
-        .opportunity-card.has-opportunity {
-            border-color: rgba(16, 185, 129, 0.3);
+        .opportunity - card.has - opportunity {
+            border - color: rgba(16, 185, 129, 0.3);
             background: rgba(16, 185, 129, 0.05);
         }
 
         /* Coin Header - Kompakt */
-        .coin-header {
+        .coin - header {
             display: flex;
-            align-items: center;
+            align - items: center;
             gap: 0.75rem;
-            margin-bottom: 0.75rem;
+            margin - bottom: 0.75rem;
         }
 
-        .coin-logo {
+        .coin - logo {
             width: 32px;
             height: 32px;
-            border-radius: 50%;
+            border - radius: 50 %;
             background: rgba(255, 255, 255, 0.1);
             padding: 4px;
         }
 
-        .coin-info {
+        .coin - info {
             flex: 1;
         }
 
-        .coin-name {
-            font-size: 1rem;
-            font-weight: 700;
-            line-height: 1.2;
+        .coin - name {
+            font - size: 1rem;
+            font - weight: 700;
+            line - height: 1.2;
         }
 
-        .coin-symbol {
-            font-size: 0.75rem;
+        .coin - symbol {
+            font - size: 0.75rem;
             color: rgba(255, 255, 255, 0.5);
         }
 
-        .opportunity-badge {
+        .opportunity - badge {
             padding: 0.3rem 0.6rem;
-            border-radius: 12px;
-            font-size: 0.65rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            white-space: nowrap;
+            border - radius: 12px;
+            font - size: 0.65rem;
+            font - weight: 600;
+            text - transform: uppercase;
+            letter - spacing: 0.5px;
+            white - space: nowrap;
         }
 
-        .opportunity-badge.active {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        .opportunity - badge.active {
+            background: linear - gradient(135deg, #10b981 0 %, #059669 100 %);
             animation: glow 2s infinite;
         }
 
-        .opportunity-badge.inactive {
+        .opportunity - badge.inactive {
             background: rgba(255, 255, 255, 0.1);
             color: rgba(255, 255, 255, 0.5);
         }
 
         /* Exchange Data - Kompakt */
-        .exchange-row {
+        .exchange - row {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid - template - columns: 1fr 1fr;
             gap: 0.5rem;
-            margin-bottom: 0.75rem;
+            margin - bottom: 0.75rem;
         }
 
-        .exchange-box {
+        .exchange - box {
             background: rgba(0, 0, 0, 0.2);
-            border-radius: 8px;
+            border - radius: 8px;
             padding: 0.6rem;
         }
 
-        .exchange-header {
+        .exchange - header {
             display: flex;
-            align-items: center;
+            align - items: center;
             gap: 0.4rem;
-            margin-bottom: 0.4rem;
+            margin - bottom: 0.4rem;
         }
 
-        .exchange-logo {
+        .exchange - logo {
             width: 16px;
             height: 16px;
-            border-radius: 4px;
+            border - radius: 4px;
         }
 
-        .exchange-name {
-            font-size: 0.7rem;
-            font-weight: 600;
+        .exchange - name {
+            font - size: 0.7rem;
+            font - weight: 600;
             color: rgba(255, 255, 255, 0.7);
         }
 
-        .price-value {
-            font-size: 0.95rem;
-            font-weight: 700;
-            font-family: 'Courier New', monospace;
-            margin-bottom: 0.3rem;
+        .price - value {
+            font - size: 0.95rem;
+            font - weight: 700;
+            font - family: 'Courier New', monospace;
+            margin - bottom: 0.3rem;
         }
 
-        .funding-rate {
+        .funding - rate {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding-top: 0.3rem;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            justify - content: space - between;
+            align - items: center;
+            padding - top: 0.3rem;
+            border - top: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        .funding-label {
-            font-size: 0.65rem;
+        .funding - label {
+            font - size: 0.65rem;
             color: rgba(255, 255, 255, 0.5);
         }
 
-        .funding-value {
-            font-size: 0.8rem;
-            font-weight: 700;
-            font-family: 'Courier New', monospace;
+        .funding - value {
+            font - size: 0.8rem;
+            font - weight: 700;
+            font - family: 'Courier New', monospace;
         }
 
-        .funding-value.positive {
+        .funding - value.positive {
             color: #10b981;
         }
 
-        .funding-value.negative {
+        .funding - value.negative {
             color: #ef4444;
         }
 
         /* Table Styles */
-        .opp-table-container {
-            width: 100%;
-            overflow-x: auto;
+        .opp - table - container {
+            width: 100 %;
+            overflow - x: auto;
             background: rgba(255, 255, 255, 0.02);
-            border-radius: 12px;
+            border - radius: 12px;
             border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
-        .opp-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.9rem;
+        .opp - table {
+            width: 100 %;
+            border - collapse: collapse;
+            font - size: 0.9rem;
         }
 
-        .opp-table th {
-            text-align: left;
+        .opp - table th {
+            text - align: left;
             padding: 1rem;
             background: rgba(255, 255, 255, 0.05);
             color: rgba(255, 255, 255, 0.6);
-            font-weight: 600;
+            font - weight: 600;
             cursor: pointer;
-            user-select: none;
+            user - select: none;
             transition: color 0.2s;
         }
 
-        .opp-table th:hover {
+        .opp - table th:hover {
             color: white;
             background: rgba(255, 255, 255, 0.08);
         }
 
-        .opp-table td {
+        .opp - table td {
             padding: 0.75rem 1rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            border - bottom: 1px solid rgba(255, 255, 255, 0.05);
             color: rgba(255, 255, 255, 0.9);
         }
 
-        .opp-table tr:last-child td {
-            border-bottom: none;
+        .opp - table tr: last - child td {
+            border - bottom: none;
         }
 
-        .opp-table tr:hover {
+        .opp - table tr:hover {
             background: rgba(255, 255, 255, 0.03);
         }
 
@@ -461,164 +722,164 @@
             color: #EF4444;
         }
 
-        .exchange-badge {
-            display: inline-flex;
-            align-items: center;
+        .exchange - badge {
+            display: inline - flex;
+            align - items: center;
             gap: 6px;
             padding: 4px 8px;
-            border-radius: 4px;
+            border - radius: 4px;
             background: rgba(255, 255, 255, 0.05);
-            font-size: 0.8rem;
+            font - size: 0.8rem;
         }
 
-        .exchange-badge img {
+        .exchange - badge img {
             width: 16px;
             height: 16px;
-            border-radius: 50%;
+            border - radius: 50 %;
         }
 
-        .sort-icon {
-            font-size: 0.7rem;
-            margin-left: 4px;
+        .sort - icon {
+            font - size: 0.7rem;
+            margin - left: 4px;
             opacity: 0.5;
         }
 
         /* Analysis Section - Kompakt */
-        .analysis-grid {
+        .analysis - grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
+            grid - template - columns: repeat(2, 1fr);
             gap: 0.4rem;
-            margin-bottom: 0.75rem;
+            margin - bottom: 0.75rem;
         }
 
-        .analysis-item {
+        .analysis - item {
             background: rgba(0, 0, 0, 0.3);
-            border-radius: 6px;
+            border - radius: 6px;
             padding: 0.5rem;
         }
 
-        .analysis-label {
-            font-size: 0.65rem;
+        .analysis - label {
+            font - size: 0.65rem;
             color: rgba(255, 255, 255, 0.5);
-            margin-bottom: 0.2rem;
+            margin - bottom: 0.2rem;
         }
 
-        .analysis-value {
-            font-size: 0.85rem;
-            font-weight: 600;
-            font-family: 'Courier New', monospace;
+        .analysis - value {
+            font - size: 0.85rem;
+            font - weight: 600;
+            font - family: 'Courier New', monospace;
         }
 
-        .analysis-value.highlight {
-            font-size: 1rem;
+        .analysis - value.highlight {
+            font - size: 1rem;
             color: #fbbf24;
         }
 
-        .analysis-value.annual {
+        .analysis - value.annual {
             color: #a78bfa;
         }
 
         /* Trading Steps - Expandable */
-        .trading-steps {
+        .trading - steps {
             background: rgba(0, 0, 0, 0.3);
-            border-radius: 8px;
+            border - radius: 8px;
             padding: 0.75rem;
-            margin-top: 0.75rem;
-            max-height: 0;
+            margin - top: 0.75rem;
+            max - height: 0;
             overflow: hidden;
-            transition: max-height 0.3s ease;
+            transition: max - height 0.3s ease;
         }
 
-        .opportunity-card.expanded .trading-steps {
-            max-height: 500px;
+        .opportunity - card.expanded.trading - steps {
+            max - height: 500px;
         }
 
-        .steps-header {
-            font-size: 0.75rem;
-            font-weight: 600;
+        .steps - header {
+            font - size: 0.75rem;
+            font - weight: 600;
             color: rgba(255, 255, 255, 0.8);
-            margin-bottom: 0.5rem;
+            margin - bottom: 0.5rem;
             display: flex;
-            align-items: center;
+            align - items: center;
             gap: 0.5rem;
         }
 
-        .step-item {
+        .step - item {
             display: flex;
-            align-items: flex-start;
+            align - items: flex - start;
             gap: 0.5rem;
             padding: 0.4rem;
-            margin-bottom: 0.3rem;
+            margin - bottom: 0.3rem;
             background: rgba(255, 255, 255, 0.03);
-            border-radius: 6px;
-            border-left: 2px solid rgba(102, 126, 234, 0.5);
+            border - radius: 6px;
+            border - left: 2px solid rgba(102, 126, 234, 0.5);
         }
 
-        .step-number {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        .step - number {
+            background: linear - gradient(135deg, #667eea 0 %, #764ba2 100 %);
             color: white;
             width: 20px;
             height: 20px;
-            border-radius: 50%;
+            border - radius: 50 %;
             display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.7rem;
-            font-weight: 700;
-            flex-shrink: 0;
+            align - items: center;
+            justify - content: center;
+            font - size: 0.7rem;
+            font - weight: 700;
+            flex - shrink: 0;
         }
 
-        .step-content {
+        .step - content {
             flex: 1;
         }
 
-        .step-action {
-            font-size: 0.75rem;
-            font-weight: 600;
+        .step - action {
+            font - size: 0.75rem;
+            font - weight: 600;
             color: rgba(255, 255, 255, 0.9);
-            margin-bottom: 0.2rem;
+            margin - bottom: 0.2rem;
         }
 
-        .step-details {
-            font-size: 0.65rem;
+        .step - details {
+            font - size: 0.65rem;
             color: rgba(255, 255, 255, 0.6);
         }
 
-        .step-fee {
-            font-size: 0.65rem;
+        .step - fee {
+            font - size: 0.65rem;
             color: #fbbf24;
-            margin-top: 0.2rem;
+            margin - top: 0.2rem;
         }
 
-        .expand-button {
-            width: 100%;
+        .expand - button {
+            width: 100 %;
             padding: 0.5rem;
             background: rgba(102, 126, 234, 0.2);
             border: 1px solid rgba(102, 126, 234, 0.3);
-            border-radius: 6px;
+            border - radius: 6px;
             color: white;
-            font-size: 0.75rem;
-            font-weight: 600;
+            font - size: 0.75rem;
+            font - weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
-            margin-top: 0.5rem;
+            margin - top: 0.5rem;
         }
 
-        .expand-button:hover {
+        .expand - button:hover {
             background: rgba(102, 126, 234, 0.3);
         }
 
         .loading {
-            text-align: center;
+            text - align: center;
             padding: 3rem;
-            font-size: 1.25rem;
+            font - size: 1.25rem;
             color: rgba(255, 255, 255, 0.6);
         }
 
         .spinner {
             border: 3px solid rgba(255, 255, 255, 0.1);
-            border-top: 3px solid #667eea;
-            border-radius: 50%;
+            border - top: 3px solid #667eea;
+            border - radius: 50 %;
             width: 40px;
             height: 40px;
             animation: spin 1s linear infinite;
@@ -652,72 +913,72 @@
 
         @keyframes pulse {
 
-            0%,
-            100% {
-                opacity: 1;
-            }
+            0 %,
+                100 % {
+                    opacity: 1;
+                }
 
-            50% {
+            50 % {
                 opacity: 0.5;
             }
         }
 
         @keyframes glow {
 
-            0%,
-            100% {
-                box-shadow: 0 0 15px rgba(16, 185, 129, 0.5);
-            }
+            0 %,
+                100 % {
+                    box- shadow: 0 0 15px rgba(16, 185, 129, 0.5);
+        }
 
-            50% {
-                box-shadow: 0 0 25px rgba(16, 185, 129, 0.8);
+        50 % {
+            box- shadow: 0 0 25px rgba(16, 185, 129, 0.8);
             }
         }
 
         @keyframes spin {
-            0% {
+            0 % {
                 transform: rotate(0deg);
             }
 
-            100% {
+            100 % {
                 transform: rotate(360deg);
             }
         }
 
         /* Responsive */
-        @media (max-width: 768px) {
+        @media(max - width: 768px) {
             .header h1 {
-                font-size: 1.75rem;
+                font - size: 1.75rem;
             }
 
-            .opportunities-grid {
-                grid-template-columns: 1fr;
+            .opportunities - grid {
+                grid - template - columns: 1fr;
             }
 
-            .analysis-grid {
-                grid-template-columns: 1fr;
+            .analysis - grid {
+                grid - template - columns: 1fr;
             }
         }
-    </style>
-</head>
+    </style >
+</head >
 
-<body>
-    <!-- ... (HTML content remains same) ... -->
+            <body>
+                <!-- ... (HTML content remains same) ... -->
 
-    <script>
+                <script>
         // ... (Variables remain same) ...
 
-        // Format price intelligently
-        function formatPrice(price) {
+                    // Format price intelligently
+                    function formatPrice(price) {
             if (!price) return '-';
-            const p = parseFloat(price);
-            if (p < 0.001) return p.toFixed(8);
-            if (p < 1) return p.toFixed(6);
-            if (p < 10) return p.toFixed(4);
-            return p.toFixed(2);
+                    const p = parseFloat(price);
+                    if (p < 0.001) return p.toFixed(8);
+                    if (p < 1) return p.toFixed(6);
+                    if (p < 10) return p.toFixed(4);
+                    return p.toFixed(2);
         }
 
-        function renderAllDataTable() {
+                    function renderAllDataTable() {
             const tbody = document.getElementById('allDataBody');
 
             // Sort by symbol by default
@@ -728,16 +989,16 @@
                     if (!data) return '<td colspan="2" style="text-align:center; color:rgba(255,255,255,0.2)">-</td>';
                     const fundingClass = data.funding > 0 ? 'positive' : (data.funding < 0 ? 'negative' : '');
                     return `
-                        <td>$${formatPrice(data.price)}</td>
-                        <td class="${fundingClass}">${parseFloat(data.funding).toFixed(4)}%</td>
+                    <td>$${formatPrice(data.price)}</td>
+                    <td class="${fundingClass}">${parseFloat(data.funding).toFixed(4)}%</td>
                     `;
                 };
 
-                return `
+                    return `
                     <tr>
                         <td style="font-weight:bold; display:flex; align-items:center; gap:8px;">
                             <img src="${coin.logo}" style="width:20px; height:20px; border-radius:50%;" onerror="this.style.display='none'">
-                            ${coin.symbol}
+                                ${coin.symbol}
                         </td>
                         ${formatCell(coin.binance)}
                         ${formatCell(coin.okx)}
@@ -958,11 +1219,11 @@
     </div>
 
     <script>
-        let ws;
-        let reconnectInterval;
-        let currentTab = 'all'; // Default tab is ALL
-        let allData = {
-            'binance-okx': [],
+            let ws;
+            let reconnectInterval;
+            let currentTab = 'all'; // Default tab is ALL
+            let allData = {
+                'binance-okx': [],
             'binance-hyperliquid': [],
             'binance-bybit': [],
             'binance-asterdex': [],
@@ -973,10 +1234,10 @@
             'hyperliquid-asterdex': [],
             'bybit-asterdex': []
         };
-        let sortConfig = { key: 'profit8h', direction: 'desc' };
+            let sortConfig = {key: 'profit8h', direction: 'desc' };
 
-        function switchTab(tabId) {
-            currentTab = tabId;
+            function switchTab(tabId) {
+                currentTab = tabId;
 
             // Update tab styles - remove active from all, add to clicked
             document.querySelectorAll('.tab').forEach(tab => {
@@ -989,25 +1250,25 @@
             // Handle ALL tab vs others
             if (currentTab === 'all') {
                 document.getElementById('opportunitiesGrid').style.display = 'none';
-                document.getElementById('opportunitiesTable').style.display = 'block';
-                document.getElementById('allDataTable').style.display = 'none';
-                renderAllTable();
+            document.getElementById('opportunitiesTable').style.display = 'block';
+            document.getElementById('allDataTable').style.display = 'none';
+            renderAllTable();
             } else if (currentTab === 'all-data') {
                 document.getElementById('opportunitiesGrid').style.display = 'none';
-                document.getElementById('opportunitiesTable').style.display = 'none';
-                document.getElementById('allDataTable').style.display = 'block';
-                renderAllDataTable();
+            document.getElementById('opportunitiesTable').style.display = 'none';
+            document.getElementById('allDataTable').style.display = 'block';
+            renderAllDataTable();
             } else {
                 document.getElementById('opportunitiesGrid').style.display = 'grid';
-                document.getElementById('opportunitiesTable').style.display = 'none';
-                document.getElementById('allDataTable').style.display = 'none';
-                updateDashboard(allData[currentTab]);
+            document.getElementById('opportunitiesTable').style.display = 'none';
+            document.getElementById('allDataTable').style.display = 'none';
+            updateDashboard(allData[currentTab]);
             }
         }
 
-        function getAllOpportunities() {
-            // Flatten all data sources into one array
-            let combined = [];
+            function getAllOpportunities() {
+                // Flatten all data sources into one array
+                let combined = [];
             if (allData && typeof allData === 'object') {
                 Object.values(allData).forEach(list => {
                     if (list && Array.isArray(list)) combined.push(...list);
@@ -1016,30 +1277,30 @@
             return combined;
         }
 
-        function renderAllTable() {
+            function renderAllTable() {
             const opportunities = getAllOpportunities();
             const tbody = document.getElementById('tableBody');
 
             if (!opportunities || opportunities.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:2rem;">Waiting for data...</td></tr>';
-                return;
+            return;
             }
 
             // Sort data
             opportunities.sort((a, b) => {
                 let valA, valB;
 
-                switch (sortConfig.key) {
+            switch (sortConfig.key) {
                     case 'symbol': valA = a.symbol; valB = b.symbol; break;
-                    case 'long': valA = getLongExchange(a); valB = getLongExchange(b); break;
-                    case 'short': valA = getShortExchange(a); valB = getShortExchange(b); break;
-                    case 'funding': valA = Math.abs(a.analysis.fundingPnL8h || 0); valB = Math.abs(b.analysis.fundingPnL8h || 0); break;
-                    case 'profit8h': valA = a.analysis.totalNetProfit8h || 0; valB = b.analysis.totalNetProfit8h || 0; break; // Updated to totalNetProfit8h
-                    case 'annual': valA = a.analysis.annualAPR || 0; valB = b.analysis.annualAPR || 0; break;
-                    default: valA = a.analysis.annualAPR || 0; valB = b.analysis.annualAPR || 0;
+            case 'long': valA = getLongExchange(a); valB = getLongExchange(b); break;
+            case 'short': valA = getShortExchange(a); valB = getShortExchange(b); break;
+            case 'funding': valA = Math.abs(a.analysis.fundingPnL8h || 0); valB = Math.abs(b.analysis.fundingPnL8h || 0); break;
+            case 'profit8h': valA = a.analysis.totalNetProfit8h || 0; valB = b.analysis.totalNetProfit8h || 0; break; // Updated to totalNetProfit8h
+            case 'annual': valA = a.analysis.annualAPR || 0; valB = b.analysis.annualAPR || 0; break;
+            default: valA = a.analysis.annualAPR || 0; valB = b.analysis.annualAPR || 0;
                 }
 
-                if (typeof valA === 'string') {
+            if (typeof valA === 'string') {
                     return sortConfig.direction === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
                 } else {
                     return sortConfig.direction === 'asc' ? valA - valB : valB - valA;
@@ -1048,47 +1309,47 @@
 
             tbody.innerHTML = opportunities.map(opp => {
                 const longExchange = getLongExchange(opp);
-                const shortExchange = getShortExchange(opp);
-                const longLogo = getLongExchangeLogo(opp);
-                const shortLogo = getShortExchangeLogo(opp);
+            const shortExchange = getShortExchange(opp);
+            const longLogo = getLongExchangeLogo(opp);
+            const shortLogo = getShortExchangeLogo(opp);
 
-                return `
-                    <tr onclick="showDetails('${opp.symbol}')">
-                        <td style="font-weight:bold; display:flex; align-items:center; gap:8px;">
-                            <img src="${opp.logo}" style="width:20px; height:20px; border-radius:50%;" onerror="this.style.display='none'">
-                            ${opp.symbol}
-                        </td>
-                        <td>
-                            <span class="exchange-badge">
-                                <img src="${longLogo}" onerror="this.style.display='none'">
-                                ${longExchange}
-                            </span>
-                        </td>
-                        <td>
-                            <span class="exchange-badge">
-                                <img src="${shortLogo}" onerror="this.style.display='none'">
-                                ${shortExchange}
-                            </span>
-                        </td>
-                        <td class="${opp.analysis.priceDifferencePnL >= 0 ? 'positive' : 'negative'}">
-                            $${opp.analysis.priceDifferencePnL.toFixed(2)}
-                        </td>
-                        <td class="${(opp.analysis.totalNetProfit8h || 0) >= 0 ? 'positive' : 'negative'}" style="font-weight:bold">
-                            $${(opp.analysis.totalNetProfit8h || 0).toFixed(4)}
-                        </td>
-                        <td class="${opp.analysis.annualAPR > 0 ? 'positive' : 'negative'}">
-                            ${opp.analysis.annualAPR.toFixed(2)}%
-                        </td>
-                    </tr>
-                `;
+            return `
+            <tr onclick="showDetails('${opp.symbol}')">
+                <td style="font-weight:bold; display:flex; align-items:center; gap:8px;">
+                    <img src="${opp.logo}" style="width:20px; height:20px; border-radius:50%;" onerror="this.style.display='none'">
+                        ${opp.symbol}
+                </td>
+                <td>
+                    <span class="exchange-badge">
+                        <img src="${longLogo}" onerror="this.style.display='none'">
+                            ${longExchange}
+                    </span>
+                </td>
+                <td>
+                    <span class="exchange-badge">
+                        <img src="${shortLogo}" onerror="this.style.display='none'">
+                            ${shortExchange}
+                    </span>
+                </td>
+                <td class="${opp.analysis.priceDifferencePnL >= 0 ? 'positive' : 'negative'}">
+                    $${opp.analysis.priceDifferencePnL.toFixed(2)}
+                </td>
+                <td class="${(opp.analysis.totalNetProfit8h || 0) >= 0 ? 'positive' : 'negative'}" style="font-weight:bold">
+                    $${(opp.analysis.totalNetProfit8h || 0).toFixed(4)}
+                </td>
+                <td class="${opp.analysis.annualAPR > 0 ? 'positive' : 'negative'}">
+                    ${opp.analysis.annualAPR.toFixed(2)}%
+                </td>
+            </tr>
+            `;
             }).join('');
 
             // Update Stats for ALL view
             updateStats(opportunities);
         }
 
-        // Format price intelligently
-        function formatPrice(price) {
+            // Format price intelligently
+            function formatPrice(price) {
             if (!price) return '-';
             const p = parseFloat(price);
             if (p < 0.001) return p.toFixed(8);
@@ -1097,7 +1358,7 @@
             return p.toFixed(2);
         }
 
-        function renderAllDataTable() {
+            function renderAllDataTable() {
             const tbody = document.getElementById('allDataBody');
 
             // Sort by symbol by default
@@ -1107,63 +1368,63 @@
                 const formatCell = (data) => {
                     if (!data) return '<td colspan="2" style="text-align:center; color:rgba(255,255,255,0.2)">-</td>';
                     const fundingClass = data.funding > 0 ? 'positive' : (data.funding < 0 ? 'negative' : '');
-                    return `
-                            <td>$${formatPrice(data.price)}</td>
-                            <td class="${fundingClass}">${parseFloat(data.funding).toFixed(4)}%</td>
-                        `;
+            return `
+            <td>$${formatPrice(data.price)}</td>
+            <td class="${fundingClass}">${parseFloat(data.funding).toFixed(4)}%</td>
+            `;
                 };
 
-                return `
-                        <tr>
-                            <td style="font-weight:bold; display:flex; align-items:center; gap:8px;">
-                                <img src="${coin.logo}" style="width:20px; height:20px; border-radius:50%;" onerror="this.style.display='none'">
-                                ${coin.symbol}
-                            </td>
-                            ${formatCell(coin.binance)}
-                            ${formatCell(coin.okx)}
-                            ${formatCell(coin.hyperliquid)}
-                            ${formatCell(coin.bybit)}
-                            ${formatCell(coin.asterdex)}
-                        </tr>
-                    `;
+            return `
+            <tr>
+                <td style="font-weight:bold; display:flex; align-items:center; gap:8px;">
+                    <img src="${coin.logo}" style="width:20px; height:20px; border-radius:50%;" onerror="this.style.display='none'">
+                        ${coin.symbol}
+                </td>
+                ${formatCell(coin.binance)}
+                ${formatCell(coin.okx)}
+                ${formatCell(coin.hyperliquid)}
+                ${formatCell(coin.bybit)}
+                ${formatCell(coin.asterdex)}
+            </tr>
+            `;
             }).join('');
         }
 
-        function getLongExchange(opp) {
+            function getLongExchange(opp) {
             if (opp.analysis.strategy === 'SHORT_A_LONG_B') return opp.exchangeB.name;
             if (opp.analysis.strategy === 'LONG_A_SHORT_B') return opp.exchangeA.name;
             return opp.exchangeA.name; // Default if no clear strategy
         }
 
-        function getShortExchange(opp) {
+            function getShortExchange(opp) {
             if (opp.analysis.strategy === 'SHORT_A_LONG_B') return opp.exchangeA.name;
             if (opp.analysis.strategy === 'LONG_A_SHORT_B') return opp.exchangeB.name;
             return opp.exchangeB.name; // Default if no clear strategy
         }
 
-        function getLongExchangeLogo(opp) {
+            function getLongExchangeLogo(opp) {
             if (opp.analysis.strategy === 'SHORT_A_LONG_B') return opp.exchangeB.logo;
             if (opp.analysis.strategy === 'LONG_A_SHORT_B') return opp.exchangeA.logo;
             return opp.exchangeA.logo;
         }
 
-        function getShortExchangeLogo(opp) {
+            function getShortExchangeLogo(opp) {
             if (opp.analysis.strategy === 'SHORT_A_LONG_B') return opp.exchangeA.logo;
             if (opp.analysis.strategy === 'LONG_A_SHORT_B') return opp.exchangeB.logo;
             return opp.exchangeB.logo;
         }
 
-        function sortTable(key) {
+            function sortTable(key) {
             if (sortConfig.key === key) {
                 sortConfig.direction = sortConfig.direction === 'asc' ? 'desc' : 'asc';
             } else {
                 sortConfig.key = key;
-                sortConfig.direction = (key === 'symbol' || key === 'long' || key === 'short') ? 'asc' : 'desc'; // Default asc for strings, desc for numbers
+            sortConfig.direction = (key === 'symbol' || key === 'long' || key === 'short') ? 'asc' : 'desc'; // Default asc for strings, desc for numbers
             }
             renderAllTable();
         }
 
-        function connectWebSocket() {
+            function connectWebSocket() {
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
             const wsUrl = `${protocol}//${window.location.host}`;
 
@@ -1171,71 +1432,71 @@
 
             ws.onopen = () => {
                 document.getElementById('wsStatus').classList.add('connected');
-                document.getElementById('wsStatusText').textContent = 'Connected';
-                if (reconnectInterval) {
-                    clearInterval(reconnectInterval);
-                    reconnectInterval = null;
+            document.getElementById('wsStatusText').textContent = 'Connected';
+            if (reconnectInterval) {
+                clearInterval(reconnectInterval);
+            reconnectInterval = null;
                 }
             };
 
             ws.onmessage = (event) => {
                 const message = JSON.parse(event.data);
 
-                if (message.type === 'ARBITRAGE_UPDATE') {
-                    allData = message.data;
-                    if (message.allData) {
-                        allCoinsData = message.allData;
+            if (message.type === 'ARBITRAGE_UPDATE') {
+                allData = message.data;
+            if (message.allData) {
+                allCoinsData = message.allData;
                     }
 
-                    document.getElementById('lastUpdate').textContent = new Date(message.timestamp).toLocaleTimeString();
+            document.getElementById('lastUpdate').textContent = new Date(message.timestamp).toLocaleTimeString();
 
-                    // Always render current tab
-                    if (currentTab === 'all') {
-                        renderAllTable();
+            // Always render current tab
+            if (currentTab === 'all') {
+                renderAllTable();
                     } else if (currentTab === 'all-data') {
-                        renderAllDataTable();
+                renderAllDataTable();
                     } else {
-                        updateDashboard(allData[currentTab]);
+                updateDashboard(allData[currentTab]);
                     }
                 }
             };
 
             ws.onclose = () => {
                 document.getElementById('wsStatus').classList.remove('connected');
-                document.getElementById('wsStatusText').textContent = 'Disconnected';
+            document.getElementById('wsStatusText').textContent = 'Disconnected';
 
-                if (!reconnectInterval) {
-                    reconnectInterval = setInterval(connectWebSocket, 5000);
+            if (!reconnectInterval) {
+                reconnectInterval = setInterval(connectWebSocket, 5000);
                 }
             };
 
             ws.onerror = (error) => {
                 console.error('WebSocket error:', error);
-                document.getElementById('wsStatus').classList.remove('connected');
-                document.getElementById('wsStatusText').textContent = 'Disconnected';
+            document.getElementById('wsStatus').classList.remove('connected');
+            document.getElementById('wsStatusText').textContent = 'Disconnected';
             };
         }
 
-        function updateConnectionStatus(connected) {
+            function updateConnectionStatus(connected) {
             const statusDot = document.getElementById('wsStatus');
             const statusText = document.getElementById('wsStatusText');
 
             if (connected) {
                 statusDot.className = 'status-dot connected';
-                statusText.textContent = 'Connected';
+            statusText.textContent = 'Connected';
             } else {
                 statusDot.className = 'status-dot disconnected';
-                statusText.textContent = 'Disconnected';
+            statusText.textContent = 'Disconnected';
             }
         }
 
-        function updateLastUpdate() {
+            function updateLastUpdate() {
             const now = new Date();
             const timeString = now.toLocaleTimeString('tr-TR');
             document.getElementById('lastUpdate').textContent = timeString;
         }
 
-        function updateStats(opportunities) {
+            function updateStats(opportunities) {
             const activeOpps = opportunities.filter(o => o.analysis && o.analysis.isOpportunity);
             document.getElementById('totalOpportunities').textContent = opportunities.length;
             document.getElementById('activeArbitrage').textContent = activeOpps.length;
@@ -1243,19 +1504,19 @@
             if (activeOpps.length > 0) {
                 const best8h = activeOpps.reduce((max, o) =>
                     o.analysis.annualAPR > max.analysis.annualAPR ? o : max
-                );
-                document.getElementById('bestOpportunity').textContent =
-                    best8h.analysis.fundingPnL8h.toFixed(4) + '$';
+            );
+            document.getElementById('bestOpportunity').textContent =
+            best8h.analysis.fundingPnL8h.toFixed(4) + '$';
 
-                document.getElementById('bestAnnual').textContent =
-                    best8h.analysis.annualAPR.toFixed(2) + '%';
+            document.getElementById('bestAnnual').textContent =
+            best8h.analysis.annualAPR.toFixed(2) + '%';
             } else {
                 document.getElementById('bestOpportunity').textContent = 'None';
-                document.getElementById('bestAnnual').textContent = 'None';
+            document.getElementById('bestAnnual').textContent = 'None';
             }
         }
 
-        function updateDashboard(opportunities) {
+            function updateDashboard(opportunities) {
             if (!opportunities) return;
 
             // Hide loading
@@ -1268,8 +1529,8 @@
             const expandedCards = new Set();
             document.querySelectorAll('.opportunity-card.expanded').forEach(card => {
                 const symbolElement = card.querySelector('.coin-symbol');
-                if (symbolElement) {
-                    expandedCards.add(symbolElement.textContent);
+            if (symbolElement) {
+                expandedCards.add(symbolElement.textContent);
                 }
             });
 
@@ -1283,10 +1544,10 @@
                     const cards = document.querySelectorAll('.opportunity-card');
                     cards.forEach(card => {
                         const symbolElement = card.querySelector('.coin-symbol');
-                        if (symbolElement && symbolElement.textContent === opp.symbol) {
-                            card.classList.add('expanded');
-                            const btn = card.querySelector('.expand-button');
-                            if (btn) btn.textContent = '▲ Hide Trading Steps';
+            if (symbolElement && symbolElement.textContent === opp.symbol) {
+                card.classList.add('expanded');
+            const btn = card.querySelector('.expand-button');
+            if (btn) btn.textContent = '▲ Hide Trading Steps';
                         }
                     });
                 }
@@ -1305,7 +1566,7 @@
             });
         }
 
-        function createOpportunityCard(opp) {
+            function createOpportunityCard(opp) {
             const hasOpportunity = opp.analysis.isOpportunity;
             const cardClass = hasOpportunity ? 'opportunity-card has-opportunity' : 'opportunity-card';
 
@@ -1313,125 +1574,125 @@
             let longExchange, shortExchange, longPrice, shortPrice;
             if (opp.analysis.strategy === 'LONG_A_SHORT_B') {
                 longExchange = opp.exchangeA;
-                shortExchange = opp.exchangeB;
+            shortExchange = opp.exchangeB;
             } else {
                 longExchange = opp.exchangeB;
-                shortExchange = opp.exchangeA;
+            shortExchange = opp.exchangeA;
             }
 
             return `
-                <div class="${cardClass}">
+            <div class="${cardClass}">
                     <!-- Header: Coin Info & Badge -->
-                    <div class="coin-header">
-                        <div style="display:flex; align-items:center; gap:10px; flex:1;">
-                            <img src="${opp.logo}" alt="${opp.name}" class="coin-logo" onerror="this.style.display='none'">
+                <div class="coin-header">
+                    <div style="display:flex; align-items:center; gap:10px; flex:1;">
+                        <img src="${opp.logo}" alt="${opp.name}" class="coin-logo" onerror="this.style.display='none'">
                             <div>
                                 <div class="coin-name">${opp.name}</div>
                                 <div class="coin-symbol">${opp.symbol}</div>
                             </div>
-                        </div>
-                        <div class="opportunity-badge ${hasOpportunity ? 'active' : 'inactive'}">
-                            ${hasOpportunity ? '🎯 LIVE' : 'NO SIGNAL'}
-                        </div>
                     </div>
+                    <div class="opportunity-badge ${hasOpportunity ? 'active' : 'inactive'}">
+                        ${hasOpportunity ? '🎯 LIVE' : 'NO SIGNAL'}
+                    </div>
+                </div>
 
-                    <!-- Main Data Grid -->
-                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:10px;">
-                        <!-- Long Side -->
-                        <div class="exchange-box" style="border-left: 2px solid #10b981;">
-                            <div class="exchange-header">
-                                <span style="font-size:0.7rem; color:#10b981; font-weight:bold;">LONG</span>
-                                <img src="${longExchange.logo}" class="exchange-logo" style="margin-left:auto;">
+                <!-- Main Data Grid -->
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:10px;">
+                    <!-- Long Side -->
+                    <div class="exchange-box" style="border-left: 2px solid #10b981;">
+                        <div class="exchange-header">
+                            <span style="font-size:0.7rem; color:#10b981; font-weight:bold;">LONG</span>
+                            <img src="${longExchange.logo}" class="exchange-logo" style="margin-left:auto;">
                                 <span class="exchange-name">${longExchange.name}</span>
-                            </div>
-                            <div class="price-value">$${formatPrice(longExchange.markPrice)}</div>
-                            <div class="funding-rate">
-                                <span class="funding-label">Funding</span>
-                                <span class="funding-value ${longExchange.fundingRate >= 0 ? 'positive' : 'negative'}">
-                                    ${parseFloat(longExchange.fundingRate).toFixed(4)}%
-                                </span>
-                            </div>
                         </div>
+                        <div class="price-value">$${formatPrice(longExchange.markPrice)}</div>
+                        <div class="funding-rate">
+                            <span class="funding-label">Funding</span>
+                            <span class="funding-value ${longExchange.fundingRate >= 0 ? 'positive' : 'negative'}">
+                                ${parseFloat(longExchange.fundingRate).toFixed(4)}%
+                            </span>
+                        </div>
+                    </div>
 
-                        <!-- Short Side -->
-                        <div class="exchange-box" style="border-left: 2px solid #ef4444;">
-                            <div class="exchange-header">
-                                <span style="font-size:0.7rem; color:#ef4444; font-weight:bold;">SHORT</span>
-                                <img src="${shortExchange.logo}" class="exchange-logo" style="margin-left:auto;">
+                    <!-- Short Side -->
+                    <div class="exchange-box" style="border-left: 2px solid #ef4444;">
+                        <div class="exchange-header">
+                            <span style="font-size:0.7rem; color:#ef4444; font-weight:bold;">SHORT</span>
+                            <img src="${shortExchange.logo}" class="exchange-logo" style="margin-left:auto;">
                                 <span class="exchange-name">${shortExchange.name}</span>
-                            </div>
-                            <div class="price-value">$${formatPrice(shortExchange.markPrice)}</div>
-                            <div class="funding-rate">
-                                <span class="funding-label">Funding</span>
-                                <span class="funding-value ${shortExchange.fundingRate >= 0 ? 'positive' : 'negative'}">
-                                    ${parseFloat(shortExchange.fundingRate).toFixed(4)}%
-                                </span>
-                            </div>
                         </div>
-                    </div>
-
-                    <!-- Analysis & Action -->
-                    <div style="background:rgba(0,0,0,0.2); border-radius:8px; padding:10px;">
-                        <div style="display:flex; justify-content:space-between; margin-bottom:4px; font-size:0.8rem;">
-                            <span style="color:rgba(255,255,255,0.6);">Net Profit (8h)</span>
-                            <span class="${opp.analysis.totalNetProfit8h >= 0 ? 'positive' : 'negative'}" style="font-weight:bold;">
-                                $${(opp.analysis.totalNetProfit8h || 0).toFixed(4)}
+                        <div class="price-value">$${formatPrice(shortExchange.markPrice)}</div>
+                        <div class="funding-rate">
+                            <span class="funding-label">Funding</span>
+                            <span class="funding-value ${shortExchange.fundingRate >= 0 ? 'positive' : 'negative'}">
+                                ${parseFloat(shortExchange.fundingRate).toFixed(4)}%
                             </span>
-                        </div>
-                        <div style="display:flex; justify-content:flex-end; margin-bottom:8px; font-size:0.65rem; color:rgba(255,255,255,0.4);">
-                            (Funding: $${opp.analysis.fundingPnL8h.toFixed(4)} + Price: $${opp.analysis.priceDifferencePnL.toFixed(2)})
-                        </div>
-
-                        <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:0.8rem;">
-                            <span style="color:rgba(255,255,255,0.6);">Annual APR (Funding Only)</span>
-                            <span class="${opp.analysis.annualAPR > 0 ? 'positive' : 'negative'}" style="font-weight:bold;">
-                                ${opp.analysis.annualAPR.toFixed(2)}%
-                            </span>
-                        </div>
-                        
-                        <!-- Action Instruction -->
-                        <div style="margin-top:10px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.1); font-size:0.75rem; text-align:center;">
-                            <div style="margin-bottom:4px; color:rgba(255,255,255,0.8);">Recommended Action (100$ Size)</div>
-                            <div style="display:flex; justify-content:center; gap:10px; align-items:center;">
-                                <span style="color:#10b981; font-weight:bold;">LONG $100 ${longExchange.name}</span>
-                                <span style="opacity:0.5;">+</span>
-                                <span style="color:#ef4444; font-weight:bold;">SHORT $100 ${shortExchange.name}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <button class="expand-button">▼ Show Details</button>
-                    
-                    <!-- Hidden Details (Trading Steps) -->
-                    <div class="trading-steps">
-                        <div class="steps-header">EXECUTION STEPS</div>
-                        <div class="step-item">
-                            <div class="step-number">1</div>
-                            <div class="step-content">
-                                <div class="step-action">Open LONG on ${longExchange.name}</div>
-                                <div class="step-details">Buy $100 worth of ${opp.symbol} Perpetual</div>
-                            </div>
-                        </div>
-                        <div class="step-item">
-                            <div class="step-number">2</div>
-                            <div class="step-content">
-                                <div class="step-action">Open SHORT on ${shortExchange.name}</div>
-                                <div class="step-details">Sell $100 worth of ${opp.symbol} Perpetual</div>
-                            </div>
-                        </div>
-                        <div class="step-item">
-                            <div class="step-number">3</div>
-                            <div class="step-content">
-                                <div class="step-action">Wait for Funding</div>
-                                <div class="step-details">Collect funding payments every 8 hours</div>
-                            </div>
                         </div>
                     </div>
                 </div>
+
+                <!-- Analysis & Action -->
+                <div style="background:rgba(0,0,0,0.2); border-radius:8px; padding:10px;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:4px; font-size:0.8rem;">
+                        <span style="color:rgba(255,255,255,0.6);">Net Profit (8h)</span>
+                        <span class="${opp.analysis.totalNetProfit8h >= 0 ? 'positive' : 'negative'}" style="font-weight:bold;">
+                            $${(opp.analysis.totalNetProfit8h || 0).toFixed(4)}
+                        </span>
+                    </div>
+                    <div style="display:flex; justify-content:flex-end; margin-bottom:8px; font-size:0.65rem; color:rgba(255,255,255,0.4);">
+                        (Funding: $${opp.analysis.fundingPnL8h.toFixed(4)} + Price: $${opp.analysis.priceDifferencePnL.toFixed(2)})
+                    </div>
+
+                    <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:0.8rem;">
+                        <span style="color:rgba(255,255,255,0.6);">Annual APR (Funding Only)</span>
+                        <span class="${opp.analysis.annualAPR > 0 ? 'positive' : 'negative'}" style="font-weight:bold;">
+                            ${opp.analysis.annualAPR.toFixed(2)}%
+                        </span>
+                    </div>
+
+                    <!-- Action Instruction -->
+                    <div style="margin-top:10px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.1); font-size:0.75rem; text-align:center;">
+                        <div style="margin-bottom:4px; color:rgba(255,255,255,0.8);">Recommended Action (100$ Size)</div>
+                        <div style="display:flex; justify-content:center; gap:10px; align-items:center;">
+                            <span style="color:#10b981; font-weight:bold;">LONG $100 ${longExchange.name}</span>
+                            <span style="opacity:0.5;">+</span>
+                            <span style="color:#ef4444; font-weight:bold;">SHORT $100 ${shortExchange.name}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="expand-button">▼ Show Details</button>
+
+                <!-- Hidden Details (Trading Steps) -->
+                <div class="trading-steps">
+                    <div class="steps-header">EXECUTION STEPS</div>
+                    <div class="step-item">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <div class="step-action">Open LONG on ${longExchange.name}</div>
+                            <div class="step-details">Buy $100 worth of ${opp.symbol} Perpetual</div>
+                        </div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <div class="step-action">Open SHORT on ${shortExchange.name}</div>
+                            <div class="step-details">Sell $100 worth of ${opp.symbol} Perpetual</div>
+                        </div>
+                    </div>
+                    <div class="step-item">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <div class="step-action">Wait for Funding</div>
+                            <div class="step-details">Collect funding payments every 8 hours</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
             `;
         }
 
-        function formatStrategy(strategy, exchangeA, exchangeB) {
+            function formatStrategy(strategy, exchangeA, exchangeB) {
             if (strategy === 'LONG_A_SHORT_B') {
                 return `LONG ${exchangeA} + SHORT ${exchangeB}`;
             } else if (strategy === 'SHORT_A_LONG_B') {
