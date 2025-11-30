@@ -554,6 +554,122 @@
                 padding: 0.75rem 0.5rem;
             }
         }
+
+        /* Settings Modal & Button */
+        .settings-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        .settings-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: rotate(90deg);
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal {
+            background: #1a1b26;
+            padding: 2rem;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 500px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            animation: fadeInDown 0.3s ease;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .form-select {
+            width: 100%;
+            padding: 0.75rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: white;
+            font-size: 0.9rem;
+            outline: none;
+        }
+
+        .form-select:focus {
+            border-color: #667eea;
+        }
+
+        .save-btn {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-weight: 700;
+            margin-top: 1rem;
+            cursor: pointer;
+            transition: opacity 0.3s;
+        }
+
+        .save-btn:hover {
+            opacity: 0.9;
+        }
+
+        .stat-card.compact {
+            padding: 0.75rem;
+        }
+
+        .stat-card.compact .stat-value {
+            font-size: 1.2rem;
+        }
     </style>
 </head>
 
@@ -561,7 +677,10 @@
     <div class="container">
         <!-- Header -->
         <div class="header">
-            <h1>🚀 Crypto Arbitrage Dashboard</h1>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h1>🚀 Crypto Arbitrage Dashboard</h1>
+                <button class="settings-btn" onclick="openSettings()" title="Fee Settings">⚙️</button>
+            </div>
             <div class="status-bar">
                 <div class="status-indicator">
                     <div class="status-dot" id="wsStatus"></div>
@@ -635,6 +754,30 @@
             </div>
         </div>
 
+        <!-- Coin Counts Grid -->
+        <div class="stats-grid" style="margin-top: -1rem; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));">
+            <div class="stat-card compact">
+                <div class="stat-label">Binance Coins</div>
+                <div class="stat-value" id="count-Binance">0</div>
+            </div>
+            <div class="stat-card compact">
+                <div class="stat-label">OKX Coins</div>
+                <div class="stat-value" id="count-OKX">0</div>
+            </div>
+            <div class="stat-card compact">
+                <div class="stat-label">Hyperliquid Coins</div>
+                <div class="stat-value" id="count-Hyperliquid">0</div>
+            </div>
+            <div class="stat-card compact">
+                <div class="stat-label">Bybit Coins</div>
+                <div class="stat-value" id="count-Bybit">0</div>
+            </div>
+            <div class="stat-card compact">
+                <div class="stat-label">Asterdex Coins</div>
+                <div class="stat-value" id="count-Asterdex">0</div>
+            </div>
+        </div>
+
         <!-- Loading -->
         <div class="loading" id="loading">
             <div class="spinner"></div>
@@ -691,6 +834,18 @@
         </div>
     </div>
 
+    <!-- Settings Modal -->
+    <div class="modal-overlay" id="settingsModal">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title">Fee Settings</div>
+                <button class="close-btn" onclick="closeSettings()">×</button>
+            </div>
+            <div id="feeSettingsForm"></div>
+            <button class="save-btn" onclick="saveSettings()">Save Settings</button>
+        </div>
+    </div>
+
     <script>
         let ws;
         let reconnectInterval;
@@ -698,6 +853,114 @@
         let allData = {};
         let allCoinsData = [];
         let sortConfig = { key: 'totalNetProfit', direction: 'desc' };
+
+        // Fee Settings
+        const EXCHANGE_FEES = {
+            'Binance': [
+                { name: 'Regular (Maker 0.02% / Taker 0.05%)', maker: 0.02, taker: 0.05 },
+                { name: 'VIP 1 (Maker 0.016% / Taker 0.04%)', maker: 0.016, taker: 0.04 },
+                { name: 'VIP 2 (Maker 0.014% / Taker 0.035%)', maker: 0.014, taker: 0.035 },
+                { name: 'VIP 3 (Maker 0.012% / Taker 0.032%)', maker: 0.012, taker: 0.032 }
+            ],
+            'OKX': [
+                { name: 'Regular (Maker 0.02% / Taker 0.05%)', maker: 0.02, taker: 0.05 },
+                { name: 'VIP 1 (Maker 0.018% / Taker 0.045%)', maker: 0.018, taker: 0.045 },
+                { name: 'VIP 2 (Maker 0.016% / Taker 0.04%)', maker: 0.016, taker: 0.04 }
+            ],
+            'Bybit': [
+                { name: 'Regular (Maker 0.02% / Taker 0.055%)', maker: 0.02, taker: 0.055 },
+                { name: 'VIP 1 (Maker 0.018% / Taker 0.05%)', maker: 0.018, taker: 0.05 },
+                { name: 'VIP 2 (Maker 0.016% / Taker 0.045%)', maker: 0.016, taker: 0.045 }
+            ],
+            'Hyperliquid': [
+                { name: 'Regular (Maker 0.01% / Taker 0.035%)', maker: 0.01, taker: 0.035 }
+            ],
+            'Asterdex': [
+                { name: 'Regular (Maker 0.02% / Taker 0.05%)', maker: 0.02, taker: 0.05 }
+            ]
+        };
+
+        let userFeeSettings = JSON.parse(localStorage.getItem('feeSettings')) || {
+            'Binance': 0, 'OKX': 0, 'Hyperliquid': 0, 'Bybit': 0, 'Asterdex': 0
+        };
+
+        function getTakerFee(exchangeName) {
+            const tiers = EXCHANGE_FEES[exchangeName];
+            if (!tiers) return 0.05; // Default fallback
+            const tierIndex = userFeeSettings[exchangeName] || 0;
+            return tiers[tierIndex] ? tiers[tierIndex].taker : tiers[0].taker;
+        }
+
+        function calculateAdjustedProfit(opp) {
+            const tradeSize = 100; // 100$
+            const longEx = getLongExchange(opp);
+            const shortEx = getShortExchange(opp);
+
+            const longFeeRate = getTakerFee(longEx);
+            const shortFeeRate = getTakerFee(shortEx);
+
+            // Entry Fee (Opening Position)
+            const totalEntryFee = tradeSize * (longFeeRate + shortFeeRate) / 100;
+
+            // Net Profit = (Funding PnL + Price Diff PnL) - Entry Fee
+            const grossProfit = opp.analysis.totalNetProfit8h || 0;
+            return grossProfit - totalEntryFee;
+        }
+
+        // Settings Modal Functions
+        function openSettings() {
+            const form = document.getElementById('feeSettingsForm');
+            form.innerHTML = '';
+
+            Object.keys(EXCHANGE_FEES).forEach(exchange => {
+                const tiers = EXCHANGE_FEES[exchange];
+                const currentTier = userFeeSettings[exchange] || 0;
+
+                const div = document.createElement('div');
+                div.className = 'form-group';
+
+                const label = document.createElement('label');
+                label.className = 'form-label';
+                label.textContent = `${exchange} Fee Tier`;
+
+                const select = document.createElement('select');
+                select.className = 'form-select';
+                select.id = `fee-${exchange}`;
+
+                tiers.forEach((tier, index) => {
+                    const option = document.createElement('option');
+                    option.value = index;
+                    option.textContent = tier.name;
+                    if (index === currentTier) option.selected = true;
+                    select.appendChild(option);
+                });
+
+                div.appendChild(label);
+                div.appendChild(select);
+                form.appendChild(div);
+            });
+
+            document.getElementById('settingsModal').style.display = 'flex';
+        }
+
+        function closeSettings() {
+            document.getElementById('settingsModal').style.display = 'none';
+        }
+
+        function saveSettings() {
+            Object.keys(EXCHANGE_FEES).forEach(exchange => {
+                const select = document.getElementById(`fee-${exchange}`);
+                if (select) {
+                    userFeeSettings[exchange] = parseInt(select.value);
+                }
+            });
+            localStorage.setItem('feeSettings', JSON.stringify(userFeeSettings));
+            closeSettings();
+
+            // Re-render to apply new fees
+            if (currentTab === 'all') renderAllTable();
+            else if (currentTab !== 'all-data') updateDashboard(allData[currentTab]);
+        }
 
         function switchTab(tabId) {
             currentTab = tabId;
@@ -734,6 +997,9 @@
             const opportunities = getAllOpportunities();
             const tbody = document.getElementById('tableBody');
 
+            // Fix loading stuck issue
+            document.getElementById('loading').style.display = 'none';
+
             if (!opportunities || opportunities.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:2rem;">Waiting for data...</td></tr>';
                 return;
@@ -746,9 +1012,9 @@
                     case 'long': valA = getLongExchange(a); valB = getLongExchange(b); break;
                     case 'short': valA = getShortExchange(a); valB = getShortExchange(b); break;
                     case 'pricePnL': valA = a.analysis.priceDifferencePnL || 0; valB = b.analysis.priceDifferencePnL || 0; break;
-                    case 'totalNetProfit': valA = a.analysis.totalNetProfit8h || 0; valB = b.analysis.totalNetProfit8h || 0; break;
+                    case 'totalNetProfit': valA = calculateAdjustedProfit(a); valB = calculateAdjustedProfit(b); break;
                     case 'apr': valA = a.analysis.annualAPR || 0; valB = b.analysis.annualAPR || 0; break;
-                    default: valA = a.analysis.totalNetProfit8h || 0; valB = b.analysis.totalNetProfit8h || 0;
+                    default: valA = calculateAdjustedProfit(a); valB = calculateAdjustedProfit(b);
                 }
                 if (typeof valA === 'string') return sortConfig.direction === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
                 return sortConfig.direction === 'asc' ? valA - valB : valB - valA;
@@ -757,6 +1023,8 @@
             tbody.innerHTML = opportunities.map(opp => {
                 const longExchange = getLongExchange(opp);
                 const shortExchange = getShortExchange(opp);
+                const netProfit = calculateAdjustedProfit(opp);
+
                 return `
                     <tr onclick="showDetails('${opp.symbol}')">
                         <td style="font-weight:bold; display:flex; align-items:center; gap:8px;">
@@ -765,7 +1033,7 @@
                         <td><span class="exchange-badge"><img src="${getLongExchangeLogo(opp)}" onerror="this.style.display='none'"> ${longExchange}</span></td>
                         <td><span class="exchange-badge"><img src="${getShortExchangeLogo(opp)}" onerror="this.style.display='none'"> ${shortExchange}</span></td>
                         <td class="${opp.analysis.priceDifferencePnL >= 0 ? 'positive' : 'negative'}">$${opp.analysis.priceDifferencePnL.toFixed(2)}</td>
-                        <td class="${(opp.analysis.totalNetProfit8h || 0) >= 0 ? 'positive' : 'negative'}" style="font-weight:bold">$${(opp.analysis.totalNetProfit8h || 0).toFixed(4)}</td>
+                        <td class="${netProfit >= 0 ? 'positive' : 'negative'}" style="font-weight:bold">$${netProfit.toFixed(4)}</td>
                         <td class="${opp.analysis.annualAPR > 0 ? 'positive' : 'negative'}">${opp.analysis.annualAPR.toFixed(2)}%</td>
                     </tr>
                 `;
@@ -782,6 +1050,8 @@
             } else {
                 longExchange = opp.exchangeB; shortExchange = opp.exchangeA;
             }
+
+            const netProfit = calculateAdjustedProfit(opp);
 
             return `
                 <div class="${cardClass}">
@@ -816,8 +1086,9 @@
                             </div>
                             <div style="display:flex; justify-content:space-between; font-weight:bold; margin-top:4px;">
                                 <span style="color:white;">Net Profit (8h)</span>
-                                <span class="${(opp.analysis.totalNetProfit8h || 0) >= 0 ? 'positive' : 'negative'}">$${(opp.analysis.totalNetProfit8h || 0).toFixed(4)}</span>
+                                <span class="${netProfit >= 0 ? 'positive' : 'negative'}">$${netProfit.toFixed(4)}</span>
                             </div>
+                            <div style="text-align:right; font-size:0.65rem; color:rgba(255,255,255,0.4); margin-top:-2px;">(After Fees)</div>
                         </div>
                         <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:0.8rem;">
                             <span style="color:rgba(255,255,255,0.6);">Annual APR (Funding Only)</span>
@@ -890,6 +1161,9 @@
 
         function renderAllDataTable() {
             const tbody = document.getElementById('allDataBody');
+            // Fix loading stuck issue
+            document.getElementById('loading').style.display = 'none';
+
             allCoinsData.sort((a, b) => a.symbol.localeCompare(b.symbol));
             tbody.innerHTML = allCoinsData.map(coin => {
                 const formatCell = (data) => {
@@ -899,6 +1173,9 @@
                 };
                 return `<tr><td style="font-weight:bold; display:flex; align-items:center; gap:8px;"><img src="${coin.logo}" style="width:20px; height:20px; border-radius:50%;" onerror="this.style.display='none'"> ${coin.symbol}</td>${formatCell(coin.binance)}${formatCell(coin.okx)}${formatCell(coin.hyperliquid)}${formatCell(coin.bybit)}${formatCell(coin.asterdex)}</tr>`;
             }).join('');
+
+            // Update counts even in this view
+            updateCoinCounts();
         }
 
         function getLongExchange(opp) { return opp.analysis.strategy === 'LONG_A_SHORT_B' ? opp.exchangeA.name : opp.exchangeB.name; }
@@ -916,6 +1193,26 @@
             renderAllTable();
         }
 
+        function updateCoinCounts() {
+            if (!allCoinsData || allCoinsData.length === 0) return;
+
+            const counts = { Binance: 0, OKX: 0, Hyperliquid: 0, Bybit: 0, Asterdex: 0 };
+
+            allCoinsData.forEach(coin => {
+                if (coin.binance) counts.Binance++;
+                if (coin.okx) counts.OKX++;
+                if (coin.hyperliquid) counts.Hyperliquid++;
+                if (coin.bybit) counts.Bybit++;
+                if (coin.asterdex) counts.Asterdex++;
+            });
+
+            if (document.getElementById('count-Binance')) document.getElementById('count-Binance').textContent = counts.Binance;
+            if (document.getElementById('count-OKX')) document.getElementById('count-OKX').textContent = counts.OKX;
+            if (document.getElementById('count-Hyperliquid')) document.getElementById('count-Hyperliquid').textContent = counts.Hyperliquid;
+            if (document.getElementById('count-Bybit')) document.getElementById('count-Bybit').textContent = counts.Bybit;
+            if (document.getElementById('count-Asterdex')) document.getElementById('count-Asterdex').textContent = counts.Asterdex;
+        }
+
         function updateStats(opportunities) {
             const activeOpps = opportunities.filter(o => o.analysis && o.analysis.isOpportunity);
             document.getElementById('totalOpportunities').textContent = opportunities.length;
@@ -928,6 +1225,7 @@
                 document.getElementById('bestOpportunity').textContent = 'None';
                 document.getElementById('bestAnnual').textContent = 'None';
             }
+            updateCoinCounts();
         }
 
         function connectWebSocket() {
