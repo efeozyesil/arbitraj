@@ -85,44 +85,107 @@
         }
 
         /* Tab System */
-        .tabs {
+        /* Tabs Container */
+        .tabs-container {
+            margin-bottom: 1.5rem;
+            animation: fadeInUp 0.6s ease-out 0.2s both;
+        }
+
+        .tab-row {
             display: flex;
             gap: 0.5rem;
-            margin-bottom: 1.5rem;
-            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 0.5rem;
+        }
+
+        .tab-pairs {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+        }
+
+        .tab-pairs::-webkit-scrollbar {
+            height: 4px;
+        }
+
+        .tab-pairs::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
         }
 
         .tab {
             padding: 0.75rem 1.5rem;
             background: rgba(255, 255, 255, 0.05);
-            border: none;
-            border-radius: 8px 8px 0 0;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
             color: rgba(255, 255, 255, 0.6);
             font-size: 0.875rem;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
             position: relative;
+            white-space: nowrap;
+        }
+
+        .tab-all {
+            flex: 1;
+            font-size: 1rem;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .tab-pair {
+            flex: 1;
+            min-width: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1rem;
+        }
+
+        .tab-logo {
+            width: 24px;
+            height: 24px;
+            object-fit: contain;
+            filter: grayscale(50%) opacity(0.7);
+            transition: all 0.3s ease;
+        }
+
+        .tab-arrow {
+            font-size: 0.875rem;
+            opacity: 0.5;
+            transition: opacity 0.3s ease;
         }
 
         .tab:hover {
             background: rgba(255, 255, 255, 0.08);
             color: rgba(255, 255, 255, 0.8);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .tab:hover .tab-logo {
+            filter: grayscale(0%) opacity(1);
+        }
+
+        .tab:hover .tab-arrow {
+            opacity: 1;
         }
 
         .tab.active {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
+            border-color: transparent;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
         }
 
-        .tab.active::after {
-            content: '';
-            position: absolute;
-            bottom: -2px;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        .tab.active .tab-logo {
+            filter: grayscale(0%) opacity(1) drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+        }
+
+        .tab.active .tab-arrow {
+            opacity: 1;
         }
 
         /* Stats Cards */
@@ -637,11 +700,68 @@
         </div>
 
         <!-- Tabs -->
-        <div class="tabs">
-            <button class="tab active" onclick="switchTab('all')">ALL</button>
-            <button class="tab" onclick="switchTab('binance-okx')">Binance ↔ OKX</button>
-            <button class="tab" onclick="switchTab('okx-hyperliquid')">OKX ↔ Hyperliquid</button>
-            <button class="tab" onclick="switchTab('binance-hyperliquid')">Binance ↔ Hyperliquid</button>
+        <div class="tabs-container">
+            <!-- ALL Tab (Full Width) -->
+            <div class="tab-row">
+                <button class="tab tab-all active" onclick="switchTab('all')">ALL PAIRS</button>
+            </div>
+
+            <!-- Exchange Pair Tabs (2 rows of 5) -->
+            <div class="tab-row tab-pairs">
+                <button class="tab tab-pair" onclick="switchTab('binance-okx')" title="Binance ↔ OKX">
+                    <img src="/logos/binance.png" alt="Binance" class="tab-logo">
+                    <span class="tab-arrow">↔</span>
+                    <img src="/logos/okx.png" alt="OKX" class="tab-logo">
+                </button>
+                <button class="tab tab-pair" onclick="switchTab('binance-hyperliquid')" title="Binance ↔ Hyperliquid">
+                    <img src="/logos/binance.png" alt="Binance" class="tab-logo">
+                    <span class="tab-arrow">↔</span>
+                    <img src="/logos/hyperliquid.png" alt="Hyperliquid" class="tab-logo">
+                </button>
+                <button class="tab tab-pair" onclick="switchTab('binance-bybit')" title="Binance ↔ Bybit">
+                    <img src="/logos/binance.png" alt="Binance" class="tab-logo">
+                    <span class="tab-arrow">↔</span>
+                    <img src="/logos/bybit.png" alt="Bybit" class="tab-logo">
+                </button>
+                <button class="tab tab-pair" onclick="switchTab('binance-asterdex')" title="Binance ↔ Asterdex">
+                    <img src="/logos/binance.png" alt="Binance" class="tab-logo">
+                    <span class="tab-arrow">↔</span>
+                    <img src="/logos/asterdex.png" alt="Asterdex" class="tab-logo">
+                </button>
+                <button class="tab tab-pair" onclick="switchTab('okx-hyperliquid')" title="OKX ↔ Hyperliquid">
+                    <img src="/logos/okx.png" alt="OKX" class="tab-logo">
+                    <span class="tab-arrow">↔</span>
+                    <img src="/logos/hyperliquid.png" alt="Hyperliquid" class="tab-logo">
+                </button>
+            </div>
+
+            <div class="tab-row tab-pairs">
+                <button class="tab tab-pair" onclick="switchTab('okx-bybit')" title="OKX ↔ Bybit">
+                    <img src="/logos/okx.png" alt="OKX" class="tab-logo">
+                    <span class="tab-arrow">↔</span>
+                    <img src="/logos/bybit.png" alt="Bybit" class="tab-logo">
+                </button>
+                <button class="tab tab-pair" onclick="switchTab('okx-asterdex')" title="OKX ↔ Asterdex">
+                    <img src="/logos/okx.png" alt="OKX" class="tab-logo">
+                    <span class="tab-arrow">↔</span>
+                    <img src="/logos/asterdex.png" alt="Asterdex" class="tab-logo">
+                </button>
+                <button class="tab tab-pair" onclick="switchTab('hyperliquid-bybit')" title="Hyperliquid ↔ Bybit">
+                    <img src="/logos/hyperliquid.png" alt="Hyperliquid" class="tab-logo">
+                    <span class="tab-arrow">↔</span>
+                    <img src="/logos/bybit.png" alt="Bybit" class="tab-logo">
+                </button>
+                <button class="tab tab-pair" onclick="switchTab('hyperliquid-asterdex')" title="Hyperliquid ↔ Asterdex">
+                    <img src="/logos/hyperliquid.png" alt="Hyperliquid" class="tab-logo">
+                    <span class="tab-arrow">↔</span>
+                    <img src="/logos/asterdex.png" alt="Asterdex" class="tab-logo">
+                </button>
+                <button class="tab tab-pair" onclick="switchTab('bybit-asterdex')" title="Bybit ↔ Asterdex">
+                    <img src="/logos/bybit.png" alt="Bybit" class="tab-logo">
+                    <span class="tab-arrow">↔</span>
+                    <img src="/logos/asterdex.png" alt="Asterdex" class="tab-logo">
+                </button>
+            </div>
         </div>
 
         <!-- Stats -->
@@ -699,22 +819,28 @@
         let currentTab = 'all'; // Default tab is ALL
         let allData = {
             'binance-okx': [],
+            'binance-hyperliquid': [],
+            'binance-bybit': [],
+            'binance-asterdex': [],
             'okx-hyperliquid': [],
-            'binance-hyperliquid': []
+            'okx-bybit': [],
+            'okx-asterdex': [],
+            'hyperliquid-bybit': [],
+            'hyperliquid-asterdex': [],
+            'bybit-asterdex': []
         };
         let sortConfig = { key: 'profit8h', direction: 'desc' };
 
         function switchTab(tabId) {
             currentTab = tabId;
 
-            // Update tab styles
+            // Update tab styles - remove active from all, add to clicked
             document.querySelectorAll('.tab').forEach(tab => {
                 tab.classList.remove('active');
-                if (tab.textContent.toLowerCase().includes(tabId.replace('-', ' ')) ||
-                    (tabId === 'all' && tab.textContent.includes('ALL'))) {
-                    tab.classList.add('active');
-                }
             });
+
+            // Add active class to the clicked tab
+            event.target.closest('.tab').classList.add('active');
 
             // Handle ALL tab vs others
             if (currentTab === 'all') {
