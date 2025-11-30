@@ -243,7 +243,21 @@ class ArbitrageService {
             { "binance": "IMXUSDT", "okx": "IMX-USDT-SWAP", "hyperliquid": "IMX", "bybit": "IMXUSDT", "asterdex": "IMXUSDT", "name": "IMX", "symbol": "IMX", "logo": "https://cryptologos.cc/logos/immutable-x-imx-logo.png", "color": "#000000" },
             { "binance": "AAVEUSDT", "okx": "AAVE-USDT-SWAP", "hyperliquid": "AAVE", "bybit": "AAVEUSDT", "asterdex": "AAVEUSDT", "name": "AAVE", "symbol": "AAVE", "logo": "https://cryptologos.cc/logos/aave-aave-logo.png", "color": "#000000" },
             { "binance": "WLDUSDT", "okx": "WLD-USDT-SWAP", "hyperliquid": "WLD", "bybit": "WLDUSDT", "asterdex": "WLDUSDT", "name": "WLD", "symbol": "WLD", "logo": "https://assets.coingecko.com/coins/images/31069/small/worldcoin.jpeg", "color": "#000000" },
-            { "binance": "PEPEUSDT", "okx": "PEPE-USDT-SWAP", "hyperliquid": "PEPE", "bybit": "PEPEUSDT", "asterdex": "PEPEUSDT", "name": "PEPE", "symbol": "PEPE", "logo": "https://assets.coingecko.com/coins/images/29850/small/pepe-token.jpeg", "color": "#000000" }
+            // PEPE: Binance/Bybit=1000PEPE, Hyperliquid=kPEPE, OKX=PEPE (Fiyat farkı çok, OKX'i çıkarıyoruz şimdilik)
+            { "binance": "1000PEPEUSDT", "okx": null, "hyperliquid": "kPEPE", "bybit": "1000PEPEUSDT", "asterdex": "1000PEPEUSDT", "name": "PEPE", "symbol": "PEPE", "logo": "https://assets.coingecko.com/coins/images/29850/small/pepe-token.jpeg", "color": "#000000" },
+            // BONK: Binance/Bybit=1000BONK, Hyperliquid=kBONK
+            { "binance": "1000BONKUSDT", "okx": null, "hyperliquid": "kBONK", "bybit": "1000BONKUSDT", "asterdex": "1000BONKUSDT", "name": "BONK", "symbol": "BONK", "logo": "https://assets.coingecko.com/coins/images/28600/small/bonk.jpg", "color": "#000000" },
+            // SHIB: Binance/Bybit=1000SHIB, Hyperliquid=kSHIB
+            { "binance": "1000SHIBUSDT", "okx": null, "hyperliquid": "kSHIB", "bybit": "1000SHIBUSDT", "asterdex": "1000SHIBUSDT", "name": "SHIB", "symbol": "SHIB", "logo": "https://cryptologos.cc/logos/shiba-inu-shib-logo.png", "color": "#000000" },
+            // FLOKI: Binance/Bybit=1000FLOKI, Hyperliquid=kFLOKI
+            { "binance": "1000FLOKIUSDT", "okx": null, "hyperliquid": "kFLOKI", "bybit": "1000FLOKIUSDT", "asterdex": "1000FLOKIUSDT", "name": "FLOKI", "symbol": "FLOKI", "logo": "https://assets.coingecko.com/coins/images/16746/small/FLOKI.png", "color": "#000000" },
+
+            // New Coins
+            { "binance": "TRXUSDT", "okx": "TRX-USDT-SWAP", "hyperliquid": "TRX", "bybit": "TRXUSDT", "asterdex": "TRXUSDT", "name": "TRX", "symbol": "TRX", "logo": "https://cryptologos.cc/logos/tron-trx-logo.png", "color": "#FF0013" },
+            { "binance": "MATICUSDT", "okx": "MATIC-USDT-SWAP", "hyperliquid": "MATIC", "bybit": "MATICUSDT", "asterdex": "MATICUSDT", "name": "MATIC", "symbol": "MATIC", "logo": "https://cryptologos.cc/logos/polygon-matic-logo.png", "color": "#8247E5" },
+            { "binance": "FTMUSDT", "okx": "FTM-USDT-SWAP", "hyperliquid": "FTM", "bybit": "FTMUSDT", "asterdex": "FTMUSDT", "name": "FTM", "symbol": "FTM", "logo": "https://cryptologos.cc/logos/fantom-ftm-logo.png", "color": "#13B5EC" },
+            { "binance": "RUNEUSDT", "okx": "RUNE-USDT-SWAP", "hyperliquid": "RUNE", "bybit": "RUNEUSDT", "asterdex": "RUNEUSDT", "name": "RUNE", "symbol": "RUNE", "logo": "https://cryptologos.cc/logos/thorchain-rune-logo.png", "color": "#00CCBC" },
+            { "binance": "SANDUSDT", "okx": "SAND-USDT-SWAP", "hyperliquid": "SAND", "bybit": "SANDUSDT", "asterdex": "SANDUSDT", "name": "SAND", "symbol": "SAND", "logo": "https://cryptologos.cc/logos/the-sandbox-sand-logo.png", "color": "#00ADEF" }
         ];
 
         // Add fallback logo for missing images
