@@ -1297,35 +1297,46 @@
             // Sort by APR (highest first)
             opportunities.sort((a, b) => (b.analysis.annualAPR || 0) - (a.analysis.annualAPR || 0));
 
+            // Take only top 10
+            const topOpportunities = opportunities.slice(0, 10);
+
             const grid = document.getElementById('opportunitiesGrid');
-            const existingCards = new Map();
-            grid.querySelectorAll('.opportunity-card').forEach(card => {
+
+            // Remember expanded cards
+            const expandedSymbols = new Set();
+            grid.querySelectorAll('.opportunity-card.expanded').forEach(card => {
                 const symbol = card.getAttribute('data-symbol');
-                if (symbol) existingCards.set(symbol, card);
+                if (symbol) expandedSymbols.add(symbol);
             });
 
-            opportunities.forEach(opp => {
-                let card = existingCards.get(opp.symbol);
-                if (card) {
-                    updateCardValues(card, opp);
-                    existingCards.delete(opp.symbol);
-                } else {
-                    const tempDiv = document.createElement('div');
-                    tempDiv.innerHTML = createOpportunityCard(opp);
-                    const newCard = tempDiv.firstElementChild;
-                    grid.appendChild(newCard);
-                    const btn = newCard.querySelector('.expand-button');
-                    if (btn) {
-                        btn.addEventListener('click', (e) => {
-                            e.stopPropagation();
-                            newCard.classList.toggle('expanded');
-                            btn.textContent = newCard.classList.contains('expanded') ? '▲ Hide Trading Steps' : '▼ Show Trading Steps';
-                        });
-                    }
+            // Clear and rebuild
+            grid.innerHTML = '';
+
+            topOpportunities.forEach(opp => {
+                const cardHTML = createOpportunityCard(opp);
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = cardHTML;
+                const card = tempDiv.firstElementChild;
+
+                // Restore expanded state
+                if (expandedSymbols.has(opp.symbol)) {
+                    card.classList.add('expanded');
+                    const btn = card.querySelector('.expand-button');
+                    if (btn) btn.textContent = '▲ Hide Trading Steps';
+                }
+
+                grid.appendChild(card);
+
+                // Add event listener
+                const btn = card.querySelector('.expand-button');
+                if (btn) {
+                    btn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        card.classList.toggle('expanded');
+                        btn.textContent = card.classList.contains('expanded') ? '▲ Hide Trading Steps' : '▼ Show Trading Steps';
+                    });
                 }
             });
-
-            existingCards.forEach(card => card.remove());
         }
 
         function updateCardValues(card, opp) {
