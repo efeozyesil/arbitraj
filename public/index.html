@@ -904,29 +904,39 @@
         let allCoinsData = [];
         let sortConfig = { key: 'totalNetProfit', direction: 'desc' };
 
-        // Real Fee Settings (2024 Data)
+        // Real Fee Settings (Expanded)
         const EXCHANGE_FEES = {
             'Binance': [
                 { name: 'Regular (Maker 0.02% / Taker 0.05%)', maker: 0.02, taker: 0.05 },
                 { name: 'VIP 1 (Maker 0.016% / Taker 0.04%)', maker: 0.016, taker: 0.04 },
                 { name: 'VIP 2 (Maker 0.014% / Taker 0.035%)', maker: 0.014, taker: 0.035 },
                 { name: 'VIP 3 (Maker 0.012% / Taker 0.032%)', maker: 0.012, taker: 0.032 },
-                { name: 'VIP 4 (Maker 0.01% / Taker 0.03%)', maker: 0.01, taker: 0.03 }
+                { name: 'VIP 4 (Maker 0.01% / Taker 0.03%)', maker: 0.01, taker: 0.03 },
+                { name: 'VIP 5 (Maker 0.008% / Taker 0.027%)', maker: 0.008, taker: 0.027 },
+                { name: 'VIP 6 (Maker 0.006% / Taker 0.025%)', maker: 0.006, taker: 0.025 },
+                { name: 'VIP 7 (Maker 0.004% / Taker 0.022%)', maker: 0.004, taker: 0.022 },
+                { name: 'VIP 8 (Maker 0.002% / Taker 0.02%)', maker: 0.002, taker: 0.02 },
+                { name: 'VIP 9 (Maker 0% / Taker 0.017%)', maker: 0, taker: 0.017 }
             ],
             'OKX': [
                 { name: 'Regular (Maker 0.02% / Taker 0.05%)', maker: 0.02, taker: 0.05 },
                 { name: 'VIP 1 (Maker 0.01% / Taker 0.03%)', maker: 0.01, taker: 0.03 },
-                { name: 'VIP 2 (Maker 0.008% / Taker 0.028%)', maker: 0.008, taker: 0.028 }
+                { name: 'VIP 2 (Maker 0.008% / Taker 0.028%)', maker: 0.008, taker: 0.028 },
+                { name: 'VIP 3 (Maker 0.006% / Taker 0.026%)', maker: 0.006, taker: 0.026 },
+                { name: 'VIP 4 (Maker 0.004% / Taker 0.024%)', maker: 0.004, taker: 0.024 },
+                { name: 'VIP 5 (Maker 0.002% / Taker 0.022%)', maker: 0.002, taker: 0.022 }
             ],
             'Bybit': [
-                { name: 'Regular (Maker 0.02% / Taker 0.055%)', maker: 0.02, taker: 0.055 },
+                { name: 'Non-VIP (Maker 0.02% / Taker 0.055%)', maker: 0.02, taker: 0.055 },
                 { name: 'VIP 1 (Maker 0.018% / Taker 0.05%)', maker: 0.018, taker: 0.05 },
                 { name: 'VIP 2 (Maker 0.016% / Taker 0.045%)', maker: 0.016, taker: 0.045 },
-                { name: 'Pro 1 (Maker 0.01% / Taker 0.04%)', maker: 0.01, taker: 0.04 }
+                { name: 'VIP 3 (Maker 0.014% / Taker 0.04%)', maker: 0.014, taker: 0.04 },
+                { name: 'VIP 4 (Maker 0.012% / Taker 0.035%)', maker: 0.012, taker: 0.035 },
+                { name: 'Pro 1 (Maker 0.01% / Taker 0.04%)', maker: 0.01, taker: 0.04 },
+                { name: 'Pro 2 (Maker 0.008% / Taker 0.035%)', maker: 0.008, taker: 0.035 }
             ],
             'Hyperliquid': [
-                { name: 'Regular (Maker 0.01% / Taker 0.035%)', maker: 0.01, taker: 0.035 },
-                { name: 'VIP (Maker 0% / Taker 0.019%)', maker: 0, taker: 0.019 }
+                { name: 'Regular (Maker 0.01% / Taker 0.035%)', maker: 0.01, taker: 0.035 }
             ],
             'Asterdex': [
                 { name: 'Regular (Maker 0.02% / Taker 0.05%)', maker: 0.02, taker: 0.05 }
@@ -945,41 +955,34 @@
         }
 
         function calculateAdjustedProfit(opp) {
-            const tradeSize = 100; // 100$
+            const tradeSize = 100;
             const longEx = getLongExchange(opp);
             const shortEx = getShortExchange(opp);
 
             const longFees = getFeeRates(longEx);
             const shortFees = getFeeRates(shortEx);
 
-            // Entry Fee (Opening Position - Taker assumed for safety)
+            // Entry Fee (Taker assumed)
             const totalEntryFee = tradeSize * (longFees.taker + shortFees.taker) / 100;
 
-            // Net Profit = (Funding PnL + Price Diff PnL) - Entry Fee
             const grossProfit = opp.analysis.totalNetProfit8h || 0;
             return grossProfit - totalEntryFee;
         }
 
-        // Settings Modal Functions
         function openSettings() {
             const form = document.getElementById('feeSettingsForm');
             form.innerHTML = '';
-
             Object.keys(EXCHANGE_FEES).forEach(exchange => {
                 const tiers = EXCHANGE_FEES[exchange];
                 const currentTier = userFeeSettings[exchange] || 0;
-
                 const div = document.createElement('div');
                 div.className = 'form-group';
-
                 const label = document.createElement('label');
                 label.className = 'form-label';
                 label.textContent = `${exchange} Fee Tier`;
-
                 const select = document.createElement('select');
                 select.className = 'form-select';
                 select.id = `fee-${exchange}`;
-
                 tiers.forEach((tier, index) => {
                     const option = document.createElement('option');
                     option.value = index;
@@ -987,30 +990,22 @@
                     if (index === currentTier) option.selected = true;
                     select.appendChild(option);
                 });
-
                 div.appendChild(label);
                 div.appendChild(select);
                 form.appendChild(div);
             });
-
             document.getElementById('settingsModal').style.display = 'flex';
         }
 
-        function closeSettings() {
-            document.getElementById('settingsModal').style.display = 'none';
-        }
+        function closeSettings() { document.getElementById('settingsModal').style.display = 'none'; }
 
         function saveSettings() {
             Object.keys(EXCHANGE_FEES).forEach(exchange => {
                 const select = document.getElementById(`fee-${exchange}`);
-                if (select) {
-                    userFeeSettings[exchange] = parseInt(select.value);
-                }
+                if (select) userFeeSettings[exchange] = parseInt(select.value);
             });
             localStorage.setItem('feeSettings', JSON.stringify(userFeeSettings));
             closeSettings();
-
-            // Re-render to apply new fees
             if (currentTab === 'all') renderAllTable();
             else if (currentTab !== 'all-data') updateDashboard(allData[currentTab]);
         }
@@ -1019,11 +1014,9 @@
             currentTab = tabId;
             document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
             event.target.closest('.tab').classList.add('active');
-
             document.getElementById('opportunitiesGrid').style.display = 'none';
             document.getElementById('opportunitiesTable').style.display = 'none';
             document.getElementById('allDataTable').style.display = 'none';
-
             if (currentTab === 'all') {
                 document.getElementById('opportunitiesTable').style.display = 'block';
                 renderAllTable();
@@ -1049,15 +1042,11 @@
         function renderAllTable() {
             const opportunities = getAllOpportunities();
             const tbody = document.getElementById('tableBody');
-
-            // Fix loading stuck issue
             document.getElementById('loading').style.display = 'none';
-
             if (!opportunities || opportunities.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:2rem;">Waiting for data...</td></tr>';
                 return;
             }
-
             opportunities.sort((a, b) => {
                 let valA, valB;
                 switch (sortConfig.key) {
@@ -1072,17 +1061,13 @@
                 if (typeof valA === 'string') return sortConfig.direction === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
                 return sortConfig.direction === 'asc' ? valA - valB : valB - valA;
             });
-
             tbody.innerHTML = opportunities.map(opp => {
                 const longExchange = getLongExchange(opp);
                 const shortExchange = getShortExchange(opp);
                 const netProfit = calculateAdjustedProfit(opp);
-
                 return `
                     <tr onclick="showDetails('${opp.symbol}')">
-                        <td style="font-weight:bold; display:flex; align-items:center; gap:8px;">
-                            <img src="${opp.logo}" style="width:20px; height:20px; border-radius:50%;" onerror="this.style.display='none'"> ${opp.symbol}
-                        </td>
+                        <td style="font-weight:bold; display:flex; align-items:center; gap:8px;"><img src="${opp.logo}" style="width:20px; height:20px; border-radius:50%;" onerror="this.style.display='none'"> ${opp.symbol}</td>
                         <td><span class="exchange-badge"><img src="${getLongExchangeLogo(opp)}" onerror="this.style.display='none'"> ${longExchange}</span></td>
                         <td><span class="exchange-badge"><img src="${getShortExchangeLogo(opp)}" onerror="this.style.display='none'"> ${shortExchange}</span></td>
                         <td class="${opp.analysis.priceDifferencePnL >= 0 ? 'positive' : 'negative'}">$${opp.analysis.priceDifferencePnL.toFixed(2)}</td>
@@ -1098,7 +1083,6 @@
             const hasOpportunity = opp.analysis.isOpportunity;
             const cardClass = hasOpportunity ? 'opportunity-card has-opportunity' : 'opportunity-card';
             let longExchangeName, shortExchangeName, longExchangeLogo, shortExchangeLogo;
-
             if (opp.analysis.strategy === 'LONG_A_SHORT_B') {
                 longExchangeName = opp.exchangeA.name; shortExchangeName = opp.exchangeB.name;
                 longExchangeLogo = opp.exchangeA.logo; shortExchangeLogo = opp.exchangeB.logo;
@@ -1107,42 +1091,32 @@
                 longExchangeLogo = opp.exchangeB.logo; shortExchangeLogo = opp.exchangeA.logo;
             }
 
-            // Fee & Break-Even Calculation
             const tradeSize = 100;
             const longFees = getFeeRates(longExchangeName);
             const shortFees = getFeeRates(shortExchangeName);
-
             const openLongMaker = (tradeSize * longFees.maker / 100);
             const openLongTaker = (tradeSize * longFees.taker / 100);
             const openShortMaker = (tradeSize * shortFees.maker / 100);
             const openShortTaker = (tradeSize * shortFees.taker / 100);
-
             const totalEntryTaker = openLongTaker + openShortTaker;
             const totalEntryMaker = openLongMaker + openShortMaker;
-
-            // Exit fees (Estimated same as entry)
             const totalExitTaker = totalEntryTaker;
             const totalExitMaker = totalEntryMaker;
-
-            // Total Cost (Taker Entry + Taker Exit + Price Diff Loss if any)
             const priceDiffPnL = opp.analysis.priceDifferencePnL || 0;
             const priceDiffLoss = priceDiffPnL < 0 ? Math.abs(priceDiffPnL) : 0;
             const totalCostTaker = totalEntryTaker + totalExitTaker + priceDiffLoss;
-
-            // Break Even
             const funding8h = opp.analysis.fundingPnL8h || 0;
             const hourlyFunding = funding8h / 8;
             let breakEvenHours = 'Never';
-
             if (hourlyFunding > 0) {
                 const hours = totalCostTaker / hourlyFunding;
                 breakEvenHours = hours.toFixed(1);
             }
-
             const netProfit = calculateAdjustedProfit(opp);
 
+            // Added data-symbol and specific classes for selective updates
             return `
-                <div class="${cardClass}">
+                <div class="${cardClass}" data-symbol="${opp.symbol}">
                     <div class="coin-header">
                         <div style="display:flex; align-items:center; gap:10px; flex:1;">
                             <img src="${opp.logo}" alt="${opp.name}" class="coin-logo" onerror="this.style.display='none'">
@@ -1153,34 +1127,34 @@
                     <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:10px;">
                         <div class="exchange-box" style="border-left: 2px solid #10b981;">
                             <div class="exchange-header"><span style="font-size:0.7rem; color:#10b981; font-weight:bold;">LONG</span><img src="${longExchangeLogo}" class="exchange-logo" style="margin-left:auto;"><span class="exchange-name">${longExchangeName}</span></div>
-                            <div class="price-value">$${formatPrice(opp.analysis.strategy === 'LONG_A_SHORT_B' ? opp.exchangeA.markPrice : opp.exchangeB.markPrice)}</div>
-                            <div class="funding-rate"><span class="funding-label">Funding</span><span class="funding-value ${parseFloat(opp.analysis.strategy === 'LONG_A_SHORT_B' ? opp.exchangeA.fundingRate : opp.exchangeB.fundingRate) >= 0 ? 'positive' : 'negative'}">${parseFloat(opp.analysis.strategy === 'LONG_A_SHORT_B' ? opp.exchangeA.fundingRate : opp.exchangeB.fundingRate).toFixed(4)}%</span></div>
+                            <div class="price-value val-price-long">$${formatPrice(opp.analysis.strategy === 'LONG_A_SHORT_B' ? opp.exchangeA.markPrice : opp.exchangeB.markPrice)}</div>
+                            <div class="funding-rate"><span class="funding-label">Funding</span><span class="funding-value val-funding-long ${parseFloat(opp.analysis.strategy === 'LONG_A_SHORT_B' ? opp.exchangeA.fundingRate : opp.exchangeB.fundingRate) >= 0 ? 'positive' : 'negative'}">${parseFloat(opp.analysis.strategy === 'LONG_A_SHORT_B' ? opp.exchangeA.fundingRate : opp.exchangeB.fundingRate).toFixed(4)}%</span></div>
                         </div>
                         <div class="exchange-box" style="border-left: 2px solid #ef4444;">
                             <div class="exchange-header"><span style="font-size:0.7rem; color:#ef4444; font-weight:bold;">SHORT</span><img src="${shortExchangeLogo}" class="exchange-logo" style="margin-left:auto;"><span class="exchange-name">${shortExchangeName}</span></div>
-                            <div class="price-value">$${formatPrice(opp.analysis.strategy === 'LONG_A_SHORT_B' ? opp.exchangeB.markPrice : opp.exchangeA.markPrice)}</div>
-                            <div class="funding-rate"><span class="funding-label">Funding</span><span class="funding-value ${parseFloat(opp.analysis.strategy === 'LONG_A_SHORT_B' ? opp.exchangeB.fundingRate : opp.exchangeA.fundingRate) >= 0 ? 'positive' : 'negative'}">${parseFloat(opp.analysis.strategy === 'LONG_A_SHORT_B' ? opp.exchangeB.fundingRate : opp.exchangeA.fundingRate).toFixed(4)}%</span></div>
+                            <div class="price-value val-price-short">$${formatPrice(opp.analysis.strategy === 'LONG_A_SHORT_B' ? opp.exchangeB.markPrice : opp.exchangeA.markPrice)}</div>
+                            <div class="funding-rate"><span class="funding-label">Funding</span><span class="funding-value val-funding-short ${parseFloat(opp.analysis.strategy === 'LONG_A_SHORT_B' ? opp.exchangeB.fundingRate : opp.exchangeA.fundingRate) >= 0 ? 'positive' : 'negative'}">${parseFloat(opp.analysis.strategy === 'LONG_A_SHORT_B' ? opp.exchangeB.fundingRate : opp.exchangeA.fundingRate).toFixed(4)}%</span></div>
                         </div>
                     </div>
                     <div style="background:rgba(0,0,0,0.2); border-radius:8px; padding:10px;">
                         <div style="margin-bottom:8px; font-size:0.8rem; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:8px;">
                             <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
                                 <span style="color:rgba(255,255,255,0.6);">Price Diff (100$)</span>
-                                <span class="${opp.analysis.priceDifferencePnL >= 0 ? 'positive' : 'negative'}">$${opp.analysis.priceDifferencePnL.toFixed(2)}</span>
+                                <span class="val-price-diff ${opp.analysis.priceDifferencePnL >= 0 ? 'positive' : 'negative'}">$${opp.analysis.priceDifferencePnL.toFixed(2)}</span>
                             </div>
                             <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
                                 <span style="color:rgba(255,255,255,0.6);">Funding (8h)</span>
-                                <span class="${opp.analysis.fundingPnL8h >= 0 ? 'positive' : 'negative'}">$${opp.analysis.fundingPnL8h.toFixed(4)}</span>
+                                <span class="val-funding-8h ${opp.analysis.fundingPnL8h >= 0 ? 'positive' : 'negative'}">$${opp.analysis.fundingPnL8h.toFixed(4)}</span>
                             </div>
                             <div style="display:flex; justify-content:space-between; font-weight:bold; margin-top:4px;">
                                 <span style="color:white;">Net Profit (8h)</span>
-                                <span class="${netProfit >= 0 ? 'positive' : 'negative'}">$${netProfit.toFixed(4)}</span>
+                                <span class="val-net-profit ${netProfit >= 0 ? 'positive' : 'negative'}">$${netProfit.toFixed(4)}</span>
                             </div>
                             <div style="text-align:right; font-size:0.65rem; color:rgba(255,255,255,0.4); margin-top:-2px;">(After Taker Entry Fees)</div>
                         </div>
                         <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:0.8rem;">
                             <span style="color:rgba(255,255,255,0.6);">Annual APR (Funding Only)</span>
-                            <span class="${opp.analysis.annualAPR > 0 ? 'positive' : 'negative'}" style="font-weight:bold;">${opp.analysis.annualAPR.toFixed(2)}%</span>
+                            <span class="val-apr ${opp.analysis.annualAPR > 0 ? 'positive' : 'negative'}" style="font-weight:bold;">${opp.analysis.annualAPR.toFixed(2)}%</span>
                         </div>
                         <div style="margin-top:10px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.1); font-size:0.75rem; text-align:center;">
                             <div style="margin-bottom:4px; color:rgba(255,255,255,0.8);">Recommended Action (100$ Size)</div>
@@ -1219,37 +1193,109 @@
             document.getElementById('loading').style.display = 'none';
             updateStats(opportunities);
 
-            const expandedCards = new Set();
-            document.querySelectorAll('.opportunity-card.expanded').forEach(card => {
-                const sym = card.querySelector('.coin-symbol');
-                if (sym) expandedCards.add(sym.textContent);
+            const grid = document.getElementById('opportunitiesGrid');
+            const existingCards = new Map();
+            grid.querySelectorAll('.opportunity-card').forEach(card => {
+                const symbol = card.getAttribute('data-symbol');
+                if (symbol) existingCards.set(symbol, card);
             });
 
-            const grid = document.getElementById('opportunitiesGrid');
-            grid.innerHTML = opportunities.map(opp => createOpportunityCard(opp)).join('');
-
             opportunities.forEach(opp => {
-                if (expandedCards.has(opp.symbol)) {
-                    const cards = document.querySelectorAll('.opportunity-card');
-                    cards.forEach(card => {
-                        const sym = card.querySelector('.coin-symbol');
-                        if (sym && sym.textContent === opp.symbol) {
-                            card.classList.add('expanded');
-                            const btn = card.querySelector('.expand-button');
-                            if (btn) btn.textContent = '▲ Hide Trading Steps';
-                        }
-                    });
+                let card = existingCards.get(opp.symbol);
+                if (card) {
+                    updateCardValues(card, opp);
+                    existingCards.delete(opp.symbol);
+                } else {
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = createOpportunityCard(opp);
+                    const newCard = tempDiv.firstElementChild;
+                    grid.appendChild(newCard);
+                    const btn = newCard.querySelector('.expand-button');
+                    if (btn) {
+                        btn.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            newCard.classList.toggle('expanded');
+                            btn.textContent = newCard.classList.contains('expanded') ? '▲ Hide Trading Steps' : '▼ Show Trading Steps';
+                        });
+                    }
                 }
             });
 
-            document.querySelectorAll('.expand-button').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    const card = btn.closest('.opportunity-card');
-                    card.classList.toggle('expanded');
-                    btn.textContent = card.classList.contains('expanded') ? '▲ Hide Trading Steps' : '▼ Show Trading Steps';
-                });
-            });
+            existingCards.forEach(card => card.remove());
+        }
+
+        function updateCardValues(card, opp) {
+            const hasOpportunity = opp.analysis.isOpportunity;
+            const cardClass = hasOpportunity ? 'opportunity-card has-opportunity' : 'opportunity-card';
+            // Preserve expanded state
+            if (card.classList.contains('expanded')) {
+                card.className = cardClass + ' expanded';
+            } else {
+                card.className = cardClass;
+            }
+
+            const badge = card.querySelector('.opportunity-badge');
+            if (badge) {
+                badge.className = `opportunity-badge ${hasOpportunity ? 'active' : 'inactive'}`;
+                badge.textContent = hasOpportunity ? '🎯 LIVE' : 'NO SIGNAL';
+            }
+
+            let longExchange, shortExchange;
+            if (opp.analysis.strategy === 'LONG_A_SHORT_B') {
+                longExchange = opp.exchangeA; shortExchange = opp.exchangeB;
+            } else {
+                longExchange = opp.exchangeB; shortExchange = opp.exchangeA;
+            }
+
+            // Update Prices and Funding
+            const priceLong = card.querySelector('.val-price-long');
+            if (priceLong) priceLong.textContent = '$' + formatPrice(longExchange.markPrice);
+
+            const fundingLong = card.querySelector('.val-funding-long');
+            if (fundingLong) {
+                fundingLong.textContent = parseFloat(longExchange.fundingRate).toFixed(4) + '%';
+                fundingLong.className = `funding-value val-funding-long ${longExchange.fundingRate >= 0 ? 'positive' : 'negative'}`;
+            }
+
+            const priceShort = card.querySelector('.val-price-short');
+            if (priceShort) priceShort.textContent = '$' + formatPrice(shortExchange.markPrice);
+
+            const fundingShort = card.querySelector('.val-funding-short');
+            if (fundingShort) {
+                fundingShort.textContent = parseFloat(shortExchange.fundingRate).toFixed(4) + '%';
+                fundingShort.className = `funding-value val-funding-short ${shortExchange.fundingRate >= 0 ? 'positive' : 'negative'}`;
+            }
+
+            // PnL Values
+            const priceDiff = card.querySelector('.val-price-diff');
+            if (priceDiff) {
+                priceDiff.textContent = '$' + opp.analysis.priceDifferencePnL.toFixed(2);
+                priceDiff.className = `val-price-diff ${opp.analysis.priceDifferencePnL >= 0 ? 'positive' : 'negative'}`;
+            }
+
+            const funding8h = card.querySelector('.val-funding-8h');
+            if (funding8h) {
+                funding8h.textContent = '$' + opp.analysis.fundingPnL8h.toFixed(4);
+                funding8h.className = `val-funding-8h ${opp.analysis.fundingPnL8h >= 0 ? 'positive' : 'negative'}`;
+            }
+
+            const netProfit = calculateAdjustedProfit(opp);
+            const netProfitEl = card.querySelector('.val-net-profit');
+            if (netProfitEl) {
+                netProfitEl.textContent = '$' + netProfit.toFixed(4);
+                netProfitEl.className = `val-net-profit ${netProfit >= 0 ? 'positive' : 'negative'}`;
+            }
+
+            const apr = card.querySelector('.val-apr');
+            if (apr) {
+                apr.textContent = opp.analysis.annualAPR.toFixed(2) + '%';
+                apr.className = `val-apr ${opp.analysis.annualAPR > 0 ? 'positive' : 'negative'}`;
+            }
+
+            // Note: We are NOT updating the "Details" section dynamically to save performance and avoid complex DOM manipulation.
+            // The details section is mostly static based on initial calculation or requires full re-render.
+            // Since details are only visible when expanded, and we want to avoid jitter, we keep them as is until next full refresh or we can implement more granular updates if needed.
+            // However, for critical values like Break-Even, we could update them if we added classes to them.
         }
 
         function formatPrice(price) {
@@ -1264,7 +1310,6 @@
         function renderAllDataTable() {
             const tbody = document.getElementById('allDataBody');
             document.getElementById('loading').style.display = 'none';
-
             allCoinsData.sort((a, b) => a.symbol.localeCompare(b.symbol));
             tbody.innerHTML = allCoinsData.map(coin => {
                 const formatCell = (data) => {
@@ -1274,7 +1319,6 @@
                 };
                 return `<tr><td style="font-weight:bold; display:flex; align-items:center; gap:8px;"><img src="${coin.logo}" style="width:20px; height:20px; border-radius:50%;" onerror="this.style.display='none'"> ${coin.symbol}</td>${formatCell(coin.binance)}${formatCell(coin.okx)}${formatCell(coin.hyperliquid)}${formatCell(coin.bybit)}${formatCell(coin.asterdex)}</tr>`;
             }).join('');
-
             updateCoinCounts();
         }
 
@@ -1295,9 +1339,7 @@
 
         function updateCoinCounts() {
             if (!allCoinsData || allCoinsData.length === 0) return;
-
             const counts = { Binance: 0, OKX: 0, Hyperliquid: 0, Bybit: 0, Asterdex: 0 };
-
             allCoinsData.forEach(coin => {
                 if (coin.binance) counts.Binance++;
                 if (coin.okx) counts.OKX++;
@@ -1305,7 +1347,6 @@
                 if (coin.bybit) counts.Bybit++;
                 if (coin.asterdex) counts.Asterdex++;
             });
-
             if (document.getElementById('count-Binance')) document.getElementById('count-Binance').textContent = counts.Binance;
             if (document.getElementById('count-OKX')) document.getElementById('count-OKX').textContent = counts.OKX;
             if (document.getElementById('count-Hyperliquid')) document.getElementById('count-Hyperliquid').textContent = counts.Hyperliquid;
