@@ -189,9 +189,8 @@
         }
 
         .opportunity-card:hover {
-            transform: translateY(-5px);
-            border-color: rgba(102, 126, 234, 0.5);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
+            border-color: rgba(255, 255, 255, 0.2);
         }
 
         .opportunity-card.has-opportunity {
@@ -670,6 +669,57 @@
         .stat-card.compact .stat-value {
             font-size: 1.2rem;
         }
+
+        /* Analysis Table & Break Even */
+        .analysis-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .analysis-table th,
+        .analysis-table td {
+            padding: 4px 8px;
+            text-align: right;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .analysis-table th:first-child,
+        .analysis-table td:first-child {
+            text-align: left;
+        }
+
+        .analysis-table th {
+            color: rgba(255, 255, 255, 0.5);
+            font-weight: normal;
+        }
+
+        .break-even-info {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            padding: 8px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .break-even-info .highlight {
+            font-weight: bold;
+            color: #10b981;
+        }
+
+        .section-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 0.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 4px;
+        }
     </style>
 </head>
 
@@ -854,26 +904,29 @@
         let allCoinsData = [];
         let sortConfig = { key: 'totalNetProfit', direction: 'desc' };
 
-        // Fee Settings
+        // Real Fee Settings (2024 Data)
         const EXCHANGE_FEES = {
             'Binance': [
                 { name: 'Regular (Maker 0.02% / Taker 0.05%)', maker: 0.02, taker: 0.05 },
                 { name: 'VIP 1 (Maker 0.016% / Taker 0.04%)', maker: 0.016, taker: 0.04 },
                 { name: 'VIP 2 (Maker 0.014% / Taker 0.035%)', maker: 0.014, taker: 0.035 },
-                { name: 'VIP 3 (Maker 0.012% / Taker 0.032%)', maker: 0.012, taker: 0.032 }
+                { name: 'VIP 3 (Maker 0.012% / Taker 0.032%)', maker: 0.012, taker: 0.032 },
+                { name: 'VIP 4 (Maker 0.01% / Taker 0.03%)', maker: 0.01, taker: 0.03 }
             ],
             'OKX': [
                 { name: 'Regular (Maker 0.02% / Taker 0.05%)', maker: 0.02, taker: 0.05 },
-                { name: 'VIP 1 (Maker 0.018% / Taker 0.045%)', maker: 0.018, taker: 0.045 },
-                { name: 'VIP 2 (Maker 0.016% / Taker 0.04%)', maker: 0.016, taker: 0.04 }
+                { name: 'VIP 1 (Maker 0.01% / Taker 0.03%)', maker: 0.01, taker: 0.03 },
+                { name: 'VIP 2 (Maker 0.008% / Taker 0.028%)', maker: 0.008, taker: 0.028 }
             ],
             'Bybit': [
                 { name: 'Regular (Maker 0.02% / Taker 0.055%)', maker: 0.02, taker: 0.055 },
                 { name: 'VIP 1 (Maker 0.018% / Taker 0.05%)', maker: 0.018, taker: 0.05 },
-                { name: 'VIP 2 (Maker 0.016% / Taker 0.045%)', maker: 0.016, taker: 0.045 }
+                { name: 'VIP 2 (Maker 0.016% / Taker 0.045%)', maker: 0.016, taker: 0.045 },
+                { name: 'Pro 1 (Maker 0.01% / Taker 0.04%)', maker: 0.01, taker: 0.04 }
             ],
             'Hyperliquid': [
-                { name: 'Regular (Maker 0.01% / Taker 0.035%)', maker: 0.01, taker: 0.035 }
+                { name: 'Regular (Maker 0.01% / Taker 0.035%)', maker: 0.01, taker: 0.035 },
+                { name: 'VIP (Maker 0% / Taker 0.019%)', maker: 0, taker: 0.019 }
             ],
             'Asterdex': [
                 { name: 'Regular (Maker 0.02% / Taker 0.05%)', maker: 0.02, taker: 0.05 }
@@ -884,11 +937,11 @@
             'Binance': 0, 'OKX': 0, 'Hyperliquid': 0, 'Bybit': 0, 'Asterdex': 0
         };
 
-        function getTakerFee(exchangeName) {
+        function getFeeRates(exchangeName) {
             const tiers = EXCHANGE_FEES[exchangeName];
-            if (!tiers) return 0.05; // Default fallback
+            if (!tiers) return { maker: 0.02, taker: 0.05 };
             const tierIndex = userFeeSettings[exchangeName] || 0;
-            return tiers[tierIndex] ? tiers[tierIndex].taker : tiers[0].taker;
+            return tiers[tierIndex] || tiers[0];
         }
 
         function calculateAdjustedProfit(opp) {
@@ -896,11 +949,11 @@
             const longEx = getLongExchange(opp);
             const shortEx = getShortExchange(opp);
 
-            const longFeeRate = getTakerFee(longEx);
-            const shortFeeRate = getTakerFee(shortEx);
+            const longFees = getFeeRates(longEx);
+            const shortFees = getFeeRates(shortEx);
 
-            // Entry Fee (Opening Position)
-            const totalEntryFee = tradeSize * (longFeeRate + shortFeeRate) / 100;
+            // Entry Fee (Opening Position - Taker assumed for safety)
+            const totalEntryFee = tradeSize * (longFees.taker + shortFees.taker) / 100;
 
             // Net Profit = (Funding PnL + Price Diff PnL) - Entry Fee
             const grossProfit = opp.analysis.totalNetProfit8h || 0;
@@ -1044,11 +1097,46 @@
         function createOpportunityCard(opp) {
             const hasOpportunity = opp.analysis.isOpportunity;
             const cardClass = hasOpportunity ? 'opportunity-card has-opportunity' : 'opportunity-card';
-            let longExchange, shortExchange;
+            let longExchangeName, shortExchangeName, longExchangeLogo, shortExchangeLogo;
+
             if (opp.analysis.strategy === 'LONG_A_SHORT_B') {
-                longExchange = opp.exchangeA; shortExchange = opp.exchangeB;
+                longExchangeName = opp.exchangeA.name; shortExchangeName = opp.exchangeB.name;
+                longExchangeLogo = opp.exchangeA.logo; shortExchangeLogo = opp.exchangeB.logo;
             } else {
-                longExchange = opp.exchangeB; shortExchange = opp.exchangeA;
+                longExchangeName = opp.exchangeB.name; shortExchangeName = opp.exchangeA.name;
+                longExchangeLogo = opp.exchangeB.logo; shortExchangeLogo = opp.exchangeA.logo;
+            }
+
+            // Fee & Break-Even Calculation
+            const tradeSize = 100;
+            const longFees = getFeeRates(longExchangeName);
+            const shortFees = getFeeRates(shortExchangeName);
+
+            const openLongMaker = (tradeSize * longFees.maker / 100);
+            const openLongTaker = (tradeSize * longFees.taker / 100);
+            const openShortMaker = (tradeSize * shortFees.maker / 100);
+            const openShortTaker = (tradeSize * shortFees.taker / 100);
+
+            const totalEntryTaker = openLongTaker + openShortTaker;
+            const totalEntryMaker = openLongMaker + openShortMaker;
+
+            // Exit fees (Estimated same as entry)
+            const totalExitTaker = totalEntryTaker;
+            const totalExitMaker = totalEntryMaker;
+
+            // Total Cost (Taker Entry + Taker Exit + Price Diff Loss if any)
+            const priceDiffPnL = opp.analysis.priceDifferencePnL || 0;
+            const priceDiffLoss = priceDiffPnL < 0 ? Math.abs(priceDiffPnL) : 0;
+            const totalCostTaker = totalEntryTaker + totalExitTaker + priceDiffLoss;
+
+            // Break Even
+            const funding8h = opp.analysis.fundingPnL8h || 0;
+            const hourlyFunding = funding8h / 8;
+            let breakEvenHours = 'Never';
+
+            if (hourlyFunding > 0) {
+                const hours = totalCostTaker / hourlyFunding;
+                breakEvenHours = hours.toFixed(1);
             }
 
             const netProfit = calculateAdjustedProfit(opp);
@@ -1064,14 +1152,14 @@
                     </div>
                     <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:10px;">
                         <div class="exchange-box" style="border-left: 2px solid #10b981;">
-                            <div class="exchange-header"><span style="font-size:0.7rem; color:#10b981; font-weight:bold;">LONG</span><img src="${longExchange.logo}" class="exchange-logo" style="margin-left:auto;"><span class="exchange-name">${longExchange.name}</span></div>
-                            <div class="price-value">$${formatPrice(longExchange.markPrice)}</div>
-                            <div class="funding-rate"><span class="funding-label">Funding</span><span class="funding-value ${longExchange.fundingRate >= 0 ? 'positive' : 'negative'}">${parseFloat(longExchange.fundingRate).toFixed(4)}%</span></div>
+                            <div class="exchange-header"><span style="font-size:0.7rem; color:#10b981; font-weight:bold;">LONG</span><img src="${longExchangeLogo}" class="exchange-logo" style="margin-left:auto;"><span class="exchange-name">${longExchangeName}</span></div>
+                            <div class="price-value">$${formatPrice(opp.analysis.strategy === 'LONG_A_SHORT_B' ? opp.exchangeA.markPrice : opp.exchangeB.markPrice)}</div>
+                            <div class="funding-rate"><span class="funding-label">Funding</span><span class="funding-value ${parseFloat(opp.analysis.strategy === 'LONG_A_SHORT_B' ? opp.exchangeA.fundingRate : opp.exchangeB.fundingRate) >= 0 ? 'positive' : 'negative'}">${parseFloat(opp.analysis.strategy === 'LONG_A_SHORT_B' ? opp.exchangeA.fundingRate : opp.exchangeB.fundingRate).toFixed(4)}%</span></div>
                         </div>
                         <div class="exchange-box" style="border-left: 2px solid #ef4444;">
-                            <div class="exchange-header"><span style="font-size:0.7rem; color:#ef4444; font-weight:bold;">SHORT</span><img src="${shortExchange.logo}" class="exchange-logo" style="margin-left:auto;"><span class="exchange-name">${shortExchange.name}</span></div>
-                            <div class="price-value">$${formatPrice(shortExchange.markPrice)}</div>
-                            <div class="funding-rate"><span class="funding-label">Funding</span><span class="funding-value ${shortExchange.fundingRate >= 0 ? 'positive' : 'negative'}">${parseFloat(shortExchange.fundingRate).toFixed(4)}%</span></div>
+                            <div class="exchange-header"><span style="font-size:0.7rem; color:#ef4444; font-weight:bold;">SHORT</span><img src="${shortExchangeLogo}" class="exchange-logo" style="margin-left:auto;"><span class="exchange-name">${shortExchangeName}</span></div>
+                            <div class="price-value">$${formatPrice(opp.analysis.strategy === 'LONG_A_SHORT_B' ? opp.exchangeB.markPrice : opp.exchangeA.markPrice)}</div>
+                            <div class="funding-rate"><span class="funding-label">Funding</span><span class="funding-value ${parseFloat(opp.analysis.strategy === 'LONG_A_SHORT_B' ? opp.exchangeB.fundingRate : opp.exchangeA.fundingRate) >= 0 ? 'positive' : 'negative'}">${parseFloat(opp.analysis.strategy === 'LONG_A_SHORT_B' ? opp.exchangeB.fundingRate : opp.exchangeA.fundingRate).toFixed(4)}%</span></div>
                         </div>
                     </div>
                     <div style="background:rgba(0,0,0,0.2); border-radius:8px; padding:10px;">
@@ -1088,7 +1176,7 @@
                                 <span style="color:white;">Net Profit (8h)</span>
                                 <span class="${netProfit >= 0 ? 'positive' : 'negative'}">$${netProfit.toFixed(4)}</span>
                             </div>
-                            <div style="text-align:right; font-size:0.65rem; color:rgba(255,255,255,0.4); margin-top:-2px;">(After Fees)</div>
+                            <div style="text-align:right; font-size:0.65rem; color:rgba(255,255,255,0.4); margin-top:-2px;">(After Taker Entry Fees)</div>
                         </div>
                         <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:0.8rem;">
                             <span style="color:rgba(255,255,255,0.6);">Annual APR (Funding Only)</span>
@@ -1097,15 +1185,29 @@
                         <div style="margin-top:10px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.1); font-size:0.75rem; text-align:center;">
                             <div style="margin-bottom:4px; color:rgba(255,255,255,0.8);">Recommended Action (100$ Size)</div>
                             <div style="display:flex; justify-content:center; gap:10px; align-items:center;">
-                                <span style="color:#10b981; font-weight:bold;">LONG $100 ${longExchange.name}</span><span style="opacity:0.5;">+</span><span style="color:#ef4444; font-weight:bold;">SHORT $100 ${shortExchange.name}</span>
+                                <span style="color:#10b981; font-weight:bold;">LONG $100 ${longExchangeName}</span><span style="opacity:0.5;">+</span><span style="color:#ef4444; font-weight:bold;">SHORT $100 ${shortExchangeName}</span>
                             </div>
                         </div>
                     </div>
                     <button class="expand-button">▼ Show Details</button>
                     <div class="trading-steps">
+                        <div class="analysis-section">
+                            <div class="section-title">💰 COST & PROFIT ANALYSIS (100$ Size)</div>
+                            <table class="analysis-table">
+                                <tr><th>Action</th><th>Maker Fee</th><th>Taker Fee</th></tr>
+                                <tr><td>Open LONG (${longExchangeName})</td><td>$${openLongMaker.toFixed(4)}</td><td>$${openLongTaker.toFixed(4)}</td></tr>
+                                <tr><td>Open SHORT (${shortExchangeName})</td><td>$${openShortMaker.toFixed(4)}</td><td>$${openShortTaker.toFixed(4)}</td></tr>
+                                <tr><td><strong>Total Entry Cost</strong></td><td><strong>$${totalEntryMaker.toFixed(4)}</strong></td><td><strong>$${totalEntryTaker.toFixed(4)}</strong></td></tr>
+                                <tr><td>Close Positions (Est.)</td><td>$${totalExitMaker.toFixed(4)}</td><td>$${totalExitTaker.toFixed(4)}</td></tr>
+                            </table>
+                            <div class="break-even-info">
+                                <div>Funding Profit (8h): <span class="positive">$${funding8h.toFixed(4)}</span></div>
+                                <div>Break-Even (Taker): <span class="highlight">${breakEvenHours} hours</span></div>
+                            </div>
+                        </div>
                         <div class="steps-header">EXECUTION STEPS</div>
-                        <div class="step-item"><div class="step-number">1</div><div class="step-content"><div class="step-action">Open LONG on ${longExchange.name}</div><div class="step-details">Buy $100 worth of ${opp.symbol} Perpetual</div></div></div>
-                        <div class="step-item"><div class="step-number">2</div><div class="step-content"><div class="step-action">Open SHORT on ${shortExchange.name}</div><div class="step-details">Sell $100 worth of ${opp.symbol} Perpetual</div></div></div>
+                        <div class="step-item"><div class="step-number">1</div><div class="step-content"><div class="step-action">Open LONG on ${longExchangeName}</div><div class="step-details">Buy $100 worth of ${opp.symbol} Perpetual (Fee: $${openLongTaker.toFixed(4)})</div></div></div>
+                        <div class="step-item"><div class="step-number">2</div><div class="step-content"><div class="step-action">Open SHORT on ${shortExchangeName}</div><div class="step-details">Sell $100 worth of ${opp.symbol} Perpetual (Fee: $${openShortTaker.toFixed(4)})</div></div></div>
                         <div class="step-item"><div class="step-number">3</div><div class="step-content"><div class="step-action">Wait for Funding</div><div class="step-details">Collect funding payments every 8 hours</div></div></div>
                     </div>
                 </div>
@@ -1161,7 +1263,6 @@
 
         function renderAllDataTable() {
             const tbody = document.getElementById('allDataBody');
-            // Fix loading stuck issue
             document.getElementById('loading').style.display = 'none';
 
             allCoinsData.sort((a, b) => a.symbol.localeCompare(b.symbol));
@@ -1174,7 +1275,6 @@
                 return `<tr><td style="font-weight:bold; display:flex; align-items:center; gap:8px;"><img src="${coin.logo}" style="width:20px; height:20px; border-radius:50%;" onerror="this.style.display='none'"> ${coin.symbol}</td>${formatCell(coin.binance)}${formatCell(coin.okx)}${formatCell(coin.hyperliquid)}${formatCell(coin.bybit)}${formatCell(coin.asterdex)}</tr>`;
             }).join('');
 
-            // Update counts even in this view
             updateCoinCounts();
         }
 
