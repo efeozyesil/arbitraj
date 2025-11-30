@@ -89,7 +89,9 @@ class ArbitrageService {
         const logos = {
             binance: '/logos/binance.png',
             okx: '/logos/okx.png',
-            hyperliquid: '/logos/hyperliquid.png'
+            hyperliquid: '/logos/hyperliquid.png',
+            bybit: '/logos/bybit.png',
+            asterdex: '/logos/asterdex.png'
         };
         return logos[slug] || '';
     }
