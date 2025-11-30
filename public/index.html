@@ -701,9 +701,10 @@
 
         <!-- Tabs -->
         <div class="tabs-container">
-            <!-- ALL Tab (Full Width) -->
+            <!-- Main Tabs -->
             <div class="tab-row">
-                <button class="tab tab-all active" onclick="switchTab('all')">ALL PAIRS</button>
+                <button class="tab tab-all active" onclick="switchTab('all')" style="flex:1">ALL OPPORTUNITIES</button>
+                <button class="tab tab-all" onclick="switchTab('all-data')" style="flex:1">ALL DATA</button>
             </div>
 
             <!-- Exchange Pair Tabs (2 rows of 5) -->
@@ -811,6 +812,37 @@
                 </tbody>
             </table>
         </div>
+
+        <!-- All Data Table -->
+        <div class="opportunities-table" id="allDataTable" style="display: none;">
+            <table>
+                <thead>
+                    <tr>
+                        <th rowspan="2">Coin</th>
+                        <th colspan="2">Binance</th>
+                        <th colspan="2">OKX</th>
+                        <th colspan="2">Hyperliquid</th>
+                        <th colspan="2">Bybit</th>
+                        <th colspan="2">Asterdex</th>
+                    </tr>
+                    <tr>
+                        <th>Price</th>
+                        <th>Fund%</th>
+                        <th>Price</th>
+                        <th>Fund%</th>
+                        <th>Price</th>
+                        <th>Fund%</th>
+                        <th>Price</th>
+                        <th>Fund%</th>
+                        <th>Price</th>
+                        <th>Fund%</th>
+                    </tr>
+                </thead>
+                <tbody id="allDataBody">
+                    <!-- Rows will be injected here -->
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <script>
@@ -846,10 +878,17 @@
             if (currentTab === 'all') {
                 document.getElementById('opportunitiesGrid').style.display = 'none';
                 document.getElementById('opportunitiesTable').style.display = 'block';
+                document.getElementById('allDataTable').style.display = 'none';
                 renderAllTable();
+            } else if (currentTab === 'all-data') {
+                document.getElementById('opportunitiesGrid').style.display = 'none';
+                document.getElementById('opportunitiesTable').style.display = 'none';
+                document.getElementById('allDataTable').style.display = 'block';
+                renderAllDataTable();
             } else {
                 document.getElementById('opportunitiesGrid').style.display = 'grid';
                 document.getElementById('opportunitiesTable').style.display = 'none';
+                document.getElementById('allDataTable').style.display = 'none';
                 updateDashboard(allData[currentTab]);
             }
         }
@@ -930,6 +969,38 @@
             updateStats(opportunities);
         }
 
+        function renderAllDataTable() {
+            const tbody = document.getElementById('allDataBody');
+
+            // Sort by symbol by default
+            allCoinsData.sort((a, b) => a.symbol.localeCompare(b.symbol));
+
+            tbody.innerHTML = allCoinsData.map(coin => {
+                const formatCell = (data) => {
+                    if (!data) return '<td colspan="2" style="text-align:center; color:rgba(255,255,255,0.2)">-</td>';
+                    const fundingClass = data.funding > 0 ? 'positive' : (data.funding < 0 ? 'negative' : '');
+                    return `
+                        <td>$${parseFloat(data.price).toFixed(2)}</td>
+                        <td class="${fundingClass}">${parseFloat(data.funding).toFixed(4)}%</td>
+                    `;
+                };
+
+                return `
+                    <tr>
+                        <td style="font-weight:bold; display:flex; align-items:center; gap:8px;">
+                            <img src="${coin.logo}" style="width:20px; height:20px; border-radius:50%;" onerror="this.style.display='none'">
+                            ${coin.symbol}
+                        </td>
+                        ${formatCell(coin.binance)}
+                        ${formatCell(coin.okx)}
+                        ${formatCell(coin.hyperliquid)}
+                        ${formatCell(coin.bybit)}
+                        ${formatCell(coin.asterdex)}
+                    </tr>
+                `;
+            }).join('');
+        }
+
         function getLongExchange(opp) {
             if (opp.analysis.strategy === 'SHORT_A_LONG_B') return opp.exchangeB.name;
             if (opp.analysis.strategy === 'LONG_A_SHORT_B') return opp.exchangeA.name;
@@ -965,32 +1036,39 @@
         }
 
         function connectWebSocket() {
-            // Connect to WebSocket server
-            const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const wsHost = window.location.hostname;
-            const wsPort = window.location.port ? `:${window.location.port}` : '';
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.host}`;
 
-            ws = new WebSocket(`${wsProtocol}//${wsHost}${wsPort}`);
+            ws = new WebSocket(wsUrl);
 
             ws.onopen = () => {
                 console.log('WebSocket connected');
-                updateConnectionStatus(true);
-                clearInterval(reconnectInterval);
+                document.getElementById('wsStatus').classList.add('connected');
+                document.getElementById('wsStatusText').textContent = 'Connected';
+                if (reconnectInterval) {
+                    clearInterval(reconnectInterval);
+                    reconnectInterval = null;
+                }
             };
 
             ws.onmessage = (event) => {
                 const message = JSON.parse(event.data);
-                if (message.type === 'ARBITRAGE_UPDATE') {
-                    // Store all data
-                    allData = message.data;
 
-                    // Update view based on current tab
+                if (message.type === 'ARBITRAGE_UPDATE') {
+                    allData = message.data;
+                    if (message.allData) {
+                        allCoinsData = message.allData;
+                    }
+
+                    document.getElementById('lastUpdate').textContent = new Date(message.timestamp).toLocaleTimeString();
+
                     if (currentTab === 'all') {
                         renderAllTable();
+                    } else if (currentTab === 'all-data') {
+                        renderAllDataTable();
                     } else {
                         updateDashboard(allData[currentTab]);
                     }
-                    updateLastUpdate();
                 }
             };
 

@@ -82,17 +82,24 @@ wss.on('connection', (ws) => {
 });
 
 // Broadcast data to all connected clients
+// Broadcast data to all connected clients
 function broadcastData() {
-    // Get opportunities from all pairs
+    // 1. Get Top 10 Opportunities for each pair
     const combinedData = {};
 
     arbitragePairs.forEach(pair => {
-        combinedData[pair.name] = arbitrageServices[pair.name].getArbitrageOpportunities();
+        const allOpps = arbitrageServices[pair.name].getArbitrageOpportunities();
+        // Server-side sorting (already sorted in service) and slicing
+        combinedData[pair.name] = allOpps.slice(0, 10);
     });
+
+    // 2. Get Consolidated All Data (All Coins x All Exchanges)
+    const allCoinsData = getAllExchangeData();
 
     const message = JSON.stringify({
         type: 'ARBITRAGE_UPDATE',
         data: combinedData,
+        allData: allCoinsData,
         timestamp: Date.now()
     });
 
@@ -103,18 +110,45 @@ function broadcastData() {
     });
 }
 
+function getAllExchangeData() {
+    const coins = ArbitrageService.getCoinList();
+
+    return coins.map(coin => {
+        const binanceData = binanceWS.getData(coin.binance);
+        const okxData = okxWS.getData(coin.okx);
+        const hyperliquidData = hyperliquidWS.getData(coin.hyperliquid);
+        const bybitData = bybitWS.getData(coin.bybit);
+        const asterdexData = asterdexWS.getData(coin.asterdex);
+
+        return {
+            symbol: coin.symbol,
+            name: coin.name,
+            logo: coin.logo,
+            binance: binanceData ? { price: binanceData.markPrice, funding: binanceData.fundingRate } : null,
+            okx: okxData ? { price: okxData.markPrice, funding: okxData.fundingRate } : null,
+            hyperliquid: hyperliquidData ? { price: hyperliquidData.markPrice, funding: hyperliquidData.fundingRate } : null,
+            bybit: bybitData ? { price: bybitData.markPrice, funding: bybitData.fundingRate } : null,
+            asterdex: asterdexData ? { price: asterdexData.markPrice, funding: asterdexData.fundingRate } : null
+        };
+    });
+}
+
 
 function sendDataToClient(ws) {
     if (ws.readyState === WebSocket.OPEN) {
         const combinedData = {};
 
         arbitragePairs.forEach(pair => {
-            combinedData[pair.name] = arbitrageServices[pair.name].getArbitrageOpportunities();
+            const allOpps = arbitrageServices[pair.name].getArbitrageOpportunities();
+            combinedData[pair.name] = allOpps.slice(0, 10);
         });
+
+        const allCoinsData = getAllExchangeData();
 
         const message = JSON.stringify({
             type: 'ARBITRAGE_UPDATE',
             data: combinedData,
+            allData: allCoinsData,
             timestamp: Date.now()
         });
 

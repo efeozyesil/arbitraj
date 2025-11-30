@@ -74,10 +74,9 @@ class ArbitrageService {
                 });
             });
 
-            // Kârlılığa göre sırala ve en iyi 10'u al (performans için)
+            // Kârlılığa göre sırala (TÜM fırsatları döndür, server'da top 10 seçilecek)
             return opportunities
-                .sort((a, b) => b.analysis.annualAPR - a.analysis.annualAPR)
-                .slice(0, 10);
+                .sort((a, b) => b.analysis.annualAPR - a.analysis.annualAPR);
 
         } catch (error) {
             console.error(`[${this.nameA}-${this.nameB}] Arbitrage calculation error:`, error.message);
@@ -94,6 +93,41 @@ class ArbitrageService {
             asterdex: '/logos/asterdex.png'
         };
         return logos[slug] || '';
+    }
+
+    // Yeni method: Tüm coinlerin her iki borsadaki raw datasını döndür
+    getAllRawData() {
+        const coins = ArbitrageService.getCoinList();
+        const rawData = [];
+
+        coins.forEach(coin => {
+            const symbolA = coin[this.slugA];
+            const symbolB = coin[this.slugB];
+
+            if (!symbolA || !symbolB) return;
+
+            const dataA = this.wsA.getData(symbolA);
+            const dataB = this.wsB.getData(symbolB);
+
+            rawData.push({
+                symbol: coin.symbol,
+                name: coin.name,
+                logo: coin.logo,
+                color: coin.color,
+                [this.slugA]: dataA ? {
+                    markPrice: dataA.markPrice,
+                    fundingRate: dataA.fundingRate,
+                    nextFundingTime: dataA.nextFundingTime
+                } : null,
+                [this.slugB]: dataB ? {
+                    markPrice: dataB.markPrice,
+                    fundingRate: dataB.fundingRate,
+                    nextFundingTime: dataB.nextFundingTime
+                } : null
+            });
+        });
+
+        return rawData;
     }
 
     analyzeArbitrage(dataA, dataB, symbolA, symbolB) {
