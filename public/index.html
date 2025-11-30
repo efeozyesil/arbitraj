@@ -278,6 +278,442 @@
                 padding: 4px;
             }
         }
+
+        /* Restored Styles */
+        .opportunity-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .opportunity-card:hover::before {
+            opacity: 1;
+        }
+
+        .opportunity-card.has-opportunity {
+            border-color: rgba(16, 185, 129, 0.3);
+            background: rgba(16, 185, 129, 0.05);
+        }
+
+        .opportunity-card.has-opportunity::before {
+            background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+            opacity: 1;
+        }
+
+        /* Coin Header - Kompakt */
+        .coin-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .coin-logo {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 4px;
+        }
+
+        .coin-info {
+            flex: 1;
+        }
+
+        .coin-name {
+            font-size: 1rem;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+        .coin-symbol {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .opportunity-badge {
+            padding: 0.3rem 0.6rem;
+            border-radius: 12px;
+            font-size: 0.65rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+
+        .opportunity-badge.active {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            animation: glow 2s infinite;
+        }
+
+        .opportunity-badge.inactive {
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        /* Exchange Data - Kompakt */
+        .exchange-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .exchange-box {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            padding: 0.6rem;
+        }
+
+        .exchange-header {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            margin-bottom: 0.4rem;
+        }
+
+        .exchange-logo {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+        }
+
+        .exchange-name {
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .price-value {
+            font-size: 0.95rem;
+            font-weight: 700;
+            font-family: 'Courier New', monospace;
+            margin-bottom: 0.3rem;
+        }
+
+        .funding-rate {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 0.3rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .funding-label {
+            font-size: 0.65rem;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .funding-value {
+            font-size: 0.8rem;
+            font-weight: 700;
+            font-family: 'Courier New', monospace;
+        }
+
+        .funding-value.positive {
+            color: #10b981;
+        }
+
+        .funding-value.negative {
+            color: #ef4444;
+        }
+
+        /* Table Styles */
+        .opp-table-container {
+            width: 100%;
+            overflow-x: auto;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .opp-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        .opp-table th {
+            text-align: left;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            color: rgba(255, 255, 255, 0.6);
+            font-weight: 600;
+            cursor: pointer;
+            user-select: none;
+            transition: color 0.2s;
+        }
+
+        .opp-table th:hover {
+            color: white;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .opp-table td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .opp-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .opp-table tr:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .positive {
+            color: #10B981;
+        }
+
+        .negative {
+            color: #EF4444;
+        }
+
+        .exchange-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.05);
+            font-size: 0.8rem;
+        }
+
+        .exchange-badge img {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+        }
+
+        .sort-icon {
+            font-size: 0.7rem;
+            margin-left: 4px;
+            opacity: 0.5;
+        }
+
+        /* Analysis Section - Kompakt */
+        .analysis-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.4rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .analysis-item {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 6px;
+            padding: 0.5rem;
+        }
+
+        .analysis-label {
+            font-size: 0.65rem;
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: 0.2rem;
+        }
+
+        .analysis-value {
+            font-size: 0.85rem;
+            font-weight: 600;
+            font-family: 'Courier New', monospace;
+        }
+
+        .analysis-value.highlight {
+            font-size: 1rem;
+            color: #fbbf24;
+        }
+
+        .analysis-value.annual {
+            color: #a78bfa;
+        }
+
+        /* Trading Steps - Expandable */
+        .trading-steps {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 0.75rem;
+            margin-top: 0.75rem;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .opportunity-card.expanded .trading-steps {
+            max-height: 500px;
+        }
+
+        .steps-header {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .step-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+            padding: 0.4rem;
+            margin-bottom: 0.3rem;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 6px;
+            border-left: 2px solid rgba(102, 126, 234, 0.5);
+        }
+
+        .step-number {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .step-content {
+            flex: 1;
+        }
+
+        .step-action {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 0.2rem;
+        }
+
+        .step-details {
+            font-size: 0.65rem;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .step-fee {
+            font-size: 0.65rem;
+            color: #fbbf24;
+            margin-top: 0.2rem;
+        }
+
+        .expand-button {
+            width: 100%;
+            padding: 0.5rem;
+            background: rgba(102, 126, 234, 0.2);
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            border-radius: 6px;
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 0.5rem;
+        }
+
+        .expand-button:hover {
+            background: rgba(102, 126, 234, 0.3);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            font-size: 1.25rem;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .spinner {
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        /* Animations */
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        @keyframes glow {
+
+            0%,
+            100% {
+                box-shadow: 0 0 15px rgba(16, 185, 129, 0.5);
+            }
+
+            50% {
+                box-shadow: 0 0 25px rgba(16, 185, 129, 0.8);
+            }
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.75rem;
+            }
+
+            .opportunities-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .analysis-grid {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 
@@ -376,699 +812,257 @@
         switchTab('all'); // Set initial state
         connectWebSocket();
     </script>
-
-    .opportunity-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 3px;
-    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    }
-
-    .opportunity-card:hover::before {
-    opacity: 1;
-    }
-
-    .opportunity-card.has-opportunity {
-    border-color: rgba(16, 185, 129, 0.3);
-    background: rgba(16, 185, 129, 0.05);
-    }
-
-    .opportunity-card.has-opportunity::before {
-    background: linear-gradient(90deg, #10b981 0%, #059669 100%);
-    opacity: 1;
-    }
-
-    /* Coin Header - Kompakt */
-    .coin-header {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    margin-bottom: 0.75rem;
-    }
-
-    .coin-logo {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.1);
-    padding: 4px;
-    }
-
-    .coin-info {
-    flex: 1;
-    }
-
-    .coin-name {
-    font-size: 1rem;
-    font-weight: 700;
-    line-height: 1.2;
-    }
-
-    .coin-symbol {
-    font-size: 0.75rem;
-    color: rgba(255, 255, 255, 0.5);
-    }
-
-    .opportunity-badge {
-    padding: 0.3rem 0.6rem;
-    border-radius: 12px;
-    font-size: 0.65rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    white-space: nowrap;
-    }
-
-    .opportunity-badge.active {
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-    animation: glow 2s infinite;
-    }
-
-    .opportunity-badge.inactive {
-    background: rgba(255, 255, 255, 0.1);
-    color: rgba(255, 255, 255, 0.5);
-    }
-
-    /* Exchange Data - Kompakt */
-    .exchange-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.5rem;
-    margin-bottom: 0.75rem;
-    }
-
-    .exchange-box {
-    background: rgba(0, 0, 0, 0.2);
-    border-radius: 8px;
-    padding: 0.6rem;
-    }
-
-    .exchange-header {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-    margin-bottom: 0.4rem;
-    }
-
-    .exchange-logo {
-    width: 16px;
-    height: 16px;
-    border-radius: 4px;
-    }
-
-    .exchange-name {
-    font-size: 0.7rem;
-    font-weight: 600;
-    color: rgba(255, 255, 255, 0.7);
-    }
-
-    .price-value {
-    font-size: 0.95rem;
-    font-weight: 700;
-    font-family: 'Courier New', monospace;
-    margin-bottom: 0.3rem;
-    }
-
-    .funding-rate {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding-top: 0.3rem;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    .funding-label {
-    font-size: 0.65rem;
-    color: rgba(255, 255, 255, 0.5);
-    }
-
-    .funding-value {
-    font-size: 0.8rem;
-    font-weight: 700;
-    font-family: 'Courier New', monospace;
-    }
-
-    .funding-value.positive {
-    color: #10b981;
-    }
-
-    .funding-value.negative {
-    color: #ef4444;
-    }
-
-    /* Table Styles */
-    .opp-table-container {
-    width: 100%;
-    overflow-x: auto;
-    background: rgba(255, 255, 255, 0.02);
-    border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    }
-
-    .opp-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.9rem;
-    }
-
-    .opp-table th {
-    text-align: left;
-    padding: 1rem;
-    background: rgba(255, 255, 255, 0.05);
-    color: rgba(255, 255, 255, 0.6);
-    font-weight: 600;
-    cursor: pointer;
-    user-select: none;
-    transition: color 0.2s;
-    }
-
-    .opp-table th:hover {
-    color: white;
-    background: rgba(255, 255, 255, 0.08);
-    }
-
-    .opp-table td {
-    padding: 0.75rem 1rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    color: rgba(255, 255, 255, 0.9);
-    }
-
-    .opp-table tr:last-child td {
-    border-bottom: none;
-    }
-
-    .opp-table tr:hover {
-    background: rgba(255, 255, 255, 0.03);
-    }
-
-    .positive {
-    color: #10B981;
-    }
-
-    .negative {
-    color: #EF4444;
-    }
-
-    .exchange-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 4px 8px;
-    border-radius: 4px;
-    background: rgba(255, 255, 255, 0.05);
-    font-size: 0.8rem;
-    }
-
-    .exchange-badge img {
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    }
-
-    .sort-icon {
-    font-size: 0.7rem;
-    margin-left: 4px;
-    opacity: 0.5;
-    }
-
-    /* Analysis Section - Kompakt */
-    .analysis-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 0.4rem;
-    margin-bottom: 0.75rem;
-    }
-
-    .analysis-item {
-    background: rgba(0, 0, 0, 0.3);
-    border-radius: 6px;
-    padding: 0.5rem;
-    }
-
-    .analysis-label {
-    font-size: 0.65rem;
-    color: rgba(255, 255, 255, 0.5);
-    margin-bottom: 0.2rem;
-    }
-
-    .analysis-value {
-    font-size: 0.85rem;
-    font-weight: 600;
-    font-family: 'Courier New', monospace;
-    }
-
-    .analysis-value.highlight {
-    font-size: 1rem;
-    color: #fbbf24;
-    }
-
-    .analysis-value.annual {
-    color: #a78bfa;
-    }
-
-    /* Trading Steps - Expandable */
-    .trading-steps {
-    background: rgba(0, 0, 0, 0.3);
-    border-radius: 8px;
-    padding: 0.75rem;
-    margin-top: 0.75rem;
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height 0.3s ease;
-    }
-
-    .opportunity-card.expanded .trading-steps {
-    max-height: 500px;
-    }
-
-    .steps-header {
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: rgba(255, 255, 255, 0.8);
-    margin-bottom: 0.5rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    }
-
-    .step-item {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.5rem;
-    padding: 0.4rem;
-    margin-bottom: 0.3rem;
-    background: rgba(255, 255, 255, 0.03);
-    border-radius: 6px;
-    border-left: 2px solid rgba(102, 126, 234, 0.5);
-    }
-
-    .step-number {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.7rem;
-    font-weight: 700;
-    flex-shrink: 0;
-    }
-
-    .step-content {
-    flex: 1;
-    }
-
-    .step-action {
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: rgba(255, 255, 255, 0.9);
-    margin-bottom: 0.2rem;
-    }
-
-    .step-details {
-    font-size: 0.65rem;
-    color: rgba(255, 255, 255, 0.6);
-    }
-
-    .step-fee {
-    font-size: 0.65rem;
-    color: #fbbf24;
-    margin-top: 0.2rem;
-    }
-
-    .expand-button {
-    width: 100%;
-    padding: 0.5rem;
-    background: rgba(102, 126, 234, 0.2);
-    border: 1px solid rgba(102, 126, 234, 0.3);
-    border-radius: 6px;
-    color: white;
-    font-size: 0.75rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    margin-top: 0.5rem;
-    }
-
-    .expand-button:hover {
-    background: rgba(102, 126, 234, 0.3);
-    }
-
-    .loading {
-    text-align: center;
-    padding: 3rem;
-    font-size: 1.25rem;
-    color: rgba(255, 255, 255, 0.6);
-    }
-
-    .spinner {
-    border: 3px solid rgba(255, 255, 255, 0.1);
-    border-top: 3px solid #667eea;
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    animation: spin 1s linear infinite;
-    margin: 0 auto 1rem;
-    }
-
-    /* Animations */
-    @keyframes fadeInDown {
-    from {
-    opacity: 0;
-    transform: translateY(-20px);
-    }
-
-    to {
-    opacity: 1;
-    transform: translateY(0);
-    }
-    }
-
-    @keyframes fadeInUp {
-    from {
-    opacity: 0;
-    transform: translateY(20px);
-    }
-
-    to {
-    opacity: 1;
-    transform: translateY(0);
-    }
-    }
-
-    @keyframes pulse {
-
-    0%,
-    100% {
-    opacity: 1;
-    }
-
-    50% {
-    opacity: 0.5;
-    }
-    }
-
-    @keyframes glow {
-
-    0%,
-    100% {
-    box-shadow: 0 0 15px rgba(16, 185, 129, 0.5);
-    }
-
-    50% {
-    box-shadow: 0 0 25px rgba(16, 185, 129, 0.8);
-    }
-    }
-
-    @keyframes spin {
-    0% {
-    transform: rotate(0deg);
-    }
-
-    100% {
-    transform: rotate(360deg);
-    }
-    }
-
-    /* Responsive */
-    @media (max-width: 768px) {
-    .header h1 {
-    font-size: 1.75rem;
-    }
-
-    .opportunities-grid {
-    grid-template-columns: 1fr;
-    }
-
-    .analysis-grid {
-    grid-template-columns: 1fr;
-    }
-    }
-    </style>
-    </head>
-
-    <body>
-        <div class="container">
-            <!-- Header -->
-            <div class="header">
-                <h1>🚀 Crypto Arbitrage Dashboard</h1>
-                <div class="status-bar">
-                    <div class="status-indicator">
-                        <div class="status-dot" id="wsStatus"></div>
-                        <span id="wsStatusText">Connecting...</span>
-                    </div>
-                    <div class="status-indicator">
-                        <span>Last Update: <span id="lastUpdate">-</span></span>
-                    </div>
-                </div>
+    <!-- Header -->
+    <div class="header">
+        <h1>🚀 Crypto Arbitrage Dashboard</h1>
+        <div class="status-bar">
+            <div class="status-indicator">
+                <div class="status-dot" id="wsStatus"></div>
+                <span id="wsStatusText">Connecting...</span>
             </div>
-
-            <!-- Tabs -->
-            <div class="tabs-container">
-                <!-- Main Tabs -->
-                <div class="tab-row">
-                    <button class="tab tab-all active" onclick="switchTab('all')" style="flex:1">ALL
-                        OPPORTUNITIES</button>
-                    <button class="tab tab-all" onclick="switchTab('all-data')" style="flex:1">ALL DATA</button>
-                </div>
-
-                <!-- Exchange Pair Tabs (2 rows of 5) -->
-                <div class="tab-row tab-pairs">
-                    <button class="tab tab-pair" onclick="switchTab('binance-okx')" title="Binance ↔ OKX">
-                        <img src="/logos/binance.png" alt="Binance" class="tab-logo">
-                        <span class="tab-arrow">↔</span>
-                        <img src="/logos/okx.png" alt="OKX" class="tab-logo">
-                    </button>
-                    <button class="tab tab-pair" onclick="switchTab('binance-hyperliquid')"
-                        title="Binance ↔ Hyperliquid">
-                        <img src="/logos/binance.png" alt="Binance" class="tab-logo">
-                        <span class="tab-arrow">↔</span>
-                        <img src="/logos/hyperliquid.png" alt="Hyperliquid" class="tab-logo">
-                    </button>
-                    <button class="tab tab-pair" onclick="switchTab('binance-bybit')" title="Binance ↔ Bybit">
-                        <img src="/logos/binance.png" alt="Binance" class="tab-logo">
-                        <span class="tab-arrow">↔</span>
-                        <img src="/logos/bybit.png" alt="Bybit" class="tab-logo">
-                    </button>
-                    <button class="tab tab-pair" onclick="switchTab('binance-asterdex')" title="Binance ↔ Asterdex">
-                        <img src="/logos/binance.png" alt="Binance" class="tab-logo">
-                        <span class="tab-arrow">↔</span>
-                        <img src="/logos/asterdex.png" alt="Asterdex" class="tab-logo">
-                    </button>
-                    <button class="tab tab-pair" onclick="switchTab('okx-hyperliquid')" title="OKX ↔ Hyperliquid">
-                        <img src="/logos/okx.png" alt="OKX" class="tab-logo">
-                        <span class="tab-arrow">↔</span>
-                        <img src="/logos/hyperliquid.png" alt="Hyperliquid" class="tab-logo">
-                    </button>
-                </div>
-
-                <div class="tab-row tab-pairs">
-                    <button class="tab tab-pair" onclick="switchTab('okx-bybit')" title="OKX ↔ Bybit">
-                        <img src="/logos/okx.png" alt="OKX" class="tab-logo">
-                        <span class="tab-arrow">↔</span>
-                        <img src="/logos/bybit.png" alt="Bybit" class="tab-logo">
-                    </button>
-                    <button class="tab tab-pair" onclick="switchTab('okx-asterdex')" title="OKX ↔ Asterdex">
-                        <img src="/logos/okx.png" alt="OKX" class="tab-logo">
-                        <span class="tab-arrow">↔</span>
-                        <img src="/logos/asterdex.png" alt="Asterdex" class="tab-logo">
-                    </button>
-                    <button class="tab tab-pair" onclick="switchTab('hyperliquid-bybit')" title="Hyperliquid ↔ Bybit">
-                        <img src="/logos/hyperliquid.png" alt="Hyperliquid" class="tab-logo">
-                        <span class="tab-arrow">↔</span>
-                        <img src="/logos/bybit.png" alt="Bybit" class="tab-logo">
-                    </button>
-                    <button class="tab tab-pair" onclick="switchTab('hyperliquid-asterdex')"
-                        title="Hyperliquid ↔ Asterdex">
-                        <img src="/logos/hyperliquid.png" alt="Hyperliquid" class="tab-logo">
-                        <span class="tab-arrow">↔</span>
-                        <img src="/logos/asterdex.png" alt="Asterdex" class="tab-logo">
-                    </button>
-                    <button class="tab tab-pair" onclick="switchTab('bybit-asterdex')" title="Bybit ↔ Asterdex">
-                        <img src="/logos/bybit.png" alt="Bybit" class="tab-logo">
-                        <span class="tab-arrow">↔</span>
-                        <img src="/logos/asterdex.png" alt="Asterdex" class="tab-logo">
-                    </button>
-                </div>
-            </div>
-
-            <!-- Stats -->
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-label">Total Coins</div>
-                    <div class="stat-value" id="totalOpportunities">0</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">Active Opportunities</div>
-                    <div class="stat-value" id="activeArbitrage">0</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">Best 8h Return</div>
-                    <div class="stat-value" id="bestOpportunity">-</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">Best Annual Return</div>
-                    <div class="stat-value" id="bestAnnual">-</div>
-                </div>
-            </div>
-
-            <!-- Loading -->
-            <div class="loading" id="loading">
-                <div class="spinner"></div>
-                <div>Loading arbitrage data...</div>
-            </div>
-
-            <!-- Opportunities Grid (Cards) -->
-            <div class="opportunities-grid" id="opportunitiesGrid" style="display: none;"></div>
-
-            <!-- Opportunities Table (List) -->
-            <div class="opp-table-container" id="opportunitiesTable" style="display: none;">
-                <table class="opp-table">
-                    <thead>
-                        <tr>
-                            <th onclick="sortTable('symbol')">Symbol <span class="sort-icon">↕</span></th>
-                            <th onclick="sortTable('long')">Long <span class="sort-icon">↕</span></th>
-                            <th onclick="sortTable('short')">Short <span class="sort-icon">↕</span></th>
-                            <th onclick="sortTable('pricePnL')">Price PnL (100$) <span class="sort-icon">↕</span></th>
-                            <th onclick="sortTable('fundingPnL')">Fund PnL (8h) <span class="sort-icon">↕</span></th>
-                            <th onclick="sortTable('apr')">APR <span class="sort-icon">↕</span></th>
-                        </tr>
-                    </thead>
-                    <tbody id="tableBody">
-                        <!-- Rows will be injected here -->
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- All Data Table -->
-            <div class="opportunities-table" id="allDataTable" style="display: none;">
-                <table>
-                    <thead>
-                        <tr>
-                            <th rowspan="2">Coin</th>
-                            <th colspan="2">Binance</th>
-                            <th colspan="2">OKX</th>
-                            <th colspan="2">Hyperliquid</th>
-                            <th colspan="2">Bybit</th>
-                            <th colspan="2">Asterdex</th>
-                        </tr>
-                        <tr>
-                            <th>Price</th>
-                            <th>Fund%</th>
-                            <th>Price</th>
-                            <th>Fund%</th>
-                            <th>Price</th>
-                            <th>Fund%</th>
-                            <th>Price</th>
-                            <th>Fund%</th>
-                            <th>Price</th>
-                            <th>Fund%</th>
-                        </tr>
-                    </thead>
-                    <tbody id="allDataBody">
-                        <!-- Rows will be injected here -->
-                    </tbody>
-                </table>
+            <div class="status-indicator">
+                <span>Last Update: <span id="lastUpdate">-</span></span>
             </div>
         </div>
+    </div>
 
-        <script>
-            let ws;
-            let reconnectInterval;
-            let currentTab = 'all'; // Default tab is ALL
-            let allData = {
-                'binance-okx': [],
-                'binance-hyperliquid': [],
-                'binance-bybit': [],
-                'binance-asterdex': [],
-                'okx-hyperliquid': [],
-                'okx-bybit': [],
-                'okx-asterdex': [],
-                'hyperliquid-bybit': [],
-                'hyperliquid-asterdex': [],
-                'bybit-asterdex': []
-            };
-            let sortConfig = { key: 'profit8h', direction: 'desc' };
+    <!-- Tabs -->
+    <div class="tabs-container">
+        <!-- Main Tabs -->
+        <div class="tab-row">
+            <button class="tab tab-all active" onclick="switchTab('all')" style="flex:1">ALL
+                OPPORTUNITIES</button>
+            <button class="tab tab-all" onclick="switchTab('all-data')" style="flex:1">ALL DATA</button>
+        </div>
 
-            function switchTab(tabId) {
-                currentTab = tabId;
+        <!-- Exchange Pair Tabs (2 rows of 5) -->
+        <div class="tab-row tab-pairs">
+            <button class="tab tab-pair" onclick="switchTab('binance-okx')" title="Binance ↔ OKX">
+                <img src="/logos/binance.png" alt="Binance" class="tab-logo">
+                <span class="tab-arrow">↔</span>
+                <img src="/logos/okx.png" alt="OKX" class="tab-logo">
+            </button>
+            <button class="tab tab-pair" onclick="switchTab('binance-hyperliquid')" title="Binance ↔ Hyperliquid">
+                <img src="/logos/binance.png" alt="Binance" class="tab-logo">
+                <span class="tab-arrow">↔</span>
+                <img src="/logos/hyperliquid.png" alt="Hyperliquid" class="tab-logo">
+            </button>
+            <button class="tab tab-pair" onclick="switchTab('binance-bybit')" title="Binance ↔ Bybit">
+                <img src="/logos/binance.png" alt="Binance" class="tab-logo">
+                <span class="tab-arrow">↔</span>
+                <img src="/logos/bybit.png" alt="Bybit" class="tab-logo">
+            </button>
+            <button class="tab tab-pair" onclick="switchTab('binance-asterdex')" title="Binance ↔ Asterdex">
+                <img src="/logos/binance.png" alt="Binance" class="tab-logo">
+                <span class="tab-arrow">↔</span>
+                <img src="/logos/asterdex.png" alt="Asterdex" class="tab-logo">
+            </button>
+            <button class="tab tab-pair" onclick="switchTab('okx-hyperliquid')" title="OKX ↔ Hyperliquid">
+                <img src="/logos/okx.png" alt="OKX" class="tab-logo">
+                <span class="tab-arrow">↔</span>
+                <img src="/logos/hyperliquid.png" alt="Hyperliquid" class="tab-logo">
+            </button>
+        </div>
 
-                // Update tab styles - remove active from all, add to clicked
-                document.querySelectorAll('.tab').forEach(tab => {
-                    tab.classList.remove('active');
-                });
+        <div class="tab-row tab-pairs">
+            <button class="tab tab-pair" onclick="switchTab('okx-bybit')" title="OKX ↔ Bybit">
+                <img src="/logos/okx.png" alt="OKX" class="tab-logo">
+                <span class="tab-arrow">↔</span>
+                <img src="/logos/bybit.png" alt="Bybit" class="tab-logo">
+            </button>
+            <button class="tab tab-pair" onclick="switchTab('okx-asterdex')" title="OKX ↔ Asterdex">
+                <img src="/logos/okx.png" alt="OKX" class="tab-logo">
+                <span class="tab-arrow">↔</span>
+                <img src="/logos/asterdex.png" alt="Asterdex" class="tab-logo">
+            </button>
+            <button class="tab tab-pair" onclick="switchTab('hyperliquid-bybit')" title="Hyperliquid ↔ Bybit">
+                <img src="/logos/hyperliquid.png" alt="Hyperliquid" class="tab-logo">
+                <span class="tab-arrow">↔</span>
+                <img src="/logos/bybit.png" alt="Bybit" class="tab-logo">
+            </button>
+            <button class="tab tab-pair" onclick="switchTab('hyperliquid-asterdex')" title="Hyperliquid ↔ Asterdex">
+                <img src="/logos/hyperliquid.png" alt="Hyperliquid" class="tab-logo">
+                <span class="tab-arrow">↔</span>
+                <img src="/logos/asterdex.png" alt="Asterdex" class="tab-logo">
+            </button>
+            <button class="tab tab-pair" onclick="switchTab('bybit-asterdex')" title="Bybit ↔ Asterdex">
+                <img src="/logos/bybit.png" alt="Bybit" class="tab-logo">
+                <span class="tab-arrow">↔</span>
+                <img src="/logos/asterdex.png" alt="Asterdex" class="tab-logo">
+            </button>
+        </div>
+    </div>
 
-                // Add active class to the clicked tab
-                event.target.closest('.tab').classList.add('active');
+    <!-- Stats -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-label">Total Coins</div>
+            <div class="stat-value" id="totalOpportunities">0</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Active Opportunities</div>
+            <div class="stat-value" id="activeArbitrage">0</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Best 8h Return</div>
+            <div class="stat-value" id="bestOpportunity">-</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Best Annual Return</div>
+            <div class="stat-value" id="bestAnnual">-</div>
+        </div>
+    </div>
 
-                // Handle ALL tab vs others
-                if (currentTab === 'all') {
-                    document.getElementById('opportunitiesGrid').style.display = 'none';
-                    document.getElementById('opportunitiesTable').style.display = 'block';
-                    document.getElementById('allDataTable').style.display = 'none';
-                    renderAllTable();
-                } else if (currentTab === 'all-data') {
-                    document.getElementById('opportunitiesGrid').style.display = 'none';
-                    document.getElementById('opportunitiesTable').style.display = 'none';
-                    document.getElementById('allDataTable').style.display = 'block';
-                    renderAllDataTable();
-                } else {
-                    document.getElementById('opportunitiesGrid').style.display = 'grid';
-                    document.getElementById('opportunitiesTable').style.display = 'none';
-                    document.getElementById('allDataTable').style.display = 'none';
-                    updateDashboard(allData[currentTab]);
+    <!-- Loading -->
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <div>Loading arbitrage data...</div>
+    </div>
+
+    <!-- Opportunities Grid (Cards) -->
+    <div class="opportunities-grid" id="opportunitiesGrid" style="display: none;"></div>
+
+    <!-- Opportunities Table (List) -->
+    <div class="opp-table-container" id="opportunitiesTable" style="display: none;">
+        <table class="opp-table">
+            <thead>
+                <tr>
+                    <th onclick="sortTable('symbol')">Symbol <span class="sort-icon">↕</span></th>
+                    <th onclick="sortTable('long')">Long <span class="sort-icon">↕</span></th>
+                    <th onclick="sortTable('short')">Short <span class="sort-icon">↕</span></th>
+                    <th onclick="sortTable('pricePnL')">Price PnL (100$) <span class="sort-icon">↕</span></th>
+                    <th onclick="sortTable('fundingPnL')">Fund PnL (8h) <span class="sort-icon">↕</span></th>
+                    <th onclick="sortTable('apr')">APR <span class="sort-icon">↕</span></th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+                <!-- Rows will be injected here -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- All Data Table -->
+    <div class="opportunities-table" id="allDataTable" style="display: none;">
+        <table>
+            <thead>
+                <tr>
+                    <th rowspan="2">Coin</th>
+                    <th colspan="2">Binance</th>
+                    <th colspan="2">OKX</th>
+                    <th colspan="2">Hyperliquid</th>
+                    <th colspan="2">Bybit</th>
+                    <th colspan="2">Asterdex</th>
+                </tr>
+                <tr>
+                    <th>Price</th>
+                    <th>Fund%</th>
+                    <th>Price</th>
+                    <th>Fund%</th>
+                    <th>Price</th>
+                    <th>Fund%</th>
+                    <th>Price</th>
+                    <th>Fund%</th>
+                    <th>Price</th>
+                    <th>Fund%</th>
+                </tr>
+            </thead>
+            <tbody id="allDataBody">
+                <!-- Rows will be injected here -->
+            </tbody>
+        </table>
+    </div>
+    </div>
+
+    <script>
+        let ws;
+        let reconnectInterval;
+        let currentTab = 'all'; // Default tab is ALL
+        let allData = {
+            'binance-okx': [],
+            'binance-hyperliquid': [],
+            'binance-bybit': [],
+            'binance-asterdex': [],
+            'okx-hyperliquid': [],
+            'okx-bybit': [],
+            'okx-asterdex': [],
+            'hyperliquid-bybit': [],
+            'hyperliquid-asterdex': [],
+            'bybit-asterdex': []
+        };
+        let sortConfig = { key: 'profit8h', direction: 'desc' };
+
+        function switchTab(tabId) {
+            currentTab = tabId;
+
+            // Update tab styles - remove active from all, add to clicked
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Add active class to the clicked tab
+            event.target.closest('.tab').classList.add('active');
+
+            // Handle ALL tab vs others
+            if (currentTab === 'all') {
+                document.getElementById('opportunitiesGrid').style.display = 'none';
+                document.getElementById('opportunitiesTable').style.display = 'block';
+                document.getElementById('allDataTable').style.display = 'none';
+                renderAllTable();
+            } else if (currentTab === 'all-data') {
+                document.getElementById('opportunitiesGrid').style.display = 'none';
+                document.getElementById('opportunitiesTable').style.display = 'none';
+                document.getElementById('allDataTable').style.display = 'block';
+                renderAllDataTable();
+            } else {
+                document.getElementById('opportunitiesGrid').style.display = 'grid';
+                document.getElementById('opportunitiesTable').style.display = 'none';
+                document.getElementById('allDataTable').style.display = 'none';
+                updateDashboard(allData[currentTab]);
+            }
+        }
+
+        function getAllOpportunities() {
+            // Flatten all data sources into one array
+            let combined = [];
+            Object.values(allData).forEach(list => {
+                if (list && Array.isArray(list)) combined.push(...list);
+            });
+            return combined;
+        }
+
+        function renderAllTable() {
+            const opportunities = getAllOpportunities();
+            const tbody = document.getElementById('tableBody');
+
+            // Filter only active opportunities or show all? Let's show all but sort by profit
+            // Sort data
+            opportunities.sort((a, b) => {
+                let valA, valB;
+
+                switch (sortConfig.key) {
+                    case 'symbol': valA = a.symbol; valB = b.symbol; break;
+                    case 'long': valA = getLongExchange(a); valB = getLongExchange(b); break;
+                    case 'short': valA = getShortExchange(a); valB = getShortExchange(b); break;
+                    case 'funding': valA = Math.abs(a.analysis.fundingPnL8h || 0); valB = Math.abs(b.analysis.fundingPnL8h || 0); break;
+                    case 'profit8h': valA = a.analysis.fundingPnL8h || 0; valB = b.analysis.fundingPnL8h || 0; break;
+                    case 'annual': valA = a.analysis.annualAPR || 0; valB = b.analysis.annualAPR || 0; break;
+                    default: valA = a.analysis.annualAPR || 0; valB = b.analysis.annualAPR || 0;
                 }
-            }
 
-            function getAllOpportunities() {
-                // Flatten all data sources into one array
-                let combined = [];
-                Object.values(allData).forEach(list => {
-                    if (list && Array.isArray(list)) combined.push(...list);
-                });
-                return combined;
-            }
+                if (typeof valA === 'string') {
+                    return sortConfig.direction === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+                } else {
+                    return sortConfig.direction === 'asc' ? valA - valB : valB - valA;
+                }
+            });
 
-            function renderAllTable() {
-                const opportunities = getAllOpportunities();
-                const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = opportunities.map(opp => {
+                const longExchange = getLongExchange(opp);
+                const shortExchange = getShortExchange(opp);
+                const longLogo = getLongExchangeLogo(opp);
+                const shortLogo = getShortExchangeLogo(opp);
 
-                // Filter only active opportunities or show all? Let's show all but sort by profit
-                // Sort data
-                opportunities.sort((a, b) => {
-                    let valA, valB;
-
-                    switch (sortConfig.key) {
-                        case 'symbol': valA = a.symbol; valB = b.symbol; break;
-                        case 'long': valA = getLongExchange(a); valB = getLongExchange(b); break;
-                        case 'short': valA = getShortExchange(a); valB = getShortExchange(b); break;
-                        case 'funding': valA = Math.abs(a.analysis.fundingPnL8h || 0); valB = Math.abs(b.analysis.fundingPnL8h || 0); break;
-                        case 'profit8h': valA = a.analysis.fundingPnL8h || 0; valB = b.analysis.fundingPnL8h || 0; break;
-                        case 'annual': valA = a.analysis.annualAPR || 0; valB = b.analysis.annualAPR || 0; break;
-                        default: valA = a.analysis.annualAPR || 0; valB = b.analysis.annualAPR || 0;
-                    }
-
-                    if (typeof valA === 'string') {
-                        return sortConfig.direction === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
-                    } else {
-                        return sortConfig.direction === 'asc' ? valA - valB : valB - valA;
-                    }
-                });
-
-                tbody.innerHTML = opportunities.map(opp => {
-                    const longExchange = getLongExchange(opp);
-                    const shortExchange = getShortExchange(opp);
-                    const longLogo = getLongExchangeLogo(opp);
-                    const shortLogo = getShortExchangeLogo(opp);
-
-                    return `
+                return `
                     <tr onclick="showDetails('${opp.symbol}')">
                         <td style="font-weight:bold; display:flex; align-items:center; gap:8px;">
                             <img src="${opp.logo}" style="width:20px; height:20px; border-radius:50%;" onerror="this.style.display='none'">
@@ -1097,39 +1091,39 @@
                         </td>
                     </tr>
                 `;
-                }).join('');
+            }).join('');
 
-                // Update Stats for ALL view
-                updateStats(opportunities);
-            }
+            // Update Stats for ALL view
+            updateStats(opportunities);
+        }
 
-            // Format price intelligently
-            function formatPrice(price) {
-                if (!price) return '-';
-                const p = parseFloat(price);
-                if (p < 0.001) return p.toFixed(8);
-                if (p < 1) return p.toFixed(6);
-                if (p < 10) return p.toFixed(4);
-                return p.toFixed(2);
-            }
+        // Format price intelligently
+        function formatPrice(price) {
+            if (!price) return '-';
+            const p = parseFloat(price);
+            if (p < 0.001) return p.toFixed(8);
+            if (p < 1) return p.toFixed(6);
+            if (p < 10) return p.toFixed(4);
+            return p.toFixed(2);
+        }
 
-            function renderAllDataTable() {
-                const tbody = document.getElementById('allDataBody');
+        function renderAllDataTable() {
+            const tbody = document.getElementById('allDataBody');
 
-                // Sort by symbol by default
-                allCoinsData.sort((a, b) => a.symbol.localeCompare(b.symbol));
+            // Sort by symbol by default
+            allCoinsData.sort((a, b) => a.symbol.localeCompare(b.symbol));
 
-                tbody.innerHTML = allCoinsData.map(coin => {
-                    const formatCell = (data) => {
-                        if (!data) return '<td colspan="2" style="text-align:center; color:rgba(255,255,255,0.2)">-</td>';
-                        const fundingClass = data.funding > 0 ? 'positive' : (data.funding < 0 ? 'negative' : '');
-                        return `
+            tbody.innerHTML = allCoinsData.map(coin => {
+                const formatCell = (data) => {
+                    if (!data) return '<td colspan="2" style="text-align:center; color:rgba(255,255,255,0.2)">-</td>';
+                    const fundingClass = data.funding > 0 ? 'positive' : (data.funding < 0 ? 'negative' : '');
+                    return `
                             <td>$${formatPrice(data.price)}</td>
                             <td class="${fundingClass}">${parseFloat(data.funding).toFixed(4)}%</td>
                         `;
-                    };
+                };
 
-                    return `
+                return `
                         <tr>
                             <td style="font-weight:bold; display:flex; align-items:center; gap:8px;">
                                 <img src="${coin.logo}" style="width:20px; height:20px; border-radius:50%;" onerror="this.style.display='none'">
@@ -1142,190 +1136,190 @@
                             ${formatCell(coin.asterdex)}
                         </tr>
                     `;
-                }).join('');
-            }
+            }).join('');
+        }
 
-            function getLongExchange(opp) {
-                if (opp.analysis.strategy === 'SHORT_A_LONG_B') return opp.exchangeB.name;
-                if (opp.analysis.strategy === 'LONG_A_SHORT_B') return opp.exchangeA.name;
-                return opp.exchangeA.name; // Default if no clear strategy
-            }
+        function getLongExchange(opp) {
+            if (opp.analysis.strategy === 'SHORT_A_LONG_B') return opp.exchangeB.name;
+            if (opp.analysis.strategy === 'LONG_A_SHORT_B') return opp.exchangeA.name;
+            return opp.exchangeA.name; // Default if no clear strategy
+        }
 
-            function getShortExchange(opp) {
-                if (opp.analysis.strategy === 'SHORT_A_LONG_B') return opp.exchangeA.name;
-                if (opp.analysis.strategy === 'LONG_A_SHORT_B') return opp.exchangeB.name;
-                return opp.exchangeB.name; // Default if no clear strategy
-            }
+        function getShortExchange(opp) {
+            if (opp.analysis.strategy === 'SHORT_A_LONG_B') return opp.exchangeA.name;
+            if (opp.analysis.strategy === 'LONG_A_SHORT_B') return opp.exchangeB.name;
+            return opp.exchangeB.name; // Default if no clear strategy
+        }
 
-            function getLongExchangeLogo(opp) {
-                if (opp.analysis.strategy === 'SHORT_A_LONG_B') return opp.exchangeB.logo;
-                if (opp.analysis.strategy === 'LONG_A_SHORT_B') return opp.exchangeA.logo;
-                return opp.exchangeA.logo;
-            }
+        function getLongExchangeLogo(opp) {
+            if (opp.analysis.strategy === 'SHORT_A_LONG_B') return opp.exchangeB.logo;
+            if (opp.analysis.strategy === 'LONG_A_SHORT_B') return opp.exchangeA.logo;
+            return opp.exchangeA.logo;
+        }
 
-            function getShortExchangeLogo(opp) {
-                if (opp.analysis.strategy === 'SHORT_A_LONG_B') return opp.exchangeA.logo;
-                if (opp.analysis.strategy === 'LONG_A_SHORT_B') return opp.exchangeB.logo;
-                return opp.exchangeB.logo;
-            }
+        function getShortExchangeLogo(opp) {
+            if (opp.analysis.strategy === 'SHORT_A_LONG_B') return opp.exchangeA.logo;
+            if (opp.analysis.strategy === 'LONG_A_SHORT_B') return opp.exchangeB.logo;
+            return opp.exchangeB.logo;
+        }
 
-            function sortTable(key) {
-                if (sortConfig.key === key) {
-                    sortConfig.direction = sortConfig.direction === 'asc' ? 'desc' : 'asc';
-                } else {
-                    sortConfig.key = key;
-                    sortConfig.direction = (key === 'symbol' || key === 'long' || key === 'short') ? 'asc' : 'desc'; // Default asc for strings, desc for numbers
+        function sortTable(key) {
+            if (sortConfig.key === key) {
+                sortConfig.direction = sortConfig.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortConfig.key = key;
+                sortConfig.direction = (key === 'symbol' || key === 'long' || key === 'short') ? 'asc' : 'desc'; // Default asc for strings, desc for numbers
+            }
+            renderAllTable();
+        }
+
+        function connectWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.host}`;
+
+            ws = new WebSocket(wsUrl);
+
+            ws.onopen = () => {
+                document.getElementById('wsStatus').classList.add('connected');
+                document.getElementById('wsStatusText').textContent = 'Connected';
+                if (reconnectInterval) {
+                    clearInterval(reconnectInterval);
+                    reconnectInterval = null;
                 }
-                renderAllTable();
-            }
+            };
 
-            function connectWebSocket() {
-                const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-                const wsUrl = `${protocol}//${window.location.host}`;
+            ws.onmessage = (event) => {
+                const message = JSON.parse(event.data);
 
-                ws = new WebSocket(wsUrl);
-
-                ws.onopen = () => {
-                    document.getElementById('wsStatus').classList.add('connected');
-                    document.getElementById('wsStatusText').textContent = 'Connected';
-                    if (reconnectInterval) {
-                        clearInterval(reconnectInterval);
-                        reconnectInterval = null;
+                if (message.type === 'ARBITRAGE_UPDATE') {
+                    allData = message.data;
+                    if (message.allData) {
+                        allCoinsData = message.allData;
                     }
-                };
 
-                ws.onmessage = (event) => {
-                    const message = JSON.parse(event.data);
+                    document.getElementById('lastUpdate').textContent = new Date(message.timestamp).toLocaleTimeString();
 
-                    if (message.type === 'ARBITRAGE_UPDATE') {
-                        allData = message.data;
-                        if (message.allData) {
-                            allCoinsData = message.allData;
+                    // Always render current tab
+                    if (currentTab === 'all') {
+                        renderAllTable();
+                    } else if (currentTab === 'all-data') {
+                        renderAllDataTable();
+                    } else {
+                        updateDashboard(allData[currentTab]);
+                    }
+                }
+            };
+
+            ws.onclose = () => {
+                document.getElementById('wsStatus').classList.remove('connected');
+                document.getElementById('wsStatusText').textContent = 'Disconnected';
+
+                if (!reconnectInterval) {
+                    reconnectInterval = setInterval(connectWebSocket, 5000);
+                }
+            };
+
+            ws.onerror = (error) => {
+                console.error('WebSocket error:', error);
+                document.getElementById('wsStatus').classList.remove('connected');
+                document.getElementById('wsStatusText').textContent = 'Disconnected';
+            };
+        }
+
+        function updateConnectionStatus(connected) {
+            const statusDot = document.getElementById('wsStatus');
+            const statusText = document.getElementById('wsStatusText');
+
+            if (connected) {
+                statusDot.className = 'status-dot connected';
+                statusText.textContent = 'Connected';
+            } else {
+                statusDot.className = 'status-dot disconnected';
+                statusText.textContent = 'Disconnected';
+            }
+        }
+
+        function updateLastUpdate() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('tr-TR');
+            document.getElementById('lastUpdate').textContent = timeString;
+        }
+
+        function updateStats(opportunities) {
+            const activeOpps = opportunities.filter(o => o.analysis && o.analysis.isOpportunity);
+            document.getElementById('totalOpportunities').textContent = opportunities.length;
+            document.getElementById('activeArbitrage').textContent = activeOpps.length;
+
+            if (activeOpps.length > 0) {
+                const best8h = activeOpps.reduce((max, o) =>
+                    o.analysis.annualAPR > max.analysis.annualAPR ? o : max
+                );
+                document.getElementById('bestOpportunity').textContent =
+                    best8h.analysis.fundingPnL8h.toFixed(4) + '$';
+
+                document.getElementById('bestAnnual').textContent =
+                    best8h.analysis.annualAPR.toFixed(2) + '%';
+            } else {
+                document.getElementById('bestOpportunity').textContent = 'None';
+                document.getElementById('bestAnnual').textContent = 'None';
+            }
+        }
+
+        function updateDashboard(opportunities) {
+            if (!opportunities) return;
+
+            // Hide loading
+            document.getElementById('loading').style.display = 'none';
+
+            // Update stats
+            updateStats(opportunities);
+
+            // Hangi kartlar açık olduğunu kaydet (refresh öncesi)
+            const expandedCards = new Set();
+            document.querySelectorAll('.opportunity-card.expanded').forEach(card => {
+                const symbolElement = card.querySelector('.coin-symbol');
+                if (symbolElement) {
+                    expandedCards.add(symbolElement.textContent);
+                }
+            });
+
+            // Render opportunities
+            const grid = document.getElementById('opportunitiesGrid');
+            grid.innerHTML = opportunities.map(opp => createOpportunityCard(opp)).join('');
+
+            // Önceden açık olan kartları tekrar aç
+            opportunities.forEach(opp => {
+                if (expandedCards.has(opp.symbol)) {
+                    const cards = document.querySelectorAll('.opportunity-card');
+                    cards.forEach(card => {
+                        const symbolElement = card.querySelector('.coin-symbol');
+                        if (symbolElement && symbolElement.textContent === opp.symbol) {
+                            card.classList.add('expanded');
+                            const btn = card.querySelector('.expand-button');
+                            if (btn) btn.textContent = '▲ Hide Trading Steps';
                         }
-
-                        document.getElementById('lastUpdate').textContent = new Date(message.timestamp).toLocaleTimeString();
-
-                        // Always render current tab
-                        if (currentTab === 'all') {
-                            renderAllTable();
-                        } else if (currentTab === 'all-data') {
-                            renderAllDataTable();
-                        } else {
-                            updateDashboard(allData[currentTab]);
-                        }
-                    }
-                };
-
-                ws.onclose = () => {
-                    document.getElementById('wsStatus').classList.remove('connected');
-                    document.getElementById('wsStatusText').textContent = 'Disconnected';
-
-                    if (!reconnectInterval) {
-                        reconnectInterval = setInterval(connectWebSocket, 5000);
-                    }
-                };
-
-                ws.onerror = (error) => {
-                    console.error('WebSocket error:', error);
-                    document.getElementById('wsStatus').classList.remove('connected');
-                    document.getElementById('wsStatusText').textContent = 'Disconnected';
-                };
-            }
-
-            function updateConnectionStatus(connected) {
-                const statusDot = document.getElementById('wsStatus');
-                const statusText = document.getElementById('wsStatusText');
-
-                if (connected) {
-                    statusDot.className = 'status-dot connected';
-                    statusText.textContent = 'Connected';
-                } else {
-                    statusDot.className = 'status-dot disconnected';
-                    statusText.textContent = 'Disconnected';
-                }
-            }
-
-            function updateLastUpdate() {
-                const now = new Date();
-                const timeString = now.toLocaleTimeString('tr-TR');
-                document.getElementById('lastUpdate').textContent = timeString;
-            }
-
-            function updateStats(opportunities) {
-                const activeOpps = opportunities.filter(o => o.analysis && o.analysis.isOpportunity);
-                document.getElementById('totalOpportunities').textContent = opportunities.length;
-                document.getElementById('activeArbitrage').textContent = activeOpps.length;
-
-                if (activeOpps.length > 0) {
-                    const best8h = activeOpps.reduce((max, o) =>
-                        o.analysis.annualAPR > max.analysis.annualAPR ? o : max
-                    );
-                    document.getElementById('bestOpportunity').textContent =
-                        best8h.analysis.fundingPnL8h.toFixed(4) + '$';
-
-                    document.getElementById('bestAnnual').textContent =
-                        best8h.analysis.annualAPR.toFixed(2) + '%';
-                } else {
-                    document.getElementById('bestOpportunity').textContent = 'None';
-                    document.getElementById('bestAnnual').textContent = 'None';
-                }
-            }
-
-            function updateDashboard(opportunities) {
-                if (!opportunities) return;
-
-                // Hide loading
-                document.getElementById('loading').style.display = 'none';
-
-                // Update stats
-                updateStats(opportunities);
-
-                // Hangi kartlar açık olduğunu kaydet (refresh öncesi)
-                const expandedCards = new Set();
-                document.querySelectorAll('.opportunity-card.expanded').forEach(card => {
-                    const symbolElement = card.querySelector('.coin-symbol');
-                    if (symbolElement) {
-                        expandedCards.add(symbolElement.textContent);
-                    }
-                });
-
-                // Render opportunities
-                const grid = document.getElementById('opportunitiesGrid');
-                grid.innerHTML = opportunities.map(opp => createOpportunityCard(opp)).join('');
-
-                // Önceden açık olan kartları tekrar aç
-                opportunities.forEach(opp => {
-                    if (expandedCards.has(opp.symbol)) {
-                        const cards = document.querySelectorAll('.opportunity-card');
-                        cards.forEach(card => {
-                            const symbolElement = card.querySelector('.coin-symbol');
-                            if (symbolElement && symbolElement.textContent === opp.symbol) {
-                                card.classList.add('expanded');
-                                const btn = card.querySelector('.expand-button');
-                                if (btn) btn.textContent = '▲ Hide Trading Steps';
-                            }
-                        });
-                    }
-                });
-
-                // Add click handlers for expand buttons
-                document.querySelectorAll('.expand-button').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        const card = btn.closest('.opportunity-card');
-                        card.classList.toggle('expanded');
-                        btn.textContent = card.classList.contains('expanded')
-                            ? '▲ Hide Trading Steps'
-                            : '▼ Show Trading Steps';
                     });
+                }
+            });
+
+            // Add click handlers for expand buttons
+            document.querySelectorAll('.expand-button').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const card = btn.closest('.opportunity-card');
+                    card.classList.toggle('expanded');
+                    btn.textContent = card.classList.contains('expanded')
+                        ? '▲ Hide Trading Steps'
+                        : '▼ Show Trading Steps';
                 });
-            }
+            });
+        }
 
-            function createOpportunityCard(opp) {
-                const hasOpportunity = opp.analysis.isOpportunity;
-                const cardClass = hasOpportunity ? 'opportunity-card has-opportunity' : 'opportunity-card';
+        function createOpportunityCard(opp) {
+            const hasOpportunity = opp.analysis.isOpportunity;
+            const cardClass = hasOpportunity ? 'opportunity-card has-opportunity' : 'opportunity-card';
 
-                return `
+            return `
                 <div class="${cardClass}">
                     <!-- Coin Header -->
                     <div class="coin-header">
@@ -1346,14 +1340,28 @@
                                 <img src="${opp.exchangeA.logo}" alt="${opp.exchangeA.name}" class="exchange-logo" onerror="this.style.display='none'">
                                 <span class="exchange-name">${opp.exchangeA.name.toUpperCase()}</span>
                             </div>
-                            <div class="price-value">$${opp.exchangeA.markPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 8 })}</div>
+                            <div class="price-value">$${formatPrice(opp.exchangeA.markPrice)}</div>
                             <div class="funding-rate">
                                 <span class="funding-label">FR (8h)</span>
                                 <span class="funding-value ${opp.exchangeA.fundingRate >= 0 ? 'positive' : 'negative'}">
-                                    ${opp.exchangeA.fundingRate >= 0 ? '+' : ''}${opp.exchangeA.fundingRate.toFixed(4)}%
+                                    ${opp.exchangeA.fundingRate >= 0 ? '+' : ''}${parseFloat(opp.exchangeA.fundingRate).toFixed(4)}%
                                 </span>
                             </div>
                         </div>
+                        <div class="exchange-box">
+                            <div class="exchange-header">
+                                <img src="${opp.exchangeB.logo}" alt="${opp.exchangeB.name}" class="exchange-logo" onerror="this.style.display='none'">
+                                <span class="exchange-name">${opp.exchangeB.name.toUpperCase()}</span>
+                            </div>
+                            <div class="price-value">$${formatPrice(opp.exchangeB.markPrice)}</div>
+                            <div class="funding-rate">
+                                <span class="funding-label">FR (8h)</span>
+                                <span class="funding-value ${opp.exchangeB.fundingRate >= 0 ? 'positive' : 'negative'}">
+                                    ${opp.exchangeB.fundingRate >= 0 ? '+' : ''}${parseFloat(opp.exchangeB.fundingRate).toFixed(4)}%
+                                </span>
+                            </div>
+                        </div>
+                    </div>
 
                         <div class="exchange-box">
                             <div class="exchange-header">
@@ -1403,20 +1411,20 @@
                     </div>
                 </div>
             `;
-            }
+        }
 
-            function formatStrategy(strategy, exchangeA, exchangeB) {
-                if (strategy === 'LONG_A_SHORT_B') {
-                    return `LONG ${exchangeA} + SHORT ${exchangeB}`;
-                } else if (strategy === 'SHORT_A_LONG_B') {
-                    return `SHORT ${exchangeA} + LONG ${exchangeB}`;
-                }
-                return 'No Strategy';
+        function formatStrategy(strategy, exchangeA, exchangeB) {
+            if (strategy === 'LONG_A_SHORT_B') {
+                return `LONG ${exchangeA} + SHORT ${exchangeB}`;
+            } else if (strategy === 'SHORT_A_LONG_B') {
+                return `SHORT ${exchangeA} + LONG ${exchangeB}`;
             }
+            return 'No Strategy';
+        }
 
-            // Initialize
-            connectWebSocket();
-        </script>
-    </body>
+        // Initialize
+        connectWebSocket();
+    </script>
+</body>
 
 </html>
