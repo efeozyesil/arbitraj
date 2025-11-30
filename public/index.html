@@ -280,30 +280,14 @@
         }
 
         /* Restored Styles */
-        .opportunity-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-            opacity: 0;
-            transition: opacity 0.3s ease;
+        .opportunity-card {
+            position: relative;
         }
 
-        .opportunity-card:hover::before {
-            opacity: 1;
-        }
-
+        /* Removed ::before styles */
         .opportunity-card.has-opportunity {
             border-color: rgba(16, 185, 129, 0.3);
             background: rgba(16, 185, 129, 0.05);
-        }
-
-        .opportunity-card.has-opportunity::before {
-            background: linear-gradient(90deg, #10b981 0%, #059669 100%);
-            opacity: 1;
         }
 
         /* Coin Header - Kompakt */
@@ -1024,9 +1008,11 @@
         function getAllOpportunities() {
             // Flatten all data sources into one array
             let combined = [];
-            Object.values(allData).forEach(list => {
-                if (list && Array.isArray(list)) combined.push(...list);
-            });
+            if (allData && typeof allData === 'object') {
+                Object.values(allData).forEach(list => {
+                    if (list && Array.isArray(list)) combined.push(...list);
+                });
+            }
             return combined;
         }
 
@@ -1034,7 +1020,11 @@
             const opportunities = getAllOpportunities();
             const tbody = document.getElementById('tableBody');
 
-            // Filter only active opportunities or show all? Let's show all but sort by profit
+            if (!opportunities || opportunities.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:2rem;">Waiting for data...</td></tr>';
+                return;
+            }
+
             // Sort data
             opportunities.sort((a, b) => {
                 let valA, valB;
@@ -1044,7 +1034,7 @@
                     case 'long': valA = getLongExchange(a); valB = getLongExchange(b); break;
                     case 'short': valA = getShortExchange(a); valB = getShortExchange(b); break;
                     case 'funding': valA = Math.abs(a.analysis.fundingPnL8h || 0); valB = Math.abs(b.analysis.fundingPnL8h || 0); break;
-                    case 'profit8h': valA = a.analysis.fundingPnL8h || 0; valB = b.analysis.fundingPnL8h || 0; break;
+                    case 'profit8h': valA = a.analysis.totalNetProfit8h || 0; valB = b.analysis.totalNetProfit8h || 0; break; // Updated to totalNetProfit8h
                     case 'annual': valA = a.analysis.annualAPR || 0; valB = b.analysis.annualAPR || 0; break;
                     default: valA = a.analysis.annualAPR || 0; valB = b.analysis.annualAPR || 0;
                 }
@@ -1083,8 +1073,8 @@
                         <td class="${opp.analysis.priceDifferencePnL >= 0 ? 'positive' : 'negative'}">
                             $${opp.analysis.priceDifferencePnL.toFixed(2)}
                         </td>
-                        <td class="${opp.analysis.fundingPnL8h >= 0 ? 'positive' : 'negative'}" style="font-weight:bold">
-                            $${opp.analysis.fundingPnL8h.toFixed(4)}
+                        <td class="${(opp.analysis.totalNetProfit8h || 0) >= 0 ? 'positive' : 'negative'}" style="font-weight:bold">
+                            $${(opp.analysis.totalNetProfit8h || 0).toFixed(4)}
                         </td>
                         <td class="${opp.analysis.annualAPR > 0 ? 'positive' : 'negative'}">
                             ${opp.analysis.annualAPR.toFixed(2)}%
@@ -1382,14 +1372,18 @@
 
                     <!-- Analysis & Action -->
                     <div style="background:rgba(0,0,0,0.2); border-radius:8px; padding:10px;">
-                        <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:0.8rem;">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:4px; font-size:0.8rem;">
                             <span style="color:rgba(255,255,255,0.6);">Net Profit (8h)</span>
-                            <span class="${opp.analysis.fundingPnL8h >= 0 ? 'positive' : 'negative'}" style="font-weight:bold;">
-                                $${opp.analysis.fundingPnL8h.toFixed(4)}
+                            <span class="${opp.analysis.totalNetProfit8h >= 0 ? 'positive' : 'negative'}" style="font-weight:bold;">
+                                $${(opp.analysis.totalNetProfit8h || 0).toFixed(4)}
                             </span>
                         </div>
+                        <div style="display:flex; justify-content:flex-end; margin-bottom:8px; font-size:0.65rem; color:rgba(255,255,255,0.4);">
+                            (Funding: $${opp.analysis.fundingPnL8h.toFixed(4)} + Price: $${opp.analysis.priceDifferencePnL.toFixed(2)})
+                        </div>
+
                         <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:0.8rem;">
-                            <span style="color:rgba(255,255,255,0.6);">Annual APR</span>
+                            <span style="color:rgba(255,255,255,0.6);">Annual APR (Funding Only)</span>
                             <span class="${opp.analysis.annualAPR > 0 ? 'positive' : 'negative'}" style="font-weight:bold;">
                                 ${opp.analysis.annualAPR.toFixed(2)}%
                             </span>

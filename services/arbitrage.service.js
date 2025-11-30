@@ -195,6 +195,9 @@ class ArbitrageService {
         }
         const priceDiffPnL = (priceDiffPercent / 100) * tradeSize;
 
+        // 4. Toplam Net Kâr (8h Funding + Price Diff)
+        const totalNetProfit8h = fundingPnL8hDollar + priceDiffPnL;
+
         // Fırsat Eşiği: Net Funding > 0
         const isOpportunity = netFundingRate8h > 0;
 
@@ -205,6 +208,7 @@ class ArbitrageService {
             priceDifferencePnL: priceDiffPnL,
             fundingDifferencePercent: netFundingRate8h,
             fundingPnL8h: fundingPnL8hDollar,
+            totalNetProfit8h, // Yeni alan
             annualFundingPnL,
             annualAPR,
             isOpportunity
