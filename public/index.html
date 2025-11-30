@@ -890,6 +890,11 @@
             });
 
             tbody.innerHTML = opportunities.map(opp => {
+                const longExchange = getLongExchange(opp);
+                const shortExchange = getShortExchange(opp);
+                const longLogo = getLongExchangeLogo(opp);
+                const shortLogo = getShortExchangeLogo(opp);
+
                 return `
                     <tr onclick="showDetails('${opp.symbol}')">
                         <td style="font-weight:bold; display:flex; align-items:center; gap:8px;">
@@ -898,14 +903,14 @@
                         </td>
                         <td>
                             <span class="exchange-badge">
-                                <img src="${opp.exchangeA.logo}" onerror="this.style.display='none'">
-                                ${getLongExchange(opp)}
+                                <img src="${longLogo}" onerror="this.style.display='none'">
+                                ${longExchange}
                             </span>
                         </td>
                         <td>
                             <span class="exchange-badge">
-                                <img src="${opp.exchangeB.logo}" onerror="this.style.display='none'">
-                                ${getShortExchange(opp)}
+                                <img src="${shortLogo}" onerror="this.style.display='none'">
+                                ${shortExchange}
                             </span>
                         </td>
                         <td class="${opp.analysis.priceDifferencePnL >= 0 ? 'positive' : 'negative'}">
@@ -935,6 +940,18 @@
             if (opp.analysis.strategy === 'SHORT_A_LONG_B') return opp.exchangeA.name;
             if (opp.analysis.strategy === 'LONG_A_SHORT_B') return opp.exchangeB.name;
             return opp.exchangeB.name; // Default if no clear strategy
+        }
+
+        function getLongExchangeLogo(opp) {
+            if (opp.analysis.strategy === 'SHORT_A_LONG_B') return opp.exchangeB.logo;
+            if (opp.analysis.strategy === 'LONG_A_SHORT_B') return opp.exchangeA.logo;
+            return opp.exchangeA.logo;
+        }
+
+        function getShortExchangeLogo(opp) {
+            if (opp.analysis.strategy === 'SHORT_A_LONG_B') return opp.exchangeA.logo;
+            if (opp.analysis.strategy === 'LONG_A_SHORT_B') return opp.exchangeB.logo;
+            return opp.exchangeB.logo;
         }
 
         function sortTable(key) {
