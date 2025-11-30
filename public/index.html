@@ -1165,12 +1165,15 @@
             const priceDiffPnL = opp.analysis.priceDifferencePnL || 0;
             const priceDiffLoss = priceDiffPnL < 0 ? Math.abs(priceDiffPnL) : 0;
             const totalCostTaker = totalEntryTaker + totalExitTaker + priceDiffLoss;
+            const totalCostMaker = totalEntryMaker + totalExitMaker + priceDiffLoss;
             const funding8h = opp.analysis.fundingPnL8h || 0;
             const hourlyFunding = funding8h / 8;
-            let breakEvenHours = 'Never';
+
+            let breakEvenHoursTaker = 'Never';
+            let breakEvenHoursMaker = 'Never';
             if (hourlyFunding > 0) {
-                const hours = totalCostTaker / hourlyFunding;
-                breakEvenHours = hours.toFixed(1);
+                breakEvenHoursTaker = (totalCostTaker / hourlyFunding).toFixed(1);
+                breakEvenHoursMaker = (totalCostMaker / hourlyFunding).toFixed(1);
             }
             const netProfit = calculateAdjustedProfit(opp);
 
@@ -1180,7 +1183,14 @@
                     <div class="coin-header">
                         <div style="display:flex; align-items:center; gap:10px; flex:1;">
                             <img src="${opp.logo}" alt="${opp.name}" class="coin-logo" onerror="this.style.display='none'">
-                            <div><div class="coin-name">${opp.name}</div><div class="coin-symbol">${opp.symbol}</div></div>
+                            <div>
+                                <div class="coin-name">${opp.name}</div>
+                                <div class="coin-symbol">${opp.symbol}</div>
+                            </div>
+                            <div style="margin-left:auto; text-align:right;">
+                                <div style="font-size:0.65rem; color:rgba(255,255,255,0.5);">APR</div>
+                                <div class="val-apr ${opp.analysis.annualAPR > 0 ? 'positive' : 'negative'}" style="font-size:0.9rem; font-weight:bold;">${opp.analysis.annualAPR.toFixed(2)}%</div>
+                            </div>
                         </div>
                         <div class="opportunity-badge ${hasOpportunity ? 'active' : 'inactive'}">${hasOpportunity ? '🎯 LIVE' : 'NO SIGNAL'}</div>
                     </div>
@@ -1266,7 +1276,8 @@
                             </table>
                             <div class="break-even-info">
                                 <div>Funding Profit (8h): <span class="positive">$${funding8h.toFixed(4)}</span></div>
-                                <div>Break-Even (Taker): <span class="highlight">${breakEvenHours} hours</span></div>
+                                <div>Break-Even (Maker): <span class="highlight">${breakEvenHoursMaker} hours</span></div>
+                                <div>Break-Even (Taker): <span class="highlight">${breakEvenHoursTaker} hours</span></div>
                             </div>
                         </div>
                         <div class="steps-header">EXECUTION STEPS</div>
@@ -1282,6 +1293,9 @@
             if (!opportunities) return;
             document.getElementById('loading').style.display = 'none';
             updateStats(opportunities);
+
+            // Sort by APR (highest first)
+            opportunities.sort((a, b) => (b.analysis.annualAPR || 0) - (a.analysis.annualAPR || 0));
 
             const grid = document.getElementById('opportunitiesGrid');
             const existingCards = new Map();
