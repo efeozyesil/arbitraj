@@ -178,6 +178,66 @@
         }
 
         /* Card Styles */
+        .scenarios-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin: 12px 0;
+        }
+
+        .scenario-card {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .scenario-title {
+            font-size: 0.75rem;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 8px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+            letter-spacing: 0.5px;
+        }
+
+        .maker-title {
+            color: #10b981;
+        }
+
+        .taker-title {
+            color: #ef4444;
+        }
+
+        .scenario-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.72rem;
+            margin-bottom: 4px;
+            padding: 2px 0;
+        }
+
+        .scenario-row .label {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .scenario-row .value {
+            font-weight: 600;
+        }
+
+        .scenario-row.net-profit {
+            margin-top: 6px;
+            padding-top: 6px;
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
+            font-weight: bold;
+        }
+
+        .scenario-row.closing {
+            opacity: 0.6;
+            font-size: 0.68rem;
+        }
+
         .opportunity-card {
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.1);
@@ -1136,31 +1196,61 @@
                             <div class="funding-rate"><span class="funding-label">Funding</span><span class="funding-value val-funding-short ${parseFloat(opp.analysis.strategy === 'LONG_A_SHORT_B' ? opp.exchangeB.fundingRate : opp.exchangeA.fundingRate) >= 0 ? 'positive' : 'negative'}">${parseFloat(opp.analysis.strategy === 'LONG_A_SHORT_B' ? opp.exchangeB.fundingRate : opp.exchangeA.fundingRate).toFixed(4)}%</span></div>
                         </div>
                     </div>
-                    <div style="background:rgba(0,0,0,0.2); border-radius:8px; padding:10px;">
-                        <div style="margin-bottom:8px; font-size:0.8rem; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:8px;">
-                            <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
-                                <span style="color:rgba(255,255,255,0.6);">Price Diff (100$)</span>
-                                <span class="val-price-diff ${opp.analysis.priceDifferencePnL >= 0 ? 'positive' : 'negative'}">$${opp.analysis.priceDifferencePnL.toFixed(2)}</span>
+                    <div class="scenarios-grid">
+                        <!-- MAKER Scenario (Left) -->
+                        <div class="scenario-card">
+                            <div class="scenario-title maker-title">MAKER (Limit Orders)</div>
+                            <div class="scenario-row">
+                                <span class="label">Price Difference</span>
+                                <span class="value val-price-diff ${priceDiffPnL >= 0 ? 'positive' : 'negative'}">$${priceDiffPnL.toFixed(2)}</span>
                             </div>
-                            <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
-                                <span style="color:rgba(255,255,255,0.6);">Funding (8h)</span>
-                                <span class="val-funding-8h ${opp.analysis.fundingPnL8h >= 0 ? 'positive' : 'negative'}">$${opp.analysis.fundingPnL8h.toFixed(4)}</span>
+                            <div class="scenario-row">
+                                <span class="label">Funding (8h)</span>
+                                <span class="value val-funding-8h ${opp.analysis.fundingPnL8h >= 0 ? 'positive' : 'negative'}">$${opp.analysis.fundingPnL8h.toFixed(4)}</span>
                             </div>
-                            <div style="display:flex; justify-content:space-between; font-weight:bold; margin-top:4px;">
-                                <span style="color:white;">Net Profit (8h)</span>
-                                <span class="val-net-profit ${netProfit >= 0 ? 'positive' : 'negative'}">$${netProfit.toFixed(4)}</span>
+                            <div class="scenario-row">
+                                <span class="label">Opening Fees</span>
+                                <span class="value val-maker-open">-$${totalEntryMaker.toFixed(4)}</span>
                             </div>
-                            <div style="text-align:right; font-size:0.65rem; color:rgba(255,255,255,0.4); margin-top:-2px;">(After Taker Entry Fees)</div>
+                            <div class="scenario-row net-profit">
+                                <span class="label">Net Profit</span>
+                                <span class="value val-maker-profit ${(priceDiffPnL + opp.analysis.fundingPnL8h - totalEntryMaker) >= 0 ? 'positive' : 'negative'}">$${(priceDiffPnL + opp.analysis.fundingPnL8h - totalEntryMaker).toFixed(4)}</span>
+                            </div>
+                            <div class="scenario-row closing">
+                                <span class="label">Closing Fees (Est.)</span>
+                                <span class="value val-maker-close">-$${totalExitMaker.toFixed(4)}</span>
+                            </div>
                         </div>
-                        <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:0.8rem;">
-                            <span style="color:rgba(255,255,255,0.6);">Annual APR (Funding Only)</span>
-                            <span class="val-apr ${opp.analysis.annualAPR > 0 ? 'positive' : 'negative'}" style="font-weight:bold;">${opp.analysis.annualAPR.toFixed(2)}%</span>
-                        </div>
-                        <div style="margin-top:10px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.1); font-size:0.75rem; text-align:center;">
-                            <div style="margin-bottom:4px; color:rgba(255,255,255,0.8);">Recommended Action (100$ Size)</div>
-                            <div style="display:flex; justify-content:center; gap:10px; align-items:center;">
-                                <span style="color:#10b981; font-weight:bold;">LONG $100 ${longExchangeName}</span><span style="opacity:0.5;">+</span><span style="color:#ef4444; font-weight:bold;">SHORT $100 ${shortExchangeName}</span>
+
+                        <!-- TAKER Scenario (Right) -->
+                        <div class="scenario-card">
+                            <div class="scenario-title taker-title">TAKER (Market Orders)</div>
+                            <div class="scenario-row">
+                                <span class="label">Price Difference</span>
+                                <span class="value val-price-diff ${priceDiffPnL >= 0 ? 'positive' : 'negative'}">$${priceDiffPnL.toFixed(2)}</span>
                             </div>
+                            <div class="scenario-row">
+                                <span class="label">Funding (8h)</span>
+                                <span class="value val-funding-8h ${opp.analysis.fundingPnL8h >= 0 ? 'positive' : 'negative'}">$${opp.analysis.fundingPnL8h.toFixed(4)}</span>
+                            </div>
+                            <div class="scenario-row">
+                                <span class="label">Opening Fees</span>
+                                <span class="value val-taker-open">-$${totalEntryTaker.toFixed(4)}</span>
+                            </div>
+                            <div class="scenario-row net-profit">
+                                <span class="label">Net Profit</span>
+                                <span class="value val-taker-profit ${(priceDiffPnL + opp.analysis.fundingPnL8h - totalEntryTaker) >= 0 ? 'positive' : 'negative'}">$${(priceDiffPnL + opp.analysis.fundingPnL8h - totalEntryTaker).toFixed(4)}</span>
+                            </div>
+                            <div class="scenario-row closing">
+                                <span class="label">Closing Fees (Est.)</span>
+                                <span class="value val-taker-close">-$${totalExitTaker.toFixed(4)}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="margin-top:10px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.1); font-size:0.75rem; text-align:center;">
+                        <div style="margin-bottom:4px; color:rgba(255,255,255,0.8);">Recommended Action (100$ Size)</div>
+                        <div style="display:flex; justify-content:center; gap:10px; align-items:center;">
+                            <span style="color:#10b981; font-weight:bold;">LONG $100 ${longExchangeName}</span><span style="opacity:0.5;">+</span><span style="color:#ef4444; font-weight:bold;">SHORT $100 ${shortExchangeName}</span>
                         </div>
                     </div>
                     <button class="expand-button">▼ Show Details</button>
