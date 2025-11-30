@@ -876,10 +876,10 @@
                     case 'symbol': valA = a.symbol; valB = b.symbol; break;
                     case 'long': valA = getLongExchange(a); valB = getLongExchange(b); break;
                     case 'short': valA = getShortExchange(a); valB = getShortExchange(b); break;
-                    case 'funding': valA = Math.abs(a.analysis.fundingDifference); valB = Math.abs(b.analysis.fundingDifference); break;
-                    case 'profit8h': valA = a.analysis.profitability8hNet; valB = b.analysis.profitability8hNet; break;
-                    case 'annual': valA = a.analysis.annualReturnNet; valB = b.analysis.annualReturnNet; break;
-                    default: valA = a.analysis.profitability8hNet; valB = b.analysis.profitability8hNet;
+                    case 'funding': valA = Math.abs(a.analysis.fundingPnL8h || 0); valB = Math.abs(b.analysis.fundingPnL8h || 0); break;
+                    case 'profit8h': valA = a.analysis.fundingPnL8h || 0; valB = b.analysis.fundingPnL8h || 0; break;
+                    case 'annual': valA = a.analysis.annualAPR || 0; valB = b.analysis.annualAPR || 0; break;
+                    default: valA = a.analysis.annualAPR || 0; valB = b.analysis.annualAPR || 0;
                 }
 
                 if (typeof valA === 'string') {
