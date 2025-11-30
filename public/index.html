@@ -1319,95 +1319,119 @@
             const hasOpportunity = opp.analysis.isOpportunity;
             const cardClass = hasOpportunity ? 'opportunity-card has-opportunity' : 'opportunity-card';
 
+            // Determine strategy details
+            let longExchange, shortExchange, longPrice, shortPrice;
+            if (opp.analysis.strategy === 'LONG_A_SHORT_B') {
+                longExchange = opp.exchangeA;
+                shortExchange = opp.exchangeB;
+            } else {
+                longExchange = opp.exchangeB;
+                shortExchange = opp.exchangeA;
+            }
+
             return `
                 <div class="${cardClass}">
-                    <!-- Coin Header -->
+                    <!-- Header: Coin Info & Badge -->
                     <div class="coin-header">
-                        <img src="${opp.logo}" alt="${opp.name}" class="coin-logo" onerror="this.style.display='none'">
-                        <div class="coin-info">
-                            <div class="coin-name">${opp.name}</div>
-                            <div class="coin-symbol">${opp.symbol}</div>
+                        <div style="display:flex; align-items:center; gap:10px; flex:1;">
+                            <img src="${opp.logo}" alt="${opp.name}" class="coin-logo" onerror="this.style.display='none'">
+                            <div>
+                                <div class="coin-name">${opp.name}</div>
+                                <div class="coin-symbol">${opp.symbol}</div>
+                            </div>
                         </div>
                         <div class="opportunity-badge ${hasOpportunity ? 'active' : 'inactive'}">
                             ${hasOpportunity ? '🎯 LIVE' : 'NO SIGNAL'}
                         </div>
                     </div>
 
-                    <!-- Exchange Data -->
-                    <div class="exchange-row">
-                        <div class="exchange-box">
+                    <!-- Main Data Grid -->
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:10px;">
+                        <!-- Long Side -->
+                        <div class="exchange-box" style="border-left: 2px solid #10b981;">
                             <div class="exchange-header">
-                                <img src="${opp.exchangeA.logo}" alt="${opp.exchangeA.name}" class="exchange-logo" onerror="this.style.display='none'">
-                                <span class="exchange-name">${opp.exchangeA.name.toUpperCase()}</span>
+                                <span style="font-size:0.7rem; color:#10b981; font-weight:bold;">LONG</span>
+                                <img src="${longExchange.logo}" class="exchange-logo" style="margin-left:auto;">
+                                <span class="exchange-name">${longExchange.name}</span>
                             </div>
-                            <div class="price-value">$${formatPrice(opp.exchangeA.markPrice)}</div>
+                            <div class="price-value">$${formatPrice(longExchange.markPrice)}</div>
                             <div class="funding-rate">
-                                <span class="funding-label">FR (8h)</span>
-                                <span class="funding-value ${opp.exchangeA.fundingRate >= 0 ? 'positive' : 'negative'}">
-                                    ${opp.exchangeA.fundingRate >= 0 ? '+' : ''}${parseFloat(opp.exchangeA.fundingRate).toFixed(4)}%
+                                <span class="funding-label">Funding</span>
+                                <span class="funding-value ${longExchange.fundingRate >= 0 ? 'positive' : 'negative'}">
+                                    ${parseFloat(longExchange.fundingRate).toFixed(4)}%
                                 </span>
                             </div>
                         </div>
-                        <div class="exchange-box">
+
+                        <!-- Short Side -->
+                        <div class="exchange-box" style="border-left: 2px solid #ef4444;">
                             <div class="exchange-header">
-                                <img src="${opp.exchangeB.logo}" alt="${opp.exchangeB.name}" class="exchange-logo" onerror="this.style.display='none'">
-                                <span class="exchange-name">${opp.exchangeB.name.toUpperCase()}</span>
+                                <span style="font-size:0.7rem; color:#ef4444; font-weight:bold;">SHORT</span>
+                                <img src="${shortExchange.logo}" class="exchange-logo" style="margin-left:auto;">
+                                <span class="exchange-name">${shortExchange.name}</span>
                             </div>
-                            <div class="price-value">$${formatPrice(opp.exchangeB.markPrice)}</div>
+                            <div class="price-value">$${formatPrice(shortExchange.markPrice)}</div>
                             <div class="funding-rate">
-                                <span class="funding-label">FR (8h)</span>
-                                <span class="funding-value ${opp.exchangeB.fundingRate >= 0 ? 'positive' : 'negative'}">
-                                    ${opp.exchangeB.fundingRate >= 0 ? '+' : ''}${parseFloat(opp.exchangeB.fundingRate).toFixed(4)}%
+                                <span class="funding-label">Funding</span>
+                                <span class="funding-value ${shortExchange.fundingRate >= 0 ? 'positive' : 'negative'}">
+                                    ${parseFloat(shortExchange.fundingRate).toFixed(4)}%
                                 </span>
                             </div>
                         </div>
                     </div>
 
-                        <div class="exchange-box">
-                            <div class="exchange-header">
-                                <img src="${opp.exchangeB.logo}" alt="${opp.exchangeB.name}" class="exchange-logo" onerror="this.style.display='none'">
-                                <span class="exchange-name">${opp.exchangeB.name.toUpperCase()}</span>
-                            </div>
-                            <div class="price-value">$${opp.exchangeB.markPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 8 })}</div>
-                            <div class="funding-rate">
-                                <span class="funding-label">FR (8h)</span>
-                                <span class="funding-value ${opp.exchangeB.fundingRate >= 0 ? 'positive' : 'negative'}">
-                                    ${opp.exchangeB.fundingRate >= 0 ? '+' : ''}${opp.exchangeB.fundingRate.toFixed(4)}%
-                                </span>
-                            </div>
+                    <!-- Analysis & Action -->
+                    <div style="background:rgba(0,0,0,0.2); border-radius:8px; padding:10px;">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:0.8rem;">
+                            <span style="color:rgba(255,255,255,0.6);">Net Profit (8h)</span>
+                            <span class="${opp.analysis.fundingPnL8h >= 0 ? 'positive' : 'negative'}" style="font-weight:bold;">
+                                $${opp.analysis.fundingPnL8h.toFixed(4)}
+                            </span>
                         </div>
-                    </div>
-
-                    <!-- Analysis Grid -->
-                    <div class="analysis-grid">
-                        <div class="analysis-item">
-                            <div class="analysis-label">Price PnL (100$)</div>
-                            <div class="analysis-value ${opp.analysis.priceDifferencePnL >= 0 ? 'positive' : 'negative'}">
-                                ${opp.analysis.priceDifferencePnL >= 0 ? '+' : ''}$${opp.analysis.priceDifferencePnL.toFixed(2)}
-                            </div>
-                        </div>
-                        <div class="analysis-item">
-                            <div class="analysis-label">Funding PnL (8h/100$)</div>
-                            <div class="analysis-value ${opp.analysis.fundingPnL8h >= 0 ? 'positive' : 'negative'}">
-                                ${opp.analysis.fundingPnL8h >= 0 ? '+' : ''}$${opp.analysis.fundingPnL8h.toFixed(4)}
-                            </div>
-                        </div>
-                        <div class="analysis-item">
-                            <div class="analysis-label">Annual APR</div>
-                            <div class="analysis-value highlight">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:0.8rem;">
+                            <span style="color:rgba(255,255,255,0.6);">Annual APR</span>
+                            <span class="${opp.analysis.annualAPR > 0 ? 'positive' : 'negative'}" style="font-weight:bold;">
                                 ${opp.analysis.annualAPR.toFixed(2)}%
-                            </div>
+                            </span>
                         </div>
-                        <div class="analysis-item">
-                            <div class="analysis-label">Annual PnL (100$)</div>
-                            <div class="analysis-value annual">
-                                $${opp.analysis.annualFundingPnL.toFixed(2)}
+                        
+                        <!-- Action Instruction -->
+                        <div style="margin-top:10px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.1); font-size:0.75rem; text-align:center;">
+                            <div style="margin-bottom:4px; color:rgba(255,255,255,0.8);">Recommended Action (100$ Size)</div>
+                            <div style="display:flex; justify-content:center; gap:10px; align-items:center;">
+                                <span style="color:#10b981; font-weight:bold;">LONG $100 ${longExchange.name}</span>
+                                <span style="opacity:0.5;">+</span>
+                                <span style="color:#ef4444; font-weight:bold;">SHORT $100 ${shortExchange.name}</span>
                             </div>
                         </div>
                     </div>
+
+                    <button class="expand-button">▼ Show Details</button>
                     
-                    <div style="margin-top: 0.5rem; padding: 0.5rem; background: rgba(255, 255, 255, 0.05); border-radius: 6px; font-size: 0.75rem; text-align: center; color: rgba(255, 255, 255, 0.8);">
-                        ${formatStrategy(opp.analysis.strategy, opp.exchangeA.name, opp.exchangeB.name)}
+                    <!-- Hidden Details (Trading Steps) -->
+                    <div class="trading-steps">
+                        <div class="steps-header">EXECUTION STEPS</div>
+                        <div class="step-item">
+                            <div class="step-number">1</div>
+                            <div class="step-content">
+                                <div class="step-action">Open LONG on ${longExchange.name}</div>
+                                <div class="step-details">Buy $100 worth of ${opp.symbol} Perpetual</div>
+                            </div>
+                        </div>
+                        <div class="step-item">
+                            <div class="step-number">2</div>
+                            <div class="step-content">
+                                <div class="step-action">Open SHORT on ${shortExchange.name}</div>
+                                <div class="step-details">Sell $100 worth of ${opp.symbol} Perpetual</div>
+                            </div>
+                        </div>
+                        <div class="step-item">
+                            <div class="step-number">3</div>
+                            <div class="step-content">
+                                <div class="step-action">Wait for Funding</div>
+                                <div class="step-details">Collect funding payments every 8 hours</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             `;
