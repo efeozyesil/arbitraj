@@ -1257,11 +1257,23 @@
                             <div class="exchange-header"><span style="font-size:0.7rem; color:#10b981; font-weight:bold;">LONG</span><img src="${longExchangeLogo}" class="exchange-logo" style="margin-left:auto;"><span class="exchange-name">${longExchangeName}</span></div>
                             <div class="price-value val-price-long">$${formatPrice(opp.analysis.strategy === 'LONG_A_SHORT_B' ? opp.exchangeA.markPrice : opp.exchangeB.markPrice)}</div>
                             <div class="funding-rate"><span class="funding-label">Funding</span><span class="funding-value val-funding-long ${parseFloat(opp.analysis.strategy === 'LONG_A_SHORT_B' ? opp.exchangeA.fundingRate : opp.exchangeB.fundingRate) >= 0 ? 'positive' : 'negative'}">${parseFloat(opp.analysis.strategy === 'LONG_A_SHORT_B' ? opp.exchangeA.fundingRate : opp.exchangeB.fundingRate).toFixed(4)}%</span></div>
+                            ${opp.analysis.detailedFunding ? `
+                                <div style="font-size:0.65rem; color:rgba(255,255,255,0.5); margin-top:4px;">
+                                    <div>⏱️ Every ${opp.analysis.detailedFunding.exchangeA.fundingInterval}h</div>
+                                    <div>⏰ Next: ${opp.analysis.detailedFunding.exchangeA.hoursUntilNext.toFixed(1)}h</div>
+                                </div>
+                            ` : ''}
                         </div>
                         <div class="exchange-box" style="border-left: 2px solid #ef4444;">
                             <div class="exchange-header"><span style="font-size:0.7rem; color:#ef4444; font-weight:bold;">SHORT</span><img src="${shortExchangeLogo}" class="exchange-logo" style="margin-left:auto;"><span class="exchange-name">${shortExchangeName}</span></div>
                             <div class="price-value val-price-short">$${formatPrice(opp.analysis.strategy === 'LONG_A_SHORT_B' ? opp.exchangeB.markPrice : opp.exchangeA.markPrice)}</div>
                             <div class="funding-rate"><span class="funding-label">Funding</span><span class="funding-value val-funding-short ${parseFloat(opp.analysis.strategy === 'LONG_A_SHORT_B' ? opp.exchangeB.fundingRate : opp.exchangeA.fundingRate) >= 0 ? 'positive' : 'negative'}">${parseFloat(opp.analysis.strategy === 'LONG_A_SHORT_B' ? opp.exchangeB.fundingRate : opp.exchangeA.fundingRate).toFixed(4)}%</span></div>
+                            ${opp.analysis.detailedFunding ? `
+                                <div style="font-size:0.65rem; color:rgba(255,255,255,0.5); margin-top:4px;">
+                                    <div>⏱️ Every ${opp.analysis.detailedFunding.exchangeB.fundingInterval}h</div>
+                                    <div>⏰ Next: ${opp.analysis.detailedFunding.exchangeB.hoursUntilNext.toFixed(1)}h</div>
+                                </div>
+                            ` : ''}
                         </div>
                     </div>
                     <div class="scenarios-grid">
