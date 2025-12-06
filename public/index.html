@@ -1260,7 +1260,7 @@
                             ${opp.analysis.detailedFunding ? `
                                 <div style="font-size:0.65rem; color:rgba(255,255,255,0.5); margin-top:4px;">
                                     <div>⏱️ Every ${opp.analysis.detailedFunding.exchangeA.fundingInterval}h</div>
-                                    <div>⏰ Next: ${opp.analysis.detailedFunding.exchangeA.hoursUntilNext.toFixed(1)}h</div>
+                                    <div>⏰ Next: ${opp.analysis.detailedFunding.exchangeA.hoursOnly}h ${opp.analysis.detailedFunding.exchangeA.minutesOnly}m</div>
                                 </div>
                             ` : ''}
                         </div>
@@ -1271,7 +1271,7 @@
                             ${opp.analysis.detailedFunding ? `
                                 <div style="font-size:0.65rem; color:rgba(255,255,255,0.5); margin-top:4px;">
                                     <div>⏱️ Every ${opp.analysis.detailedFunding.exchangeB.fundingInterval}h</div>
-                                    <div>⏰ Next: ${opp.analysis.detailedFunding.exchangeB.hoursUntilNext.toFixed(1)}h</div>
+                                    <div>⏰ Next: ${opp.analysis.detailedFunding.exchangeB.hoursOnly}h ${opp.analysis.detailedFunding.exchangeB.minutesOnly}m</div>
                                 </div>
                             ` : ''}
                         </div>
@@ -1602,7 +1602,9 @@
         }
 
         function updateStats(opportunities) {
-            const activeOpps = opportunities.filter(o => o.analysis && o.analysis.isOpportunity);
+            // Get ALL opportunities from allData (not just the filtered parameter)
+            const allOpportunities = getAllOpportunities();
+            const activeOpps = allOpportunities.filter(o => o.analysis && o.analysis.isOpportunity);
 
             // Total coins = all coins being tracked
             const totalCoins = allCoinsData.length || 0;

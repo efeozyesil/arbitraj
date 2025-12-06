@@ -50,8 +50,19 @@ function calculateDetailedFunding(exchangeA, exchangeB, dataA, dataB, strategy, 
     const intervalA = FUNDING_INTERVALS[slugA] || 8;
     const intervalB = FUNDING_INTERVALS[slugB] || 8;
 
-    const hoursUntilNextA = getHoursUntilFunding(slugA);
-    const hoursUntilNextB = getHoursUntilFunding(slugB);
+    // Use nextFundingTime from WebSocket if available, otherwise calculate
+    const nextFundingTimeA = dataA.nextFundingTime ? new Date(dataA.nextFundingTime) : getNextFundingTime(slugA);
+    const nextFundingTimeB = dataB.nextFundingTime ? new Date(dataB.nextFundingTime) : getNextFundingTime(slugB);
+
+    const now = new Date();
+    const hoursUntilNextA = (nextFundingTimeA - now) / (1000 * 60 * 60);
+    const hoursUntilNextB = (nextFundingTimeB - now) / (1000 * 60 * 60);
+
+    // Calculate minutes and hours for display
+    const minutesUntilNextA = Math.floor((hoursUntilNextA * 60) % 60);
+    const hoursOnlyA = Math.floor(hoursUntilNextA);
+    const minutesUntilNextB = Math.floor((hoursUntilNextB * 60) % 60);
+    const hoursOnlyB = Math.floor(hoursUntilNextB);
 
     // Determine which side pays/receives
     let receiveFromA, payToA, receiveFromB, payToB;
@@ -104,7 +115,9 @@ function calculateDetailedFunding(exchangeA, exchangeB, dataA, dataB, strategy, 
             fundingRate: fundingRateA,
             fundingInterval: intervalA,
             hoursUntilNext: hoursUntilNextA,
-            nextFundingTime: getNextFundingTime(slugA),
+            hoursOnly: hoursOnlyA,
+            minutesOnly: minutesUntilNextA,
+            nextFundingTime: nextFundingTimeA,
             fundingAmount: fundingAmountA,
             isPaying: payToA,
             isReceiving: receiveFromA
@@ -114,7 +127,9 @@ function calculateDetailedFunding(exchangeA, exchangeB, dataA, dataB, strategy, 
             fundingRate: fundingRateB,
             fundingInterval: intervalB,
             hoursUntilNext: hoursUntilNextB,
-            nextFundingTime: getNextFundingTime(slugB),
+            hoursOnly: hoursOnlyB,
+            minutesOnly: minutesUntilNextB,
+            nextFundingTime: nextFundingTimeB,
             fundingAmount: fundingAmountB,
             isPaying: payToB,
             isReceiving: receiveFromB
