@@ -42,17 +42,31 @@ const metadataService = require('./services/metadata.service');
 // Initialize Services
 async function startServer() {
     try {
-        // 1. Fetch metadata first (funding intervals)
-        await metadataService.initialize();
+        console.log('Fetching metadata...');
+        // 1. Fetch metadata (funding intervals) first - Fail gracefully
+        try {
+            await metadataService.initialize();
+        } catch (err) {
+            console.error('Metadata fetch failed (continuing with fallbacks):', err.message);
+        }
 
         // 2. Start WebSocket Connections
+        console.log('Connecting to WebSockets...');
         binanceWS.connect();
         okxWS.connect();
         hyperliquidWS.connect();
         bybitWS.connect();
         asterdexWS.connect();
 
-        // 3. Start Arbitrage Analysis (No direct start method on arbitrageServices object, assuming it's implicitly started by data flow)
+        // 3. Start Arbitrage Analysis Service (CRITICAL: Loads coins and starts intervals)
+        console.log('Starting Arbitrage Service...');
+        // Note: The instruction implies a single arbitrageService.start(), but arbitrageServices is an object of multiple services.
+        // Assuming the intent is to start all initialized arbitrage services.
+        for (const serviceName in arbitrageServices) {
+            if (arbitrageServices.hasOwnProperty(serviceName) && typeof arbitrageServices[serviceName].start === 'function') {
+                await arbitrageServices[serviceName].start();
+            }
+        }
 
         // Start Server
         server.listen(PORT, () => {
@@ -61,11 +75,10 @@ async function startServer() {
             console.log(`📊 Dashboard available at http://localhost:${PORT}`);
         });
     } catch (error) {
-        console.error('Failed to start server:', error);
+        console.error('CRITICAL: Failed to start server:', error);
     }
 }
 
-startServer();
 
 // Initialize ALL Arbitrage Services (10 pairs from 5 exchanges)
 const arbitragePairs = [
@@ -188,3 +201,5 @@ server.listen(PORT, () => {
     console.log(`🔌 WebSocket sharing same port`);
     console.log(`📊 Dashboard available at http://localhost:${PORT}`);
 });
+
+startServer();
