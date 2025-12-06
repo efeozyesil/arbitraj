@@ -1344,11 +1344,59 @@
                                 <tr><td><strong>Total Entry Cost</strong></td><td><strong>$${totalEntryMaker.toFixed(4)}</strong></td><td><strong>$${totalEntryTaker.toFixed(4)}</strong></td></tr>
                                 <tr><td>Close Positions (Est.)</td><td>$${totalExitMaker.toFixed(4)}</td><td>$${totalExitTaker.toFixed(4)}</td></tr>
                             </table>
-                            <div class="break-even-info">
-                                <div>Funding Profit (8h): <span class="positive">$${funding8h.toFixed(4)}</span></div>
-                                <div>Break-Even (Maker): <span class="highlight">${breakEvenHoursMaker} hours</span></div>
-                                <div>Break-Even (Taker): <span class="highlight">${breakEvenHoursTaker} hours</span></div>
-                            </div>
+                            ${opp.analysis.detailedFunding ? `
+                                <div class="break-even-info">
+                                    <div class="section-title" style="font-size:0.85rem; margin:15px 0 10px;">⏰ FUNDING TIMELINE</div>
+                                    <div style="background:rgba(0,212,255,0.05); padding:10px; border-radius:8px; margin-bottom:10px;">
+                                        <div style="font-size:0.75rem; margin-bottom:5px;">📊 First Dual Funding Collection:</div>
+                                        <div style="color:#00d4ff; font-weight:bold;">${opp.analysis.detailedFunding.firstDualFundingHours.toFixed(1)} hours</div>
+                                        <div style="font-size:0.7rem; color:rgba(255,255,255,0.6); margin-top:3px;">
+                                            (When both exchanges have paid funding)
+                                        </div>
+                                    </div>
+                                    <div style="font-size:0.75rem; margin-bottom:8px;">
+                                        <div style="display:flex; justify-content:space-between; margin-bottom:3px;">
+                                            <span>Net Funding Rate:</span>
+                                            <span class="positive">${opp.analysis.detailedFunding.netFundingRate.toFixed(4)}%</span>
+                                        </div>
+                                        <div style="display:flex; justify-content:space-between; margin-bottom:3px;">
+                                            <span>Fundings/Year:</span>
+                                            <span>${opp.analysis.detailedFunding.fundingsPerYear}</span>
+                                        </div>
+                                    </div>
+                                    <div class="section-title" style="font-size:0.85rem; margin:15px 0 10px;">💰 BREAK-EVEN ANALYSIS</div>
+                                    <div style="font-size:0.75rem;">
+                                        <div style="background:rgba(0,255,136,0.05); padding:8px; border-radius:6px; margin-bottom:8px;">
+                                            <div style="color:#00ff88; font-weight:bold; margin-bottom:4px;">MAKER (Limit Orders)</div>
+                                            <div style="display:flex; justify-content:space-between;">
+                                                <span>Initial Fees:</span>
+                                                <span class="negative">$${opp.analysis.detailedFunding.fees.totalInitialFeeMaker.toFixed(4)}</span>
+                                            </div>
+                                            <div style="display:flex; justify-content:space-between;">
+                                                <span>Break-Even:</span>
+                                                <span class="highlight">${opp.analysis.detailedFunding.breakeven.hoursMaker.toFixed(1)}h (${opp.analysis.detailedFunding.breakeven.daysMaker.toFixed(1)} days)</span>
+                                            </div>
+                                        </div>
+                                        <div style="background:rgba(239,68,68,0.05); padding:8px; border-radius:6px;">
+                                            <div style="color:#ef4444; font-weight:bold; margin-bottom:4px;">TAKER (Market Orders)</div>
+                                            <div style="display:flex; justify-content:space-between;">
+                                                <span>Initial Fees:</span>
+                                                <span class="negative">$${opp.analysis.detailedFunding.fees.totalInitialFeeTaker.toFixed(4)}</span>
+                                            </div>
+                                            <div style="display:flex; justify-content:space-between;">
+                                                <span>Break-Even:</span>
+                                                <span class="highlight">${opp.analysis.detailedFunding.breakeven.hoursTaker.toFixed(1)}h (${opp.analysis.detailedFunding.breakeven.daysTaker.toFixed(1)} days)</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ` : `
+                                <div class="break-even-info">
+                                    <div>Funding Profit (8h): <span class="positive">$${funding8h.toFixed(4)}</span></div>
+                                    <div>Break-Even (Maker): <span class="highlight">${breakEvenHoursMaker} hours</span></div>
+                                    <div>Break-Even (Taker): <span class="highlight">${breakEvenHoursTaker} hours</span></div>
+                                </div>
+                            `}
                         </div>
                         <div class="steps-header">EXECUTION STEPS</div>
                         <div class="step-item"><div class="step-number">1</div><div class="step-content"><div class="step-action">Open LONG on ${longExchangeName}</div><div class="step-details">Buy $100 worth of ${opp.symbol} Perpetual (Fee: $${openLongTaker.toFixed(4)})</div></div></div>
