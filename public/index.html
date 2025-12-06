@@ -1543,15 +1543,21 @@
 
         function updateStats(opportunities) {
             const activeOpps = opportunities.filter(o => o.analysis && o.analysis.isOpportunity);
-            document.getElementById('totalOpportunities').textContent = opportunities.length;
+
+            // Total coins = all coins being tracked
+            const totalCoins = allCoinsData.length || 0;
+            document.getElementById('totalOpportunities').textContent = totalCoins;
+
+            // Active opportunities = coins with actual arbitrage opportunities
             document.getElementById('activeArbitrage').textContent = activeOpps.length;
+
             if (activeOpps.length > 0) {
                 const best8h = activeOpps.reduce((max, o) => o.analysis.annualAPR > max.analysis.annualAPR ? o : max);
                 document.getElementById('bestOpportunity').textContent = best8h.analysis.fundingPnL8h.toFixed(4) + '$';
                 document.getElementById('bestAnnual').textContent = best8h.analysis.annualAPR.toFixed(2) + '%';
             } else {
-                document.getElementById('bestOpportunity').textContent = 'None';
-                document.getElementById('bestAnnual').textContent = 'None';
+                document.getElementById('bestOpportunity').textContent = '0.0000$';
+                document.getElementById('bestAnnual').textContent = '0.00%';
             }
             updateCoinCounts();
         }
