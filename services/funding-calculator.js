@@ -39,18 +39,21 @@ function getHoursUntilFunding(exchange) {
     return (next - now) / (1000 * 60 * 60);
 }
 
+const metadataService = require('./metadata.service');
+
 // Helper to estimate funding interval based on next funding hour (UTC)
 function estimateFundingInterval(nextTime) {
     if (!nextTime) return 8; // Default fallback
 
+    const now = Date.now();
+    const diffHours = (nextTime - now) / 3600000;
+
+    // If more than 4h away, it's likely 8h
+    if (diffHours > 4.1) return 8;
+    // If more than 1.1h away, it cannot be 1h. Must be 2h, 4h, or 8h.
+
     const date = new Date(nextTime);
     const hour = date.getUTCHours();
-
-    // Standard crypto intervals usually anchor to 00:00 UTC
-    // 8h: 00, 08, 16
-    // 4h: 00, 04, 08, 12, 16, 20
-    // 2h: 00, 02, 04...
-    // 1h: 00, 01, 02...
 
     // If hour is odd (1, 3, 5...), it implies 1h interval (cannot be 2h, 4h, 8h which are even)
     if (hour % 2 !== 0) return 1;
@@ -61,7 +64,6 @@ function estimateFundingInterval(nextTime) {
     // If divisible by 4 but not 8 (4, 12, 20...), likely 4h
     if (hour % 8 !== 0) return 4;
 
-    // If 00, 08, 16, it could be anything, but 8h is standard for major coins
     return 8;
 }
 
@@ -74,11 +76,14 @@ function calculateDetailedFunding(exchangeA, exchangeB, dataA, dataB, strategy, 
     const nextFundingTimeA = dataA.nextFundingTime ? new Date(dataA.nextFundingTime) : new Date();
     const nextFundingTimeB = dataB.nextFundingTime ? new Date(dataB.nextFundingTime) : new Date();
 
-    // Use fundingInterval from WebSocket data if available, else estimate
-    // Hyperliquid sends interval: 1 explicitly (we kept hardcoded logic there? valid check needed)
-    // OKX/Binance etc we now estimate if missing
-    const intervalA = dataA.fundingInterval || estimateFundingInterval(nextFundingTimeA);
-    const intervalB = dataB.fundingInterval || estimateFundingInterval(nextFundingTimeB);
+    // PRIORITY: 1. Metadata Service (API), 2. WebSocket Data, 3. Estimate
+    const intervalA = metadataService.getInterval(exchangeA.name, dataA.symbol)
+        || dataA.fundingInterval
+        || estimateFundingInterval(nextFundingTimeA);
+
+    const intervalB = metadataService.getInterval(exchangeB.name, dataB.symbol)
+        || dataB.fundingInterval
+        || estimateFundingInterval(nextFundingTimeB);
 
     const now = new Date();
     const hoursUntilNextA = Math.max(0, (nextFundingTimeA - now) / (1000 * 60 * 60));

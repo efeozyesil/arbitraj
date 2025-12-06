@@ -37,12 +37,35 @@ const hyperliquidWS = new HyperliquidWebSocket();
 const bybitWS = new BybitWebSocket(bybitSymbols);
 const asterdexWS = new AsterdexWebSocket();
 
-// Connect to Exchanges
-binanceWS.connect();
-okxWS.connect();
-hyperliquidWS.connect();
-bybitWS.connect();
-asterdexWS.connect();
+const metadataService = require('./services/metadata.service');
+
+// Initialize Services
+async function startServer() {
+    try {
+        // 1. Fetch metadata first (funding intervals)
+        await metadataService.initialize();
+
+        // 2. Start WebSocket Connections
+        binanceWS.connect();
+        okxWS.connect();
+        hyperliquidWS.connect();
+        bybitWS.connect();
+        asterdexWS.connect();
+
+        // 3. Start Arbitrage Analysis (No direct start method on arbitrageServices object, assuming it's implicitly started by data flow)
+
+        // Start Server
+        server.listen(PORT, () => {
+            console.log(`🚀 Server running on http://localhost:${PORT}`);
+            console.log(`🔌 WebSocket sharing same port`);
+            console.log(`📊 Dashboard available at http://localhost:${PORT}`);
+        });
+    } catch (error) {
+        console.error('Failed to start server:', error);
+    }
+}
+
+startServer();
 
 // Initialize ALL Arbitrage Services (10 pairs from 5 exchanges)
 const arbitragePairs = [
