@@ -131,6 +131,34 @@
             font-size: 1.2rem;
         }
 
+        /* Pair Pyramid Buttons */
+        .pair-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: rgba(255, 255, 255, 0.6);
+            padding: 8px 4px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            text-align: center;
+        }
+
+        .pair-btn:hover {
+            background: rgba(0, 212, 255, 0.1);
+            border-color: rgba(0, 212, 255, 0.3);
+            color: #fff;
+        }
+
+        .pair-btn.active {
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.2), rgba(0, 255, 136, 0.1));
+            border-color: #00d4ff;
+            color: #00d4ff;
+            font-weight: 700;
+            box-shadow: 0 0 10px rgba(0, 212, 255, 0.2);
+        }
+
         /* Pair Tabs (Horizontal Scroll) */
         .pair-tabs-container {
             display: flex;
@@ -1245,9 +1273,9 @@
 
                 return `
                     <tr onclick="showDetails('${opp.symbol}')">
-                        <td style="font-weight:bold; display:flex; align-items:center; gap:8px;"><img src="${opp.logo}" style="width:20px; height:20px; border-radius:50%;" onerror="this.style.display='none'"> ${opp.symbol}</td>
-                        <td><span class="exchange-badge"><img src="${getLongExchangeLogo(opp)}" onerror="this.style.display='none'"> ${longExchange}</span></td>
-                        <td><span class="exchange-badge"><img src="${getShortExchangeLogo(opp)}" onerror="this.style.display='none'"> ${shortExchange}</span></td>
+                        <td style="font-weight:bold; display:flex; align-items:center; gap:8px;">${opp.symbol}</td>
+                        <td><span class="exchange-badge">${longExchange}</span></td>
+                        <td><span class="exchange-badge">${shortExchange}</span></td>
                         <td class="${priceDiff >= 0 ? 'positive' : 'negative'}">$${priceDiff.toFixed(2)}</td>
                         <td class="${netProfit >= 0 ? 'positive' : 'negative'}" style="font-weight:bold">$${netProfit.toFixed(4)}</td>
                         <td class="${apr > 0 ? 'positive' : 'negative'}">${apr.toFixed(2)}%</td>
@@ -1313,7 +1341,7 @@
                     </div>
                     <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:10px;">
                         <div class="exchange-box" style="border-left: 2px solid #10b981;">
-                            <div class="exchange-header"><span style="font-size:0.7rem; color:#10b981; font-weight:bold;">LONG</span><img src="${longExchangeLogo}" class="exchange-logo" style="margin-left:auto;"><span class="exchange-name">${longExchangeName}</span></div>
+                            <div class="exchange-header"><span style="font-size:0.7rem; color:#10b981; font-weight:bold;">LONG</span><span class="exchange-name" style="margin-left:auto;">${longExchangeName}</span></div>
                             <div class="price-value val-price-long">$${formatPrice(opp.analysis.strategy === 'LONG_A_SHORT_B' ? opp.exchangeA.markPrice : opp.exchangeB.markPrice)}</div>
                             <div class="funding-rate"><span class="funding-label">Funding</span><span class="funding-value val-funding-long ${parseFloat(opp.analysis.strategy === 'LONG_A_SHORT_B' ? opp.exchangeA.fundingRate : opp.exchangeB.fundingRate) >= 0 ? 'positive' : 'negative'}">${parseFloat(opp.analysis.strategy === 'LONG_A_SHORT_B' ? opp.exchangeA.fundingRate : opp.exchangeB.fundingRate).toFixed(4)}%</span></div>
                             ${opp.analysis.detailedFunding ? `
@@ -1324,7 +1352,7 @@
                             ` : ''}
                         </div>
                         <div class="exchange-box" style="border-left: 2px solid #ef4444;">
-                            <div class="exchange-header"><span style="font-size:0.7rem; color:#ef4444; font-weight:bold;">SHORT</span><img src="${shortExchangeLogo}" class="exchange-logo" style="margin-left:auto;"><span class="exchange-name">${shortExchangeName}</span></div>
+                            <div class="exchange-header"><span style="font-size:0.7rem; color:#ef4444; font-weight:bold;">SHORT</span><span class="exchange-name" style="margin-left:auto;">${shortExchangeName}</span></div>
                             <div class="price-value val-price-short">$${formatPrice(opp.analysis.strategy === 'LONG_A_SHORT_B' ? opp.exchangeB.markPrice : opp.exchangeA.markPrice)}</div>
                             <div class="funding-rate"><span class="funding-label">Funding</span><span class="funding-value val-funding-short ${parseFloat(opp.analysis.strategy === 'LONG_A_SHORT_B' ? opp.exchangeB.fundingRate : opp.exchangeA.fundingRate) >= 0 ? 'positive' : 'negative'}">${parseFloat(opp.analysis.strategy === 'LONG_A_SHORT_B' ? opp.exchangeB.fundingRate : opp.exchangeA.fundingRate).toFixed(4)}%</span></div>
                             ${opp.analysis.detailedFunding ? `
@@ -1392,13 +1420,11 @@
                             <span style="color:#10b981; font-weight:bold;">LONG $100 ${longExchangeName}</span><span style="opacity:0.5;">+</span><span style="color:#ef4444; font-weight:bold;">SHORT $100 ${shortExchangeName}</span>
                         </div>
                     </div>
-                    <button class="expand-button">▼ Show Details</button>
-                    <div class="trading-steps">
+
+                    <!-- Trading Steps & Breakeven (Expandable) -->
+                    <div class="expandable-content">
+                        <!-- Cost & Profit Analysis -->
                         <div class="analysis-section">
-                            <div class="section-title">💰 COST & PROFIT ANALYSIS (100$ Size)</div>
-                            <table class="analysis-table">
-                                <tr><th>Action</th><th>Maker Fee</th><th>Taker Fee</th></tr>
-                                <tr><td>Open LONG (${longExchangeName})</td><td>$${openLongMaker.toFixed(4)}</td><td>$${openLongTaker.toFixed(4)}</td></tr>
                                 <tr><td>Open SHORT (${shortExchangeName})</td><td>$${openShortMaker.toFixed(4)}</td><td>$${openShortTaker.toFixed(4)}</td></tr>
                                 <tr><td><strong>Total Entry Cost</strong></td><td><strong>$${totalEntryMaker.toFixed(4)}</strong></td><td><strong>$${totalEntryTaker.toFixed(4)}</strong></td></tr>
                                 <tr><td>Close Positions (Est.)</td><td>$${totalExitMaker.toFixed(4)}</td><td>$${totalExitTaker.toFixed(4)}</td></tr>
@@ -1727,46 +1753,68 @@
 
         // Show default view
         document.getElementById('opportunitiesGrid').style.display = 'grid';
-        document.getElementById('pairTabs').style.display = 'flex'; // Show top tabs for pairs
 
-        // Setup initial tabs
-        setTimeout(buildPairTabs, 500);
+        // Build the static pair pyramid menu
+        buildPairPyramid();
 
-        function buildPairTabs() {
-            const tabsContainer = document.getElementById('pairTabs');
-            const pairs = Object.keys(allData || {});
+        function buildPairPyramid() {
+            const container = document.getElementById('pairTabs');
 
-            // If data not loaded yet, retry shortly
-            if (pairs.length === 0) {
-                setTimeout(buildPairTabs, 1000);
-                return;
-            }
+            // Pyramid Stucture:
+            // Row 1: Binance pairs (4)
+            // Row 2: OKX pairs (3)
+            // Row 3: Bybit pairs (2)
+            // Row 4: HL pairs (1)
 
-            tabsContainer.innerHTML = pairs.map(pairKey => {
-                const isActive = currentTab === pairKey;
-                const pairName = pairKey.toUpperCase().replace('-', ' ↔ ');
-                return `
-                    <div class="pair-tab ${isActive ? 'active' : ''}" onclick="switchToPair('${pairKey}')">
-                        ${pairName}
-                    </div>
-                `;
-            }).join('');
+            const rows = [
+                ['binance-okx', 'binance-bybit', 'binance-hyperliquid', 'binance-asterdex'],
+                ['okx-bybit', 'okx-hyperliquid', 'okx-asterdex'],
+                ['bybit-hyperliquid', 'bybit-asterdex'],
+                ['hyperliquid-asterdex']
+            ];
+
+            let html = '';
+
+            rows.forEach(row => {
+                html += '<div class="pair-row" style="display:flex; justify-content:center; gap:8px; margin-bottom:8px;">';
+                row.forEach(pairKey => {
+                    const shortName = pairKey
+                        .replace('binance', 'BN')
+                        .replace('okx', 'OKX')
+                        .replace('bybit', 'BYB')
+                        .replace('hyperliquid', 'HL')
+                        .replace('asterdex', 'AST')
+                        .toUpperCase()
+                        .replace('-', ' <> ');
+
+                    const isActive = currentTab === pairKey;
+
+                    html += `
+                        <button class="pair-btn ${isActive ? 'active' : ''}" 
+                                onclick="switchToPair('${pairKey}')"
+                                style="flex:1; max-width:120px;">
+                            ${shortName}
+                        </button>
+                    `;
+                });
+                html += '</div>';
+            });
+
+            container.innerHTML = html;
+            container.style.flexDirection = 'column'; // Stack rows vertically
+            container.style.overflowX = 'visible'; // No scroll
+            container.style.marginBottom = '20px';
         }
 
         function switchToPair(pairKey) {
             currentTab = pairKey;
 
-            // Update Top Tabs Active State
-            document.querySelectorAll('.pair-tab').forEach(tab => {
-                tab.classList.remove('active');
-                if (tab.innerText.includes(pairKey.toUpperCase().replace('-', ' ↔ '))) {
-                    tab.classList.add('active');
-                }
-            });
+            // Re-render buttons to update active state
+            buildPairPyramid();
 
             // Update Bottom Nav Active State
             document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
-            document.querySelector('.nav-item[onclick*="opportunitiesGrid"]').classList.add('active');
+            document.querySelector('.nav-item[onclick*="opportunitiesGrid"]')?.classList.add('active'); // Safe check
 
             // Show Grid View
             document.getElementById('opportunitiesGrid').style.display = 'grid';
