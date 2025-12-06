@@ -1,6 +1,7 @@
 const BinanceWebSocket = require('./websocket/binance.ws');
 const OKXWebSocket = require('./websocket/okx.ws');
 const HyperliquidWebSocket = require('./websocket/hyperliquid.ws');
+const { calculateDetailedFunding, getHoursUntilFunding } = require('./funding-calculator');
 
 class ArbitrageService {
     constructor(exchangeA, exchangeB) {
@@ -139,30 +140,25 @@ class ArbitrageService {
         const fundingB = dataB.fundingRate; // %
 
         // Strateji Belirleme: Hangi yönde funding kazanırız?
-        // Funding pozitifse: Long öder, Short alır.
-        // Funding negatifse: Short öder, Long alır.
-
         // Senaryo 1: Long A + Short B
-        // Getiri: -FundingA + FundingB
         const netFundingLongAShortB = -fundingA + fundingB;
 
         // Senaryo 2: Short A + Long B
-        // Getiri: +FundingA - FundingB
         const netFundingShortALongB = fundingA - fundingB;
 
         let strategy = '';
-        let netFundingRate8h = 0;
+        let netFundingRate = 0;
 
         if (netFundingLongAShortB > netFundingShortALongB) {
             strategy = 'LONG_A_SHORT_B';
-            netFundingRate8h = netFundingLongAShortB;
+            netFundingRate = netFundingLongAShortB;
         } else {
             strategy = 'SHORT_A_LONG_B';
-            netFundingRate8h = netFundingShortALongB;
+            netFundingRate = netFundingShortALongB;
         }
 
         // Eğer en iyi senaryoda bile funding negatifse, işlem yapma
-        if (netFundingRate8h <= 0) {
+        if (netFundingRate <= 0) {
             return {
                 strategy: 'NO_OPPORTUNITY',
                 isOpportunity: false,
@@ -172,21 +168,38 @@ class ArbitrageService {
                 fundingDifferencePercent: 0,
                 fundingPnL8h: 0,
                 annualFundingPnL: 0,
-                annualAPR: 0
+                annualAPR: 0,
+                detailedFunding: null
             };
         }
 
-        // YENİ MANTIK: 100$ İşlem Büyüklüğü
         const tradeSize = 100;
 
-        // 1. Funding Kârı (8 saatlik)
-        const fundingPnL8hDollar = (netFundingRate8h / 100) * tradeSize;
+        // Calculate detailed funding with intervals
+        const detailedFunding = calculateDetailedFunding(
+            this.nameA,
+            this.nameB,
+            dataA,
+            dataB,
+            strategy,
+            tradeSize
+        );
 
-        // 2. Yıllık Tahmini Getiri (APR) - Sadece Funding üzerinden
-        const annualFundingPnL = fundingPnL8hDollar * 3 * 365;
-        const annualAPR = netFundingRate8h * 3 * 365; // %
+        // Initial fees (Maker + Taker)
+        const makerFeeA = this.fees.exchangeA.maker * 100; // %
+        const takerFeeA = this.fees.exchangeA.taker * 100; // %
+        const makerFeeB = this.fees.exchangeB.maker * 100; // %
+        const takerFeeB = this.fees.exchangeB.taker * 100; // %
 
-        // 3. Fiyat Farkı (Bilgi Amaçlı)
+        // Total initial fees
+        const totalInitialFeeMaker = (makerFeeA + makerFeeB) / 100 * tradeSize;
+        const totalInitialFeeTaker = (takerFeeA + takerFeeB) / 100 * tradeSize;
+
+        // Breakeven calculation
+        const breakevenHoursMaker = totalInitialFeeMaker / (detailedFunding.fundingInFirstPeriod / detailedFunding.firstDualFundingHours);
+        const breakevenHoursTaker = totalInitialFeeTaker / (detailedFunding.fundingInFirstPeriod / detailedFunding.firstDualFundingHours);
+
+        // Fiyat Farkı (Bilgi Amaçlı)
         let priceDiffPercent = 0;
         if (strategy === 'LONG_A_SHORT_B') {
             priceDiffPercent = ((markB - markA) / markA) * 100;
@@ -195,23 +208,34 @@ class ArbitrageService {
         }
         const priceDiffPnL = (priceDiffPercent / 100) * tradeSize;
 
-        // 4. Toplam Net Kâr (8h Funding + Price Diff)
-        const totalNetProfit8h = fundingPnL8hDollar + priceDiffPnL;
-
-        // Fırsat Eşiği: Net Funding > 0
-        const isOpportunity = netFundingRate8h > 0;
-
         return {
             strategy,
             tradeSize,
             priceDifferencePercent: priceDiffPercent,
             priceDifferencePnL: priceDiffPnL,
-            fundingDifferencePercent: netFundingRate8h,
-            fundingPnL8h: fundingPnL8hDollar,
-            totalNetProfit8h, // Yeni alan
-            annualFundingPnL,
-            annualAPR,
-            isOpportunity
+            fundingDifferencePercent: netFundingRate,
+            fundingPnL8h: detailedFunding.fundingInFirstPeriod,
+            annualFundingPnL: detailedFunding.annualFunding,
+            annualAPR: detailedFunding.annualAPR,
+            isOpportunity: true,
+            // Detailed funding info
+            detailedFunding: {
+                ...detailedFunding,
+                fees: {
+                    makerFeeA,
+                    takerFeeA,
+                    makerFeeB,
+                    takerFeeB,
+                    totalInitialFeeMaker,
+                    totalInitialFeeTaker
+                },
+                breakeven: {
+                    hoursMaker: breakevenHoursMaker,
+                    hoursTaker: breakevenHoursTaker,
+                    daysMaker: breakevenHoursMaker / 24,
+                    daysTaker: breakevenHoursTaker / 24
+                }
+            }
         };
     }
 
