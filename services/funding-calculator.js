@@ -77,11 +77,11 @@ function calculateDetailedFunding(exchangeA, exchangeB, dataA, dataB, strategy, 
     const nextFundingTimeB = dataB.nextFundingTime ? new Date(dataB.nextFundingTime) : new Date();
 
     // PRIORITY: 1. Metadata Service (API), 2. WebSocket Data, 3. Estimate
-    const intervalA = metadataService.getInterval(exchangeA.name, dataA.symbol)
+    const intervalA = metadataService.getInterval(exchangeA, dataA.symbol)
         || dataA.fundingInterval
         || estimateFundingInterval(nextFundingTimeA);
 
-    const intervalB = metadataService.getInterval(exchangeB.name, dataB.symbol)
+    const intervalB = metadataService.getInterval(exchangeB, dataB.symbol)
         || dataB.fundingInterval
         || estimateFundingInterval(nextFundingTimeB);
 

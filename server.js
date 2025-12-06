@@ -58,15 +58,8 @@ async function startServer() {
         bybitWS.connect();
         asterdexWS.connect();
 
-        // 3. Start Arbitrage Analysis Service (CRITICAL: Loads coins and starts intervals)
-        console.log('Starting Arbitrage Service...');
-        // Note: The instruction implies a single arbitrageService.start(), but arbitrageServices is an object of multiple services.
-        // Assuming the intent is to start all initialized arbitrage services.
-        for (const serviceName in arbitrageServices) {
-            if (arbitrageServices.hasOwnProperty(serviceName) && typeof arbitrageServices[serviceName].start === 'function') {
-                await arbitrageServices[serviceName].start();
-            }
-        }
+        // 3. Services are now ready and listening
+        console.log('Services initialized.');
 
         // Start Server
         server.listen(PORT, () => {
@@ -196,10 +189,5 @@ function sendDataToClient(ws) {
 // Broadcast data every 1 second (Much faster now!)
 setInterval(broadcastData, 1000);
 
-server.listen(PORT, () => {
-    console.log(`🚀 Server running on http://localhost:${PORT}`);
-    console.log(`🔌 WebSocket sharing same port`);
-    console.log(`📊 Dashboard available at http://localhost:${PORT}`);
-});
-
+// Start the server initialization
 startServer();
