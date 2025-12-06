@@ -30,6 +30,8 @@
             max-width: 1800px;
             margin: 0 auto;
             padding: 1.5rem;
+            padding-bottom: 80px;
+            /* Space for bottom nav */
         }
 
         /* Header */
@@ -84,50 +86,54 @@
             box-shadow: 0 0 10px #ef4444;
         }
 
-        /* Tabs */
-        .tabs-container {
-            margin-bottom: 1.5rem;
-            animation: fadeInUp 0.6s ease-out 0.2s both;
-        }
-
-        .tab-row {
+        /* Bottom Navigation - Mobile App Style */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #000000;
+            border-top: 1px solid rgba(0, 212, 255, 0.2);
             display: flex;
-            gap: 0.5rem;
-            margin-bottom: 0.5rem;
+            justify-content: space-around;
+            padding: 8px 0;
+            z-index: 1000;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
         }
 
-        .tab-pairs {
-            overflow-x: auto;
-            scrollbar-width: thin;
-            gap: 0.5rem;
-        }
-
-        .tab {
+        .nav-item {
             flex: 1;
-            padding: 0.6rem 1rem;
-            background: rgba(0, 212, 255, 0.03);
-            border: 1px solid rgba(0, 212, 255, 0.15);
-            border-radius: 8px;
-            color: rgba(255, 255, 255, 0.6);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 8px;
+            color: rgba(255, 255, 255, 0.5);
             cursor: pointer;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            font-weight: 500;
-            font-size: 0.85rem;
+            transition: all 0.2s;
+            border: none;
+            background: none;
+            font-size: 0.7rem;
             text-align: center;
-            backdrop-filter: blur(10px);
-            white-space: nowrap;
         }
 
-        .tab:hover {
-            background: rgba(0, 212, 255, 0.08);
-            border-color: rgba(0, 212, 255, 0.3);
+        .nav-item:hover {
+            color: #00d4ff;
+            background: rgba(0, 212, 255, 0.05);
         }
 
-        .tab.active {
-            background: linear-gradient(135deg, rgba(0, 212, 255, 0.15), rgba(0, 255, 136, 0.1));
-            color: white;
-            border-color: transparent;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        .nav-item.active {
+            color: #00d4ff;
+            font-weight: 600;
+        }
+
+        .nav-icon {
+            font-size: 1.2rem;
+        }
+
+        /* Hide old tabs */
+        .tabs-container {
+            display: none;
         }
 
         .tab-logo {
@@ -1131,11 +1137,17 @@
 
         function switchTab(tabId) {
             currentTab = tabId;
-            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
-            event.target.closest('.tab').classList.add('active');
+
+            // Update bottom nav active state
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            event.target.closest('.nav-item').classList.add('active');
+
+            // Hide all views
             document.getElementById('opportunitiesGrid').style.display = 'none';
             document.getElementById('opportunitiesTable').style.display = 'none';
             document.getElementById('allDataTable').style.display = 'none';
+
+            // Show selected view
             if (currentTab === 'all') {
                 document.getElementById('opportunitiesTable').style.display = 'block';
                 renderAllTable();
@@ -1144,7 +1156,7 @@
                 renderAllDataTable();
             } else {
                 document.getElementById('opportunitiesGrid').style.display = 'grid';
-                updateDashboard(allData[currentTab]);
+                updateDashboard(getAllOpportunities().filter(o => currentTab === 'all' || (o.exchangeA.name + '-' + o.exchangeB.name).toLowerCase().includes(currentTab)));
             }
         }
 
@@ -1654,6 +1666,18 @@
         // Initialize
         connectWebSocket();
     </script>
+
+    <!-- Bottom Navigation -->
+    <div class="bottom-nav">
+        <button class="nav-item active" onclick="switchTab('all')">
+            <div class="nav-icon">📊</div>
+            <div>All Opportunities</div>
+        </button>
+        <button class="nav-item" onclick="switchTab('all-data')">
+            <div class="nav-icon">📈</div>
+            <div>All Data</div>
+        </button>
+    </div>
 </body>
 
 </html>
