@@ -1653,7 +1653,7 @@
                     document.getElementById('lastUpdate').textContent = new Date(message.timestamp).toLocaleTimeString();
                     if (currentTab === 'all') renderAllTable();
                     else if (currentTab === 'all-data') renderAllDataTable();
-                    else updateDashboard(allData[currentTab]);
+                    else if (allData[currentTab]) updateDashboard(allData[currentTab]);
                 }
             };
             ws.onclose = () => {
@@ -1663,15 +1663,85 @@
             };
         }
 
+        // Pair Modal Functions
+        function openPairModal() {
+            const pairList = document.getElementById('pairList');
+            const pairs = Object.keys(allData || {});
+
+            pairList.innerHTML = pairs.map(pairKey => {
+                const opportunities = allData[pairKey] || [];
+                const activeCount = opportunities.filter(o => o.analysis && o.analysis.isOpportunity).length;
+
+                return `
+                    <button onclick="selectPair('${pairKey}')" style="
+                        background: linear-gradient(135deg, rgba(0,212,255,0.1), rgba(0,255,136,0.05));
+                        border: 1px solid rgba(0,212,255,0.3);
+                        border-radius: 12px;
+                        padding: 15px;
+                        color: white;
+                        cursor: pointer;
+                        text-align: left;
+                        transition: all 0.2s;
+                    " onmouseover="this.style.background='linear-gradient(135deg, rgba(0,212,255,0.2), rgba(0,255,136,0.1))'" 
+                       onmouseout="this.style.background='linear-gradient(135deg, rgba(0,212,255,0.1), rgba(0,255,136,0.05))'">
+                        <div style="font-size:1.1rem; font-weight:600; margin-bottom:5px;">${pairKey.toUpperCase().replace('-', ' ↔ ')}</div>
+                        <div style="font-size:0.85rem; color:rgba(255,255,255,0.7);">${activeCount} active opportunities</div>
+                    </button>
+                `;
+            }).join('');
+
+            document.getElementById('pairModal').style.display = 'block';
+        }
+
+        function closePairModal() {
+            document.getElementById('pairModal').style.display = 'none';
+        }
+
+        function selectPair(pairKey) {
+            closePairModal();
+            currentTab = pairKey;
+
+            // Update nav active state
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            document.querySelectorAll('.nav-item')[1].classList.add('active'); // Pairs item
+
+            // Show opportunity cards for this pair
+            document.getElementById('opportunitiesGrid').style.display = 'grid';
+            document.getElementById('opportunitiesTable').style.display = 'none';
+            document.getElementById('allDataTable').style.display = 'none';
+
+            if (allData[pairKey]) {
+                updateDashboard(allData[pairKey]);
+            }
+        }
+
         // Initialize
         connectWebSocket();
     </script>
 
+    <!-- Pair Selection Modal -->
+    <div id="pairModal"
+        style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.9); z-index:2000; padding:20px; overflow-y:auto;">
+        <div
+            style="max-width:600px; margin:0 auto; background:#0a0e27; border-radius:16px; padding:20px; border:1px solid rgba(0,212,255,0.3);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <h2 style="color:#00d4ff; margin:0;">Select Exchange Pair</h2>
+                <button onclick="closePairModal()"
+                    style="background:none; border:none; color:#fff; font-size:2rem; cursor:pointer;">×</button>
+            </div>
+            <div id="pairList" style="display:grid; gap:10px;"></div>
+        </div>
+    </div>
+
     <!-- Bottom Navigation -->
     <div class="bottom-nav">
-        <button class="nav-item active" onclick="switchTab('all')">
+        <button class="nav-item" onclick="switchTab('all')">
             <div class="nav-icon">📊</div>
-            <div>All Opportunities</div>
+            <div>All Opps</div>
+        </button>
+        <button class="nav-item" onclick="openPairModal()">
+            <div class="nav-icon">⚡</div>
+            <div>Pairs</div>
         </button>
         <button class="nav-item" onclick="switchTab('all-data')">
             <div class="nav-icon">📈</div>
