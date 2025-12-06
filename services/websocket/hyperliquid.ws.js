@@ -63,14 +63,22 @@ class HyperliquidWebSocket extends BaseWebSocket {
 
                     const fundingData = this.fundingRates[symbol] || { rate: 0, time: 0 };
 
-                    // Hyperliquid funding is hourly, convert to 8h equivalent for comparison
-                    const funding8h = fundingData.rate * 8;
+                    // Hyperliquid funding is hourly - DO NOT multiply by 8
+                    // Keep as-is for accurate hourly rates
+                    const fundingRate = fundingData.rate;
+
+                    // Calculate next funding time (top of next hour)
+                    const now = Date.now();
+                    const nextHour = new Date(now);
+                    nextHour.setMinutes(0, 0, 0);
+                    nextHour.setHours(nextHour.getHours() + 1);
 
                     this.data[normalizedSymbol] = {
                         symbol: normalizedSymbol,
                         markPrice: price, // Using mid price as proxy for mark price
-                        fundingRate: funding8h,
-                        nextFundingTime: fundingData.time + 3600000,
+                        fundingRate: fundingRate,
+                        fundingInterval: 1, // Hyperliquid funding is every 1 hour
+                        nextFundingTime: nextHour.getTime(),
                         timestamp: Date.now()
                     };
 

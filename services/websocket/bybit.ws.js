@@ -94,6 +94,7 @@ class BybitWebSocket {
                             symbol: ticker.symbol,
                             markPrice: existingData.markPrice || parseFloat(ticker.markPrice),
                             fundingRate: parseFloat(ticker.fundingRate) * 100, // Convert to percentage
+                            fundingInterval: 8, // Bybit funding is every 8 hours
                             nextFundingTime: ticker.nextFundingTime
                         });
                     }

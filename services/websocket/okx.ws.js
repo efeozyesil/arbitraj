@@ -50,6 +50,7 @@ class OKXWebSocket extends BaseWebSocket {
                 this.data[symbol].timestamp = parseInt(item.ts);
             } else if (msg.arg.channel === 'funding-rate') {
                 this.data[symbol].fundingRate = parseFloat(item.fundingRate) * 100; // Convert to percentage
+                this.data[symbol].fundingInterval = 8; // OKX funding is every 8 hours
                 this.data[symbol].nextFundingTime = parseInt(item.nextFundingTime);
             }
         } catch (error) {

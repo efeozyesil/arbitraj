@@ -41,22 +41,20 @@ function getHoursUntilFunding(exchange) {
 
 // Calculate detailed funding analysis
 function calculateDetailedFunding(exchangeA, exchangeB, dataA, dataB, strategy, tradeSize = 100) {
-    const slugA = exchangeA.toLowerCase();
-    const slugB = exchangeB.toLowerCase();
-
     const fundingRateA = dataA.fundingRate; // % per interval
     const fundingRateB = dataB.fundingRate; // % per interval
 
-    const intervalA = FUNDING_INTERVALS[slugA] || 8;
-    const intervalB = FUNDING_INTERVALS[slugB] || 8;
+    // Use fundingInterval from WebSocket data (fallback to 8 if not present)
+    const intervalA = dataA.fundingInterval || 8;
+    const intervalB = dataB.fundingInterval || 8;
 
-    // Use nextFundingTime from WebSocket if available, otherwise calculate
-    const nextFundingTimeA = dataA.nextFundingTime ? new Date(dataA.nextFundingTime) : getNextFundingTime(slugA);
-    const nextFundingTimeB = dataB.nextFundingTime ? new Date(dataB.nextFundingTime) : getNextFundingTime(slugB);
+    // Use nextFundingTime from WebSocket
+    const nextFundingTimeA = dataA.nextFundingTime ? new Date(dataA.nextFundingTime) : new Date();
+    const nextFundingTimeB = dataB.nextFundingTime ? new Date(dataB.nextFundingTime) : new Date();
 
     const now = new Date();
-    const hoursUntilNextA = (nextFundingTimeA - now) / (1000 * 60 * 60);
-    const hoursUntilNextB = (nextFundingTimeB - now) / (1000 * 60 * 60);
+    const hoursUntilNextA = Math.max(0, (nextFundingTimeA - now) / (1000 * 60 * 60));
+    const hoursUntilNextB = Math.max(0, (nextFundingTimeB - now) / (1000 * 60 * 60));
 
     // Calculate minutes and hours for display
     const minutesUntilNextA = Math.floor((hoursUntilNextA * 60) % 60);
@@ -68,15 +66,11 @@ function calculateDetailedFunding(exchangeA, exchangeB, dataA, dataB, strategy, 
     let receiveFromA, payToA, receiveFromB, payToB;
 
     if (strategy === 'LONG_A_SHORT_B') {
-        // Long A: pays funding if positive
-        // Short B: receives funding if positive
         payToA = fundingRateA > 0;
         receiveFromA = fundingRateA < 0;
         receiveFromB = fundingRateB > 0;
         payToB = fundingRateB < 0;
     } else {
-        // Short A: receives funding if positive
-        // Long B: pays funding if positive
         receiveFromA = fundingRateA > 0;
         payToA = fundingRateA < 0;
         payToB = fundingRateB > 0;
@@ -87,7 +81,7 @@ function calculateDetailedFunding(exchangeA, exchangeB, dataA, dataB, strategy, 
     const fundingAmountA = (Math.abs(fundingRateA) / 100) * tradeSize;
     const fundingAmountB = (Math.abs(fundingRateB) / 100) * tradeSize;
 
-    // Net funding per interval (normalized to 8h for comparison)
+    // Net funding per interval
     const netFundingPerInterval = strategy === 'LONG_A_SHORT_B'
         ? -fundingRateA + fundingRateB
         : fundingRateA - fundingRateB;
@@ -101,7 +95,7 @@ function calculateDetailedFunding(exchangeA, exchangeB, dataA, dataB, strategy, 
         Math.ceil(firstDualFundingHours / intervalB)
     );
 
-    // Funding collected in first period (until both have paid at least once)
+    // Funding collected in first period
     const fundingInFirstPeriod = (netFundingPerInterval / 100) * tradeSize * collectionsInFirstPeriod;
 
     // Annualized funding
