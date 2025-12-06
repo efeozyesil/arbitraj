@@ -37,7 +37,6 @@ class AsterdexWebSocket {
                                     symbol: ticker.s,
                                     markPrice: parseFloat(ticker.p),
                                     fundingRate: parseFloat(ticker.r) * 100, // Convert to percentage
-                                    fundingInterval: 8, // Asterdex funding is every 8 hours (Binance-like)
                                     nextFundingTime: ticker.T
                                 });
                             }

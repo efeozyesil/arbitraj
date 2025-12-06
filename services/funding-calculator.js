@@ -39,18 +39,46 @@ function getHoursUntilFunding(exchange) {
     return (next - now) / (1000 * 60 * 60);
 }
 
+// Helper to estimate funding interval based on next funding hour (UTC)
+function estimateFundingInterval(nextTime) {
+    if (!nextTime) return 8; // Default fallback
+
+    const date = new Date(nextTime);
+    const hour = date.getUTCHours();
+
+    // Standard crypto intervals usually anchor to 00:00 UTC
+    // 8h: 00, 08, 16
+    // 4h: 00, 04, 08, 12, 16, 20
+    // 2h: 00, 02, 04...
+    // 1h: 00, 01, 02...
+
+    // If hour is odd (1, 3, 5...), it implies 1h interval (cannot be 2h, 4h, 8h which are even)
+    if (hour % 2 !== 0) return 1;
+
+    // If divisible by 2 but not 4 (2, 6, 10...), likely 2h
+    if (hour % 4 !== 0) return 2;
+
+    // If divisible by 4 but not 8 (4, 12, 20...), likely 4h
+    if (hour % 8 !== 0) return 4;
+
+    // If 00, 08, 16, it could be anything, but 8h is standard for major coins
+    return 8;
+}
+
 // Calculate detailed funding analysis
 function calculateDetailedFunding(exchangeA, exchangeB, dataA, dataB, strategy, tradeSize = 100) {
     const fundingRateA = dataA.fundingRate; // % per interval
     const fundingRateB = dataB.fundingRate; // % per interval
 
-    // Use fundingInterval from WebSocket data (fallback to 8 if not present)
-    const intervalA = dataA.fundingInterval || 8;
-    const intervalB = dataB.fundingInterval || 8;
-
     // Use nextFundingTime from WebSocket
     const nextFundingTimeA = dataA.nextFundingTime ? new Date(dataA.nextFundingTime) : new Date();
     const nextFundingTimeB = dataB.nextFundingTime ? new Date(dataB.nextFundingTime) : new Date();
+
+    // Use fundingInterval from WebSocket data if available, else estimate
+    // Hyperliquid sends interval: 1 explicitly (we kept hardcoded logic there? valid check needed)
+    // OKX/Binance etc we now estimate if missing
+    const intervalA = dataA.fundingInterval || estimateFundingInterval(nextFundingTimeA);
+    const intervalB = dataB.fundingInterval || estimateFundingInterval(nextFundingTimeB);
 
     const now = new Date();
     const hoursUntilNextA = Math.max(0, (nextFundingTimeA - now) / (1000 * 60 * 60));

@@ -19,7 +19,6 @@ class BinanceWebSocket extends BaseWebSocket {
                 symbol: msg.s,
                 markPrice: parseFloat(msg.p),
                 fundingRate: parseFloat(msg.r) * 100, // Convert to percentage
-                fundingInterval: 8, // Binance funding is every 8 hours
                 nextFundingTime: msg.T,
                 timestamp: Date.now()
             };

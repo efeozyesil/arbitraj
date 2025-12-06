@@ -131,20 +131,33 @@
             font-size: 1.2rem;
         }
 
-        /* Hide old tabs */
-        .tabs-container {
-            display: none;
+        /* Pair Tabs (Horizontal Scroll) */
+        .pair-tabs-container {
+            display: flex;
+            overflow-x: auto;
+            gap: 10px;
+            padding: 10px 0;
+            margin-bottom: 15px;
+            scrollbar-width: thin;
         }
 
-        .tab-logo {
-            width: 24px;
-            height: 24px;
-            object-fit: contain;
-            filter: grayscale(50%) opacity(0.7);
+        .pair-tab {
+            white-space: nowrap;
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.6);
+            cursor: pointer;
+            transition: all 0.2s;
         }
 
-        .tab.active .tab-logo {
-            filter: grayscale(0%) opacity(1);
+        .pair-tab.active {
+            background: rgba(0, 212, 255, 0.15);
+            border-color: #00d4ff;
+            color: #00d4ff;
+            font-weight: 600;
         }
 
         /* Stats */
@@ -959,8 +972,11 @@
             <div>Loading arbitrage data...</div>
         </div>
 
-        <!-- Grid -->
-        <div class="opportunities-grid" id="opportunitiesGrid" style="display: none;"></div>
+        <!-- Pair Tabs -->
+        <div id="pairTabs" class="pair-tabs-container" style="display:flex;"></div>
+
+        <!-- Opportunities Grid -->
+        <div class="opportunities-grid" id="opportunitiesGrid" style="display:grid;"></div>
 
         <!-- List Table -->
         <div class="opp-table-container" id="opportunitiesTable" style="display: none;">
@@ -1146,6 +1162,7 @@
 
             // Hide all views
             document.getElementById('opportunitiesGrid').style.display = 'none';
+            document.getElementById('pairTabs').style.display = 'none'; // Hide tabs on other pages
             document.getElementById('opportunitiesTable').style.display = 'none';
             document.getElementById('allDataTable').style.display = 'none';
 
@@ -1158,6 +1175,7 @@
                 renderAllDataTable();
             } else {
                 document.getElementById('opportunitiesGrid').style.display = 'grid';
+                document.getElementById('pairTabs').style.display = 'flex'; // Show tabs
                 if (allData[currentTab]) {
                     updateDashboard(allData[currentTab]);
                 }
@@ -1704,41 +1722,67 @@
         }
 
         // Initialize
-        currentTab = 'binance-okx'; // Default to Binance-OKX pairs
+        currentTab = 'binance-okx'; // Default pair
         connectWebSocket();
 
-        // Show default view immediately
+        // Show default view
         document.getElementById('opportunitiesGrid').style.display = 'grid';
-        document.getElementById('opportunitiesTable').style.display = 'none';
-        document.getElementById('allDataTable').style.display = 'none';
-        setTimeout(() => {
-            const navItems = document.querySelectorAll('.nav-item');
-            if (navItems[0]) navItems[0].classList.add('active');
-        }, 100);
+        document.getElementById('pairTabs').style.display = 'flex'; // Show top tabs for pairs
 
-        // Pair selector functions
-        function togglePairSelector() {
-            const selector = document.getElementById('pairSelector');
-            const isVisible = selector.style.display === 'block';
-            selector.style.display = isVisible ? 'none' : 'block';
+        // Setup initial tabs
+        setTimeout(buildPairTabs, 500);
+
+        function buildPairTabs() {
+            const tabsContainer = document.getElementById('pairTabs');
+            const pairs = Object.keys(allData || {});
+
+            // If data not loaded yet, retry shortly
+            if (pairs.length === 0) {
+                setTimeout(buildPairTabs, 1000);
+                return;
+            }
+
+            tabsContainer.innerHTML = pairs.map(pairKey => {
+                const isActive = currentTab === pairKey;
+                const pairName = pairKey.toUpperCase().replace('-', ' ↔ ');
+                return `
+                    <div class="pair-tab ${isActive ? 'active' : ''}" onclick="switchToPair('${pairKey}')">
+                        ${pairName}
+                    </div>
+                `;
+            }).join('');
         }
 
-        function selectExchangePair(pairKey) {
-            document.getElementById('pairSelector').style.display = 'none';
-            switchToPair(pairKey);
+        function switchToPair(pairKey) {
+            currentTab = pairKey;
+
+            // Update Top Tabs Active State
+            document.querySelectorAll('.pair-tab').forEach(tab => {
+                tab.classList.remove('active');
+                if (tab.innerText.includes(pairKey.toUpperCase().replace('-', ' ↔ '))) {
+                    tab.classList.add('active');
+                }
+            });
+
+            // Update Bottom Nav Active State
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            document.querySelector('.nav-item[onclick*="opportunitiesGrid"]').classList.add('active');
+
+            // Show Grid View
+            document.getElementById('opportunitiesGrid').style.display = 'grid';
+            document.getElementById('pairTabs').style.display = 'flex';
+            document.getElementById('opportunitiesTable').style.display = 'none';
+            document.getElementById('allDataTable').style.display = 'none';
+
+            if (allData[pairKey]) {
+                updateDashboard(allData[pairKey]);
+            }
         }
     </script>
 
-    <!-- Pair Selector Dropdown -->
-    <div id="pairSelector"
-        style="display:none; position:fixed; bottom:70px; left:10px; right:10px; background:#0a0e27; border:1px solid rgba(0,212,255,0.3); border-radius:12px; padding:15px; max-height:400px; overflow-y:auto; z-index:1999;">
-        <div style="font-weight:600; color:#00d4ff; margin-bottom:10px; text-align:center;">Select Exchange Pair</div>
-        <div id="pairList" style="display:grid; gap:8px;"></div>
-    </div>
-
     <!-- Bottom Navigation -->
     <div class="bottom-nav">
-        <button class="nav-item" onclick="togglePairSelector(); buildPairList();">
+        <button class="nav-item active" onclick="switchToPair(currentTab || 'binance-okx')">
             <div class="nav-icon">⚡</div>
             <div>Exchange</div>
         </button>
@@ -1751,36 +1795,6 @@
             <div>All Data</div>
         </button>
     </div>
-
-    <script>
-        function buildPairList() {
-            const pairList = document.getElementById('pairList');
-            const pairs = Object.keys(allData || {});
-
-            pairList.innerHTML = pairs.map(pairKey => {
-                const opportunities = allData[pairKey] || [];
-                const activeCount = opportunities.filter(o => o.analysis && o.analysis.isOpportunity).length;
-                const isActive = currentTab === pairKey;
-
-                return `
-                    <button onclick="selectExchangePair('${pairKey}')" style="
-                        background: ${isActive ? 'linear-gradient(135deg, rgba(0,212,255,0.2), rgba(0,255,136,0.1))' : 'linear-gradient(135deg, rgba(0,212,255,0.08), rgba(0,255,136,0.03))'};
-                        border: 1px solid ${isActive ? 'rgba(0,212,255,0.5)' : 'rgba(0,212,255,0.2)'};
-                        border-radius: 8px;
-                        padding: 12px;
-                        color: white;
-                        cursor: pointer;
-                        text-align: left;
-                        transition: all 0.2s;
-                        font-size: 0.9rem;
-                    ">
-                        <div style="font-weight:600; margin-bottom:3px;">${pairKey.toUpperCase().replace('-', ' ↔ ')}</div>
-                        <div style="font-size:0.75rem; color:rgba(255,255,255,0.6);">${activeCount} active</div>
-                    </button>
-                `;
-            }).join('');
-        }
-    </script>
 </body>
 
 </html>
