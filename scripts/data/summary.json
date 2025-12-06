@@ -1,0 +1,17 @@
+{
+  "totalUniqueCoins": 656,
+  "commonCoins": 541,
+  "breakdown": {
+    "in5Exchanges": 106,
+    "in4Exchanges": 148,
+    "in3Exchanges": 184,
+    "in2Exchanges": 103
+  },
+  "exchanges": {
+    "binance": 531,
+    "okx": 256,
+    "bybit": 456,
+    "hyperliquid": 221,
+    "asterdex": 531
+  }
+}
