@@ -1220,14 +1220,19 @@
                 const longExchange = getLongExchange(opp);
                 const shortExchange = getShortExchange(opp);
                 const netProfit = calculateAdjustedProfit(opp);
+
+                // Safe null checks
+                const priceDiff = opp.analysis && opp.analysis.priceDifferencePnL != null ? opp.analysis.priceDifferencePnL : 0;
+                const apr = opp.analysis && opp.analysis.annualAPR != null ? opp.analysis.annualAPR : 0;
+
                 return `
                     <tr onclick="showDetails('${opp.symbol}')">
                         <td style="font-weight:bold; display:flex; align-items:center; gap:8px;"><img src="${opp.logo}" style="width:20px; height:20px; border-radius:50%;" onerror="this.style.display='none'"> ${opp.symbol}</td>
                         <td><span class="exchange-badge"><img src="${getLongExchangeLogo(opp)}" onerror="this.style.display='none'"> ${longExchange}</span></td>
                         <td><span class="exchange-badge"><img src="${getShortExchangeLogo(opp)}" onerror="this.style.display='none'"> ${shortExchange}</span></td>
-                        <td class="${opp.analysis.priceDifferencePnL >= 0 ? 'positive' : 'negative'}">$${opp.analysis.priceDifferencePnL.toFixed(2)}</td>
+                        <td class="${priceDiff >= 0 ? 'positive' : 'negative'}">$${priceDiff.toFixed(2)}</td>
                         <td class="${netProfit >= 0 ? 'positive' : 'negative'}" style="font-weight:bold">$${netProfit.toFixed(4)}</td>
-                        <td class="${opp.analysis.annualAPR > 0 ? 'positive' : 'negative'}">${opp.analysis.annualAPR.toFixed(2)}%</td>
+                        <td class="${apr > 0 ? 'positive' : 'negative'}">${apr.toFixed(2)}%</td>
                     </tr>
                 `;
             }).join('');
@@ -1644,18 +1649,29 @@
 
             // Total coins = all coins being tracked
             const totalCoins = allCoinsData.length || 0;
-            document.getElementById('totalOpportunities').textContent = totalCoins;
+            const totalOppsEl = document.getElementById('totalOpportunities');
+            if (totalOppsEl) totalOppsEl.textContent = totalCoins;
 
             // Active opportunities = coins with actual arbitrage opportunities
-            document.getElementById('activeArbitrage').textContent = activeOpps.length;
+            const activeArbEl = document.getElementById('activeArbitrage');
+            if (activeArbEl) activeArbEl.textContent = activeOpps.length;
 
             if (activeOpps.length > 0) {
                 const best8h = activeOpps.reduce((max, o) => o.analysis.annualAPR > max.analysis.annualAPR ? o : max);
-                document.getElementById('bestOpportunity').textContent = best8h.analysis.fundingPnL8h.toFixed(4) + '$';
-                document.getElementById('bestAnnual').textContent = best8h.analysis.annualAPR.toFixed(2) + '%';
+                const bestOppEl = document.getElementById('bestOpportunity');
+                const bestAnnualEl = document.getElementById('bestAnnual');
+
+                if (bestOppEl && best8h.analysis && best8h.analysis.fundingPnL8h != null) {
+                    bestOppEl.textContent = best8h.analysis.fundingPnL8h.toFixed(4) + '$';
+                }
+                if (bestAnnualEl && best8h.analysis && best8h.analysis.annualAPR != null) {
+                    bestAnnualEl.textContent = best8h.analysis.annualAPR.toFixed(2) + '%';
+                }
             } else {
-                document.getElementById('bestOpportunity').textContent = '0.0000$';
-                document.getElementById('bestAnnual').textContent = '0.00%';
+                const bestOppEl = document.getElementById('bestOpportunity');
+                const bestAnnualEl = document.getElementById('bestAnnual');
+                if (bestOppEl) bestOppEl.textContent = '0.0000$';
+                if (bestAnnualEl) bestAnnualEl.textContent = '0.00%';
             }
             updateCoinCounts();
         }
@@ -1695,14 +1711,36 @@
         document.getElementById('opportunitiesGrid').style.display = 'grid';
         document.getElementById('opportunitiesTable').style.display = 'none';
         document.getElementById('allDataTable').style.display = 'none';
-        document.querySelectorAll('.nav-item')[0].classList.add('active');
+        setTimeout(() => {
+            const navItems = document.querySelectorAll('.nav-item');
+            if (navItems[0]) navItems[0].classList.add('active');
+        }, 100);
+
+        // Pair selector functions
+        function togglePairSelector() {
+            const selector = document.getElementById('pairSelector');
+            const isVisible = selector.style.display === 'block';
+            selector.style.display = isVisible ? 'none' : 'block';
+        }
+
+        function selectExchangePair(pairKey) {
+            document.getElementById('pairSelector').style.display = 'none';
+            switchToPair(pairKey);
+        }
     </script>
+
+    <!-- Pair Selector Dropdown -->
+    <div id="pairSelector"
+        style="display:none; position:fixed; bottom:70px; left:10px; right:10px; background:#0a0e27; border:1px solid rgba(0,212,255,0.3); border-radius:12px; padding:15px; max-height:400px; overflow-y:auto; z-index:1999;">
+        <div style="font-weight:600; color:#00d4ff; margin-bottom:10px; text-align:center;">Select Exchange Pair</div>
+        <div id="pairList" style="display:grid; gap:8px;"></div>
+    </div>
 
     <!-- Bottom Navigation -->
     <div class="bottom-nav">
-        <button class="nav-item" onclick="switchToPair('binance-okx')">
+        <button class="nav-item" onclick="togglePairSelector(); buildPairList();">
             <div class="nav-icon">⚡</div>
-            <div>BN↔OKX</div>
+            <div>Exchange</div>
         </button>
         <button class="nav-item" onclick="switchTab('all')">
             <div class="nav-icon">📊</div>
@@ -1713,6 +1751,36 @@
             <div>All Data</div>
         </button>
     </div>
+
+    <script>
+        function buildPairList() {
+            const pairList = document.getElementById('pairList');
+            const pairs = Object.keys(allData || {});
+
+            pairList.innerHTML = pairs.map(pairKey => {
+                const opportunities = allData[pairKey] || [];
+                const activeCount = opportunities.filter(o => o.analysis && o.analysis.isOpportunity).length;
+                const isActive = currentTab === pairKey;
+
+                return `
+                    <button onclick="selectExchangePair('${pairKey}')" style="
+                        background: ${isActive ? 'linear-gradient(135deg, rgba(0,212,255,0.2), rgba(0,255,136,0.1))' : 'linear-gradient(135deg, rgba(0,212,255,0.08), rgba(0,255,136,0.03))'};
+                        border: 1px solid ${isActive ? 'rgba(0,212,255,0.5)' : 'rgba(0,212,255,0.2)'};
+                        border-radius: 8px;
+                        padding: 12px;
+                        color: white;
+                        cursor: pointer;
+                        text-align: left;
+                        transition: all 0.2s;
+                        font-size: 0.9rem;
+                    ">
+                        <div style="font-weight:600; margin-bottom:3px;">${pairKey.toUpperCase().replace('-', ' ↔ ')}</div>
+                        <div style="font-size:0.75rem; color:rgba(255,255,255,0.6);">${activeCount} active</div>
+                    </button>
+                `;
+            }).join('');
+        }
+    </script>
 </body>
 
 </html>
