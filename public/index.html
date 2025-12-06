@@ -20,9 +20,9 @@
 
         body {
             font-family: 'Inter', sans-serif;
-            background: #0a0e27;
+            background: #000000;
             min-height: 100vh;
-            color: #e8e8e8;
+            color: #e0e0e0;
             overflow-x: hidden;
         }
 
@@ -1241,10 +1241,9 @@
                 <div class="${cardClass}" data-symbol="${opp.symbol}">
                     <div class="coin-header">
                         <div style="display:flex; align-items:center; gap:10px; flex:1;">
-                            <img src="${opp.logo}" alt="${opp.name}" class="coin-logo" onerror="this.style.display='none'">
                             <div>
-                                <div class="coin-name">${opp.name}</div>
-                                <div class="coin-symbol">${opp.symbol}</div>
+                                <div class="coin-name" style="color:#00d4ff; font-weight:800; font-size:1.1rem; text-shadow:0 0 10px rgba(0,212,255,0.5);">${opp.name}</div>
+                                <div class="coin-symbol" style="color:rgba(255,255,255,0.6);">${opp.symbol}</div>
                             </div>
                             <div style="margin-left:auto; text-align:right;">
                                 <div style="font-size:0.65rem; color:rgba(255,255,255,0.5);">APR</div>
