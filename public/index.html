@@ -169,12 +169,13 @@
             -webkit-text-fill-color: transparent;
         }
 
-        /* Grid Layout */
+        /* Opportunities Grid - Prevent Layout Shifts */
         .opportunities-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(500px, 1fr));
-            gap: 1rem;
+            grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
+            gap: 1.5rem;
             animation: fadeInUp 0.6s ease-out 0.4s both;
+            will-change: contents;
         }
 
         /* Card Styles */
@@ -497,31 +498,85 @@
             border-radius: 50%;
         }
 
-        /* All Data Table */
+        /* All Data Table - Fixed Layout to Prevent Shifting */
+        #allDataTable {
+            overflow-x: auto;
+            will-change: scroll-position;
+        }
+
         #allDataTable table {
             border-collapse: collapse;
             width: 100%;
-            font-size: 0.8rem;
+            font-size: 0.875rem;
+            table-layout: fixed;
+            /* Prevent column width changes */
+            min-width: 1400px;
         }
 
         #allDataTable th,
         #allDataTable td {
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            padding: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 12px 10px;
             text-align: right;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         #allDataTable th {
-            background: rgba(255, 255, 255, 0.1);
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.15), rgba(118, 75, 162, 0.15));
             text-align: center;
+            font-weight: 600;
+            color: #a5b4fc;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            backdrop-filter: blur(10px);
         }
 
         #allDataTable td:first-child {
             text-align: left;
             position: sticky;
             left: 0;
-            background: #1a1b26;
-            z-index: 1;
+            background: linear-gradient(90deg, #1e1b4b 0%, #1e1b4b 95%, transparent 100%);
+            z-index: 5;
+            width: 180px;
+            /* Fixed width */
+            min-width: 180px;
+            font-weight: 600;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
+        }
+
+        #allDataTable .coin-cell {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        #allDataTable .coin-logo {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            object-fit: cover;
+            background: rgba(255, 255, 255, 0.1);
+            flex-shrink: 0;
+        }
+
+        #allDataTable .coin-name {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #e0e7ff;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+        }
+
+        #allDataTable td {
+            font-variant-numeric: tabular-nums;
+            transition: background-color 0.15s ease;
+            background: rgba(30, 27, 75, 0.4);
+        }
+
+        #allDataTable td:hover {
+            background: rgba(102, 126, 234, 0.1);
         }
 
         .loading {
@@ -1426,14 +1481,29 @@
             const tbody = document.getElementById('allDataBody');
             document.getElementById('loading').style.display = 'none';
             allCoinsData.sort((a, b) => a.symbol.localeCompare(b.symbol));
+
             tbody.innerHTML = allCoinsData.map(coin => {
                 const formatCell = (data) => {
                     if (!data) return '<td colspan="2" style="text-align:center; color:rgba(255,255,255,0.2)">-</td>';
                     const fundingClass = data.funding > 0 ? 'positive' : (data.funding < 0 ? 'negative' : '');
-                    return `<td>$${formatPrice(data.price)}</td><td class="${fundingClass}">${parseFloat(data.funding).toFixed(4)}%</td>`;
+                    return `<td style="min-width:90px">$${formatPrice(data.price)}</td><td class="${fundingClass}" style="min-width:70px">${parseFloat(data.funding).toFixed(4)}%</td>`;
                 };
-                return `<tr><td style="font-weight:bold; display:flex; align-items:center; gap:8px;"><img src="${coin.logo}" style="width:20px; height:20px; border-radius:50%;" onerror="this.style.display='none'"> ${coin.symbol}</td>${formatCell(coin.binance)}${formatCell(coin.okx)}${formatCell(coin.hyperliquid)}${formatCell(coin.bybit)}${formatCell(coin.asterdex)}</tr>`;
+
+                return `<tr>
+                    <td>
+                        <div class="coin-cell">
+                            <img src="${coin.logo}" class="coin-logo" onerror="this.src='https://via.placeholder.com/32/667eea/ffffff?text=${coin.symbol.charAt(0)}'">
+                            <span class="coin-name">${coin.symbol}</span>
+                        </div>
+                    </td>
+                    ${formatCell(coin.binance)}
+                    ${formatCell(coin.okx)}
+                    ${formatCell(coin.hyperliquid)}
+                    ${formatCell(coin.bybit)}
+                    ${formatCell(coin.asterdex)}
+                </tr>`;
             }).join('');
+
             updateCoinCounts();
         }
 
