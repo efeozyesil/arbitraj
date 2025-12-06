@@ -1027,6 +1027,7 @@
         let ws;
         let reconnectInterval;
         let currentTab = 'all';
+        let currentPair = 'binance-okx'; // Added for tracking the currently selected pair in the pyramid
         let allData = {};
         let allCoinsData = [];
         let sortConfig = { key: 'totalNetProfit', direction: 'desc' };
@@ -1169,22 +1170,32 @@
         }
 
         function switchToPair(pairKey) {
-            currentTab = pairKey;
+            console.log(`[DEBUG] Handling switch to pair: ${pairKey}`);
+            currentPair = pairKey; // Update currentPair
+            currentTab = 'exchange'; // Set currentTab to 'exchange' when a pair is selected
 
-            // Update nav active state  
+            // Re-render buttons to update active state
+            buildPairPyramid();
+
+            // Update Bottom Nav Active State
             document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
-            if (event && event.target) {
-                event.target.closest('.nav-item').classList.add('active');
-            }
+            document.querySelector('.nav-item[onclick*="switchToPair"]')?.classList.add('active'); // Activate the 'Exchange' tab
 
-            // Show cards
+            // Show Grid View
             document.getElementById('opportunitiesGrid').style.display = 'grid';
+            document.getElementById('pairTabs').style.display = 'flex';
             document.getElementById('opportunitiesTable').style.display = 'none';
             document.getElementById('allDataTable').style.display = 'none';
 
-            // Load data if available
-            if (allData[pairKey]) {
-                updateDashboard(allData[pairKey]);
+            // Check data availability
+            const pairData = allData[pairKey];
+            console.log(`[DEBUG] Data for ${pairKey}:`, pairData ? `${pairData.length} items` : 'undefined');
+
+            if (pairData) {
+                updateDashboard(pairData);
+            } else {
+                updateDashboard([]); // Clear dashboard if no data for the pair
+                // Maybe trigger a refresh request?
             }
         }
 
@@ -1689,13 +1700,37 @@
             };
             ws.onmessage = (event) => {
                 const message = JSON.parse(event.data);
+
                 if (message.type === 'ARBITRAGE_UPDATE') {
-                    allData = message.data;
-                    if (message.allData) allCoinsData = message.allData;
-                    document.getElementById('lastUpdate').textContent = new Date(message.timestamp).toLocaleTimeString();
-                    if (currentTab === 'all') renderAllTable();
-                    else if (currentTab === 'all-data') renderAllDataTable();
-                    else if (allData[currentTab]) updateDashboard(allData[currentTab]);
+                    allData = message.data; // { 'binance-okx': [...], ... }
+                    allCoinsData = message.allData || [];
+
+                    // Debug specific pair count
+                    if (Math.random() < 0.05) { // Log occasionally to avoid spamming console
+                        console.log(`[WS] Update received. BN-OKX: ${allData['binance-okx']?.length}, BN-BYB: ${allData['binance-bybit']?.length}`);
+                    }
+
+                    // Update All Data Table if active
+                    if (currentTab === 'all-data') {
+                        renderAllDataTable();
+                    }
+
+                    // Update All Opportunities if active
+                    if (currentTab === 'all') {
+                        renderAllTable(); // Pass no arguments, as renderAllTable fetches from getAllOpportunities()
+                    }
+
+                    // Update Exchange View if active
+                    if (currentTab === 'exchange' && currentPair) {
+                       if (allData[currentPair]) {
+                           updateDashboard(allData[currentPair]);
+                       } else {
+                           updateDashboard([]); // Clear dashboard if no data for the current pair
+                       }
+                    }
+                    
+                    // Update stats bar
+                    updateStats(getAllOpportunities());
                 }
             };
             ws.onclose = () => {
