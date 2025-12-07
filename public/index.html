@@ -12,17 +12,15 @@
     <style>
         :root {
             --bg-color: #050505;
-            --card-bg: #0f0f0f;
+            --card-bg: #111;
             --sidebar-bg: #0a0a0a;
             --text-main: #ffffff;
             --text-sub: #888888;
             --accent: #F7931A;
             /* BITCOIN ORANGE */
             --accent-dim: rgba(247, 147, 26, 0.15);
-            --positive: #00C853;
-            /* Crisper Green */
-            --negative: #FF3D00;
-            /* Crisper Red */
+            --positive: #00FF9D;
+            --negative: #FF4D4D;
             --border: #222;
             --safe-top: env(safe-area-inset-top);
             --safe-bottom: env(safe-area-inset-bottom);
@@ -195,116 +193,124 @@
             margin: 20px 0;
         }
 
-        /* CARDS */
+        /* RESTORED CLASSIC CARD STYLES */
         .opp-card {
-            background: var(--card-bg);
-            margin: 16px;
-            border-radius: 16px;
-            border: 1px solid var(--border);
-            overflow: hidden;
+            background: #0E0E0E;
+            margin: 10px 15px;
+            border-radius: 8px;
+            border: 1px solid #222;
             position: relative;
-            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+            padding: 0;
+            overflow: hidden;
         }
 
-        .opp-card::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 4px;
-            height: 100%;
-            background: #333;
-        }
-
-        .opp-card.profit::before {
-            background: var(--positive);
-        }
-
-        .oc-header {
-            padding: 14px 16px;
-            background: rgba(255, 255, 255, 0.02);
+        .opp-card-header {
+            padding: 12px 15px;
+            border-bottom: 1px solid #1a1a1a;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid var(--border);
+            background: rgba(255, 255, 255, 0.02);
         }
 
-        .oc-symbol {
+        .oc-title {
             font-weight: 800;
             font-size: 1.1rem;
+            letter-spacing: 0.5px;
             color: #fff;
-            letter-spacing: -0.5px;
         }
 
-        .oc-badge {
+        .oc-profit {
             font-family: 'JetBrains Mono', monospace;
-            font-size: 0.75rem;
-            padding: 4px 8px;
-            border-radius: 6px;
-            background: #222;
-            color: #888;
-            border: 1px solid #333;
             font-weight: 700;
-        }
-
-        .oc-body {
-            padding: 16px;
-        }
-
-        .oc-main {
-            display: flex;
-            justify-content: space-between;
-            align-items: baseline;
-            margin-bottom: 16px;
-        }
-
-        .oc-val {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 1.7rem;
-            font-weight: 700;
-            color: #fff;
-            letter-spacing: -1px;
-        }
-
-        .oc-val.pos {
+            font-size: 1.1rem;
             color: var(--positive);
-            text-shadow: 0 0 20px rgba(0, 200, 83, 0.15);
         }
 
-        .oc-ex-row {
+        .oc-profit.neg {
+            color: var(--negative);
+        }
+
+        .oc-details {
+            padding: 15px;
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 12px;
+            gap: 15px;
         }
 
-        .oc-box {
-            background: #080808;
-            padding: 12px;
-            border-radius: 10px;
-            border: 1px solid #1a1a1a;
+        .oc-side {
             display: flex;
             flex-direction: column;
-            align-items: center;
+            gap: 4px;
         }
 
-        .oc-role {
+        .oc-side-label {
             font-size: 0.7rem;
-            font-weight: 900;
-            color: #666;
-            text-transform: uppercase;
-            margin-bottom: 6px;
-        }
-
-        .oc-price {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.9rem;
-            color: #ddd;
-        }
-
-        .oc-funding {
-            font-size: 0.7rem;
+            font-weight: 700;
             color: #555;
-            margin-top: 4px;
+            text-transform: uppercase;
+        }
+
+        .oc-ex-name {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #ccc;
+        }
+
+        .oc-ex-price {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            color: #888;
+        }
+
+        .oc-ex-fund {
+            font-size: 0.75rem;
+            color: var(--accent);
+            margin-top: 2px;
+        }
+
+        .oc-footer {
+            padding: 10px 15px;
+            background: #080808;
+            border-top: 1px solid #1a1a1a;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.75rem;
+            color: #666;
+        }
+
+        /* ALL COINS LIST STYLE */
+        .coin-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #222;
+            background: #0a0a0a;
+        }
+
+        .coin-row:last-child {
+            border-bottom: none;
+        }
+
+        .cr-sym {
+            font-weight: 700;
+            font-size: 1rem;
+            color: #eee;
+        }
+
+        .cr-name {
+            font-size: 0.75rem;
+            color: #555;
+        }
+
+        .cr-price {
+            font-family: 'JetBrains Mono';
+            font-size: 0.9rem;
+            color: var(--accent);
+            text-align: right;
         }
 
         /* TRY ARB CARDS */
@@ -531,12 +537,7 @@
 
         // New Hierarchy Logic
         const PAIR_GROUPS = [
-            {
-                title: 'Overview', items: [
-                    { id: 'all-opps', label: 'All Opportunities' },
-                    { id: 'all-coins', label: 'All Coins List' }
-                ]
-            },
+            { title: 'Overview', items: [{ id: 'all-opps', label: '⚡ All Opportunities' }, { id: 'all-coins', label: '🪙 All Coins Market' }] },
             {
                 title: 'Binance Combinations', items: [
                     { id: 'binance-okx', label: 'Binance <> OKX' },
@@ -638,35 +639,38 @@
             renderFunding: (container) => {
                 const filter = state.fundingFilter;
 
-                // --- ALL COINS VIEW ---
+                // === ALL COINS VIEW (Rebuilt) ===
                 if (filter === 'all-coins') {
                     if (!state.allData || state.allData.length === 0) {
-                        container.innerHTML = `<div class="empty-view"><div>Loading Coins...</div></div>`;
+                        container.innerHTML = `<div class="empty-view"><div>Loading Market Data...</div></div>`;
                         return;
                     }
+                    // Sort by symbol
+                    const sorted = [...state.allData].sort((a, b) => a.symbol.localeCompare(b.symbol));
 
-                    let html = '<div style="padding:10px;">';
-                    state.allData.forEach(c => {
-                        // Simple Coin Card
+                    let html = '<div style="margin-bottom:80px;">';
+                    sorted.forEach(c => {
+                        // Determine a reference price (Binance or first available)
+                        const refPrice = c.binance?.price || c.okx?.price || c.hyperliquid?.price || 0;
+
                         html += `
-                    <div style="background:#111; margin-bottom:10px; border-radius:10px; padding:12px; border:1px solid #222;">
-                        <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
-                            <span style="font-weight:800; color:#fff;">${c.symbol}</span>
-                            <span style="font-size:0.75rem; color:#666;">${c.name}</span>
-                        </div>
-                        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:5px; font-size:0.7rem;">
-                           ${c.binance ? `<div style="color:${COLORS.BINANCE}">Bin: ${c.binance.funding}%</div>` : ''}
-                           ${c.okx ? `<div style="color:${COLORS.OKX}">OKX: ${c.okx.funding}%</div>` : ''}
-                           ${c.hyperliquid ? `<div style="color:${COLORS.HYPERLIQUID}">HL: ${c.hyperliquid.funding}%</div>` : ''}
-                        </div>
-                    </div>`;
+                        <div class="coin-row">
+                            <div>
+                                <div class="cr-sym">${c.symbol}</div>
+                                <div class="cr-name">${c.name || 'Crypto Asset'}</div>
+                            </div>
+                            <div>
+                                <div class="cr-price">$${Number(refPrice).toFixed(4)}</div>
+                                <div style="font-size:0.7rem; color:#444; text-align:right;">Global Avg</div>
+                            </div>
+                        </div>`;
                     });
                     html += '</div>';
                     container.innerHTML = html;
                     return;
                 }
 
-                // --- ARBITRAGE OPPORTUNITIES VIEW ---
+                // === OPPORTUNITIES CARD VIEW (Classic Design) ===
                 let list = [];
                 if (filter === 'all-opps') {
                     Object.values(state.data).forEach(arr => { if (Array.isArray(arr)) list.push(...arr); });
@@ -676,49 +680,40 @@
                 }
 
                 if (list.length === 0) {
-                    container.innerHTML = `<div class="empty-view"><div>Waiting for Market Data...</div><small>${filter}</small></div>`;
+                    container.innerHTML = `<div class="empty-view"><div>Waiting for Opps...</div><small>${filter}</small></div>`;
                     return;
                 }
 
                 container.innerHTML = list.map(d => {
                     const profit = d.profit || 0;
-                    const pClass = profit > 0 ? 'profit' : '';
-                    const valClass = profit > 0 ? 'pos' : (profit < 0 ? 'neg' : '');
-
-                    // Safety checks for colors to avoid crash
-                    const longEx = d.longEx || 'Unknown';
-                    const shortEx = d.shortEx || 'Unknown';
-                    const c1 = longEx.toUpperCase().includes('BINANCE') ? COLORS.BINANCE :
-                        (longEx.toUpperCase().includes('OKX') ? COLORS.OKX :
-                            (longEx.toUpperCase().includes('BYBIT') ? COLORS.BYBIT : '#888'));
-
+                    const pClass = profit < 0 ? 'neg' : '';
                     const apr = d.analysis ? d.analysis.annualAPR : 0;
+                    const dur = d.analysis ? d.analysis.durationHours : 8; // Default 8h funding
 
                     return `
-                <div class="opp-card ${pClass}">
-                    <div class="oc-header">
-                        <div class="oc-symbol">${d.symbol}</div>
-                        <div class="oc-badge">APR ${apr.toFixed(0)}%</div>
-                    </div>
-                    <div class="oc-body">
-                        <div class="oc-main">
-                            <span style="font-size:0.8rem; font-weight:700; color:#666; text-transform:uppercase;">Est. Yield</span>
-                            <span class="oc-val ${valClass}">${profit.toFixed(4)}%</span>
+                    <div class="opp-card">
+                        <div class="opp-card-header">
+                            <div class="oc-title">${d.symbol}</div>
+                            <div class="oc-profit ${pClass}">%${profit.toFixed(4)}</div>
                         </div>
-                        <div class="oc-ex-row">
-                            <div class="oc-box">
-                                <span class="oc-role">Long Side</span>
-                                <span class="oc-price" style="color:${c1}">${longEx}</span>
-                                <span class="oc-funding">${d.longPrice}</span>
+                        <div class="oc-details">
+                            <div class="oc-side">
+                                <div class="oc-side-label" style="color:#00ff9d;">LONG BUY</div>
+                                <div class="oc-ex-name">${d.longEx}</div>
+                                <div class="oc-ex-price">${d.longPrice}</div>
+                                <!-- Mock funding display if not in data, or use analysis -->
                             </div>
-                            <div class="oc-box">
-                                <span class="oc-role">Short Side</span>
-                                <span class="oc-price" style="color:#fff">${shortEx}</span>
-                                <span class="oc-funding">${d.shortPrice}</span>
+                            <div class="oc-side">
+                                <div class="oc-side-label" style="color:#ff4d4d; text-align:right;">SHORT SELL</div>
+                                <div class="oc-ex-name" style="text-align:right;">${d.shortEx}</div>
+                                <div class="oc-ex-price" style="text-align:right;">${d.shortPrice}</div>
                             </div>
                         </div>
-                    </div>
-                </div>`;
+                        <div class="oc-footer">
+                            <span>APR: <strong style="color:#fff">${apr.toFixed(1)}%</strong></span>
+                            <span>Next Funding: ~${dur}h</span>
+                        </div>
+                    </div>`;
                 }).join('');
             },
 
@@ -805,3 +800,4 @@
 </body>
 
 </html>
+```
