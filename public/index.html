@@ -799,11 +799,29 @@
                 app.state.fees = n; localStorage.setItem('userFees', JSON.stringify(n)); alert('Fees updated!'); app.nav('funding');
             },
 
+            // UTILS
+            fmtPrice: (p) => {
+                p = parseFloat(p);
+                if (isNaN(p)) return '0.00';
+                if (p > 999) return p.toFixed(2);
+                if (p > 1) return p.toFixed(4);
+                return p.toPrecision(5);
+            },
+
+            fmtTime: (ts) => {
+                if (!ts) return '-';
+                const diff = new Date(ts).getTime() - Date.now();
+                if (diff <= 0) return 'Funding Now';
+                const h = Math.floor(diff / 3600000);
+                const m = Math.floor((diff % 3600000) / 60000);
+                return `${h}h ${m}m`;
+            },
+
             // RENDER LOGIC
             lastRender: 0,
             render: () => {
                 const now = Date.now();
-                if (now - app.lastRender < 2000) return; // Limit to 0.5fps (Every 2s) to reduce jitter
+                if (now - app.lastRender < 2000) return; // Limit to 0.5fps
                 app.lastRender = now;
 
                 if (app.state.view === 'exchanges') {
@@ -832,67 +850,62 @@
                         const longPrice = parseFloat(isLongA ? opp.exchangeA.markPrice : opp.exchangeB.markPrice);
                         const shortPrice = parseFloat(isLongA ? opp.exchangeB.markPrice : opp.exchangeA.markPrice);
 
-                        const timeMsg = (ts) => {
-                            if (!ts) return '-';
-                            const diff = (new Date(ts) - now) / 3600000;
-                            return `in ${diff.toFixed(1)}h`;
-                        };
+                        const longTime = isLongA ? opp.exchangeA.nextFundingTime : opp.exchangeB.nextFundingTime;
+                        const shortTime = isLongA ? opp.exchangeB.nextFundingTime : opp.exchangeA.nextFundingTime;
 
                         return `
                         <div class="new-card ${profitClass}">
                             <div class="nc-head">
                                 <div class="nc-main-info">
                                     <div class="nc-sym">${opp.symbol}</div>
-                                    <div class="nc-cycle-badge">${a.cycleDuration}h Cycle</div>
+                                    <div class="nc-badge accent">${a.cycleDuration}h Cycle</div>
                                 </div>
                                 <div class="nc-stats-right">
-                                    <div class="nc-apr">${(a.annualAPR || 0).toFixed(1)}% APR</div>
-                                    <div class="nc-next-pay">Next: $${(a.fundingIncomeCycle || 0).toFixed(2)}</div>
+                                    <div class="nc-apr">APR: <span class="accent">${(a.annualAPR || 0).toFixed(1)}%</span></div>
+                                    <div class="nc-next-pay">Next Funding: <span class="pos">$${(a.fundingIncomeCycle || 0).toFixed(4)}</span></div>
                                 </div>
                             </div>
                             
                             <div class="nc-body">
-                                <!-- Price Block -->
                                 <div class="nc-price-row">
                                     <div class="nc-p-box">
-                                        <span class="nc-p-role pos">${longEx}</span>
-                                        <span class="nc-p-price">$${longPrice.toFixed(4)}</span>
-                                        <span class="nc-p-time">Next: ${timeMsg(isLongA ? opp.exchangeA.nextFundingTime : opp.exchangeB.nextFundingTime)}</span>
+                                        <span class="nc-p-role pos">${longEx} (Long)</span>
+                                        <span class="nc-p-price">$${app.fmtPrice(longPrice)}</span>
+                                        <span class="nc-p-time">in ${app.fmtTime(longTime)}</span>
                                     </div>
                                     <div class="nc-p-box">
-                                        <span class="nc-p-role neg">${shortEx}</span>
-                                        <span class="nc-p-price">$${shortPrice.toFixed(4)}</span>
-                                        <span class="nc-p-time">Next: ${timeMsg(isLongA ? opp.exchangeB.nextFundingTime : opp.exchangeA.nextFundingTime)}</span>
+                                        <span class="nc-p-role neg">${shortEx} (Short)</span>
+                                        <span class="nc-p-price">$${app.fmtPrice(shortPrice)}</span>
+                                        <span class="nc-p-time">in ${app.fmtTime(shortTime)}</span>
                                     </div>
                                 </div>
 
-                                <!-- Common Info -->
                                 <div class="breakdown-list" style="margin-bottom:0;">
                                     <div class="bd-row">
-                                        <span>Initial Price PnL (${(a.priceDiffPercent || 0).toFixed(2)}%)</span>
-                                        <span class="${c.pricePnL >= 0 ? 'pos' : 'neg'}">${c.pricePnL.toFixed(4)}</span>
+                                        <span>Initial Price Diff (${(a.priceDiffPercent || 0).toFixed(4)}%)</span>
+                                        <span class="${c.pricePnL >= 0 ? 'pos' : 'neg'}">$${c.pricePnL.toFixed(4)}</span>
                                     </div>
                                     <div class="bd-row">
-                                        <span>Funding Income (Cycle)</span>
+                                        <span>Funding Income (Est. Cycle)</span>
                                         <span class="pos">+$${c.income.toFixed(4)}</span>
                                     </div>
+                                    <div style="font-size:0.65rem; color:#555; text-align:right; margin-bottom:5px;">Based on $100 per leg ($200 total)</div>
                                 </div>
 
-                                <!-- Split Breakdown -->
                                 <div class="breakdown-grid">
                                     <div class="bd-col">
                                         <div class="bd-title">TAKER STRATEGY</div>
-                                        <div class="bd-item"><span>Fees</span> <span class="neg">-${(c.costTakerTaker).toFixed(4)}</span></div>
+                                        <div class="bd-item"><span>Total Fees</span> <span class="neg">-$${(c.costTakerTaker).toFixed(4)}</span></div>
                                         <div class="bd-final">
-                                            <span>NET</span>
+                                            <span>NET PROFIT</span>
                                             <span class="${c.netDefault > 0 ? 'pos' : 'neg'}">$${c.netDefault.toFixed(2)}</span>
                                         </div>
                                     </div>
                                     <div class="bd-col" style="border-left:1px solid #333; padding-left:20px;">
                                         <div class="bd-title">MAKER STRATEGY</div>
-                                        <div class="bd-item"><span>Fees</span> <span class="neg">-${(c.costMakerMaker).toFixed(4)}</span></div>
+                                        <div class="bd-item"><span>Total Fees</span> <span class="neg">-$${(c.costMakerMaker).toFixed(4)}</span></div>
                                         <div class="bd-final">
-                                            <span>NET</span>
+                                            <span>NET PROFIT</span>
                                             <span class="${(c.income + c.pricePnL - c.costMakerMaker) > 0 ? 'pos' : 'neg'}">$${(c.income + c.pricePnL - c.costMakerMaker).toFixed(2)}</span>
                                         </div>
                                     </div>
@@ -906,8 +919,9 @@
                     Object.values(app.state.data).forEach(arr => {
                         arr.forEach(o => { if (o.analysis) { o.calc = app.calc(o); all.push(o); } });
                     });
-                    // Sort by Profit
-                    all.sort((a, b) => b.calc.netDefault - a.calc.netDefault);
+
+                    // SORT BY APR (High to Low)
+                    all.sort((a, b) => (b.analysis.annualAPR || 0) - (a.analysis.annualAPR || 0));
 
                     const tbody = document.getElementById('listTarget');
                     if (all.length === 0) { tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:30px;">Waiting...</td></tr>'; return; }
@@ -922,16 +936,17 @@
                             <td><b>${o.symbol}</b></td>
                             <td style="font-size:0.75rem">${s}</td>
                             <td class="${o.calc.netDefault > 0 ? 'pos' : 'neg'}" style="font-weight:bold">$${o.calc.netDefault.toFixed(4)}</td>
-                            <td class="pos">${(o.analysis.annualAPR || 0).toFixed(1)}%</td>
+                            <td class="pos" style="font-weight:800; color:var(--accent);">${(o.analysis.annualAPR || 0).toFixed(2)}%</td>
                         </tr>`;
                     }).join('');
+
                 } else if (app.state.view === 'all-data') {
                     const tbody = document.getElementById('dataTarget');
                     if (app.state.allCoins.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Loading...</td></tr>'; return; }
 
                     const fmt = (ex) => {
                         if (!ex) return '<td style="text-align:center;">-</td>';
-                        return `<td><div>$${parseFloat(ex.price).toFixed(4)}</div><div class="${ex.funding >= 0 ? 'pos' : 'neg'}" style="font-size:0.7rem">${(parseFloat(ex.funding) * 100).toFixed(4)}%</div></td>`;
+                        return `<td><div>$${app.fmtPrice(ex.price)}</div><div class="${ex.funding >= 0 ? 'pos' : 'neg'}" style="font-size:0.7rem">${(parseFloat(ex.funding) * 100).toFixed(4)}%</div></td>`;
                     };
                     tbody.innerHTML = app.state.allCoins.map(c => `<tr><td><b>${c.symbol}</b></td>${fmt(c.binance)}${fmt(c.okx)}${fmt(c.bybit)}${fmt(c.hyperliquid)}${fmt(c.asterdex)}</tr>`).join('');
                 }
