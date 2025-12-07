@@ -10,36 +10,38 @@
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap"
         rel="stylesheet">
 
+
     <style>
         :root {
-            --bg-color: #0c0c0c;
-            --card-bg: #151515;
-            --sidebar-bg: #111;
-            --text-main: #e0e0e0;
+            --bg: #050505;
+            --card-bg: #111;
+            --text: #e0e0e0;
             --accent: #F7931A;
-            --green: #00E676;
-            --red: #FF3D00;
-            --border: #333;
-            --safe-top: env(safe-area-inset-top);
-            --safe-bottom: env(safe-area-inset-bottom);
+            --pos: #00E676;
+            --neg: #FF3D00;
+            --binance: #FCD535;
+            --okx: #fff;
+            --bybit: #FFB119;
+            --hl: #00D4FF;
+            --aster: #888;
+            --border: #222;
         }
 
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
+            outline: none;
             -webkit-tap-highlight-color: transparent;
         }
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, sans-serif;
-            background: var(--bg-color);
-            color: var(--text-main);
+            background: var(--bg);
+            color: var(--text);
             height: 100vh;
             display: flex;
             flex-direction: column;
-            padding-top: var(--safe-top);
-            padding-bottom: var(--safe-bottom);
         }
 
         /* HEADER */
@@ -50,16 +52,14 @@
             justify-content: space-between;
             padding: 0 15px;
             border-bottom: 1px solid var(--border);
-            background: #111;
-            z-index: 100;
-            flex-shrink: 0;
+            background: #080808;
+            z-index: 50;
         }
 
         .logo {
-            font-weight: 700;
+            font-weight: 800;
             font-size: 1.1rem;
             color: #fff;
-            letter-spacing: -0.5px;
         }
 
         .logo span {
@@ -70,9 +70,7 @@
             background: none;
             border: none;
             font-size: 1.5rem;
-            color: #aaa;
-            padding: 5px;
-            cursor: pointer;
+            color: #fff;
             display: none;
         }
 
@@ -84,23 +82,66 @@
             position: relative;
         }
 
-        /* SIDEBAR */
         .sidebar {
             width: 260px;
-            background: var(--sidebar-bg);
+            background: #0a0a0a;
             border-right: 1px solid var(--border);
             overflow-y: auto;
-            flex-shrink: 0;
             display: flex;
             flex-direction: column;
         }
 
-        .sb-section {
+        .main {
+            flex: 1;
+            overflow-y: auto;
             padding: 15px;
-            border-bottom: 1px solid #222;
+            padding-bottom: 80px;
         }
 
-        .sb-title {
+        /* MOBILE SIDEBAR */
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 100;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                height: 100%;
+                z-index: 101;
+                transform: translateX(-100%);
+                transition: 0.2s;
+                padding-top: 50px;
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
+            }
+
+            .overlay.active {
+                display: block;
+            }
+
+            .menu-btn {
+                display: block;
+            }
+        }
+
+        /* SIDEBAR ITEMS */
+        .sb-sec {
+            padding: 15px;
+            border-bottom: 1px solid #1a1a1a;
+        }
+
+        .sb-head {
             font-size: 0.75rem;
             color: #666;
             font-weight: 700;
@@ -112,185 +153,230 @@
             display: block;
             width: 100%;
             text-align: left;
-            padding: 10px 12px;
+            padding: 10px;
             background: transparent;
             border: none;
-            color: #ccc;
+            color: #bbb;
             font-size: 0.9rem;
-            border-radius: 6px;
             margin-bottom: 2px;
-            cursor: pointer;
-        }
-
-        .sb-btn:hover {
-            background: #222;
-            color: #fff;
+            border-radius: 4px;
         }
 
         .sb-btn.active {
-            background: #222;
+            background: #1a1a1a;
             color: var(--accent);
-            font-weight: 600;
-        }
-
-        /* MOBILE SIDEBAR BEHAVIOR */
-        .sidebar-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 199;
-        }
-
-        @media (max-width: 768px) {
-            .sidebar {
-                position: fixed;
-                top: 0;
-                left: 0;
-                height: 100%;
-                z-index: 200;
-                transform: translateX(-100%);
-                transition: transform 0.2s;
-                padding-top: var(--safe-top);
-            }
-
-            .sidebar.show {
-                transform: translateX(0);
-            }
-
-            .sidebar-overlay.show {
-                display: block;
-            }
-
-            .menu-btn {
-                display: block;
-            }
-        }
-
-        /* MAIN CONTENT */
-        .main {
-            flex: 1;
-            overflow-y: auto;
-            padding: 15px;
-            background: var(--bg-color);
-            padding-bottom: 80px;
-        }
-
-        /* CARDS (Restored Clean Style) */
-        .card {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 15px;
-        }
-
-        .card-header {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 10px;
-            border-bottom: 1px solid #222;
-            padding-bottom: 8px;
-        }
-
-        .c-sym {
             font-weight: 700;
-            font-size: 1.1rem;
-            color: #fff;
         }
 
-        .c-profit {
-            font-weight: 700;
-            font-size: 1.1rem;
-            color: var(--green);
-            font-family: monospace;
-        }
-
-        .c-profit.neg {
-            color: var(--red);
-        }
-
-        .c-row {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.85rem;
-            margin-bottom: 5px;
-            color: #aaa;
-        }
-
-        .c-val {
-            color: #fff;
-            font-family: monospace;
-        }
-
-        .c-b {
-            font-weight: 600;
-        }
-
-        .c-hl {
-            color: var(--accent);
-        }
-
-        /* TABLE (For All Coins) */
-        .data-table {
+        /* --- ALL DATA TABLE --- */
+        .coin-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 0.85rem;
+            min-width: 600px;
+            display: table;
         }
 
-        .data-table th {
-            text-align: left;
-            padding: 8px;
-            color: #666;
+        .ct-head th {
+            text-align: right;
+            padding: 10px;
+            font-size: 0.8rem;
             border-bottom: 1px solid #333;
-            font-weight: 600;
         }
 
-        .data-table td {
-            padding: 10px 8px;
-            border-bottom: 1px solid #222;
+        .ct-head th:first-child {
+            text-align: left;
+        }
+
+        .ct-row td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #1a1a1a;
+            vertical-align: middle;
+        }
+
+        .ct-sym {
+            font-weight: 700;
+            color: #fff;
+            font-size: 1rem;
+        }
+
+        .ct-cell {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+
+        .ct-fund {
+            font-family: monospace;
+            font-size: 0.95rem;
+            font-weight: 700;
+        }
+
+        .ct-price {
+            font-family: monospace;
+            font-size: 0.75rem;
+            color: #666;
+            margin-top: 2px;
+        }
+
+        /* --- ALL OPPS ROW --- */
+        .opp-row {
+            background: #111;
+            border: 1px solid #222;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr auto;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .or-sym {
+            font-weight: 800;
+            font-size: 1.1rem;
+            color: #fff;
+        }
+
+        .or-ex {
+            font-size: 0.75rem;
+            color: #888;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .or-val {
+            font-family: monospace;
+            font-size: 0.9rem;
             color: #ddd;
         }
 
-        .col-right {
+        .or-apr {
             text-align: right;
+            font-weight: 800;
+            color: var(--accent);
+            font-size: 1.1rem;
         }
 
-        .t-sym {
-            font-weight: 700;
+        /* --- DETAILED CALC CARD --- */
+        .calc-card {
+            background: #111;
+            border: 1px solid #222;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .cc-head {
+            background: #161616;
+            padding: 12px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #222;
+        }
+
+        .cc-title {
+            font-weight: 800;
+            font-size: 1.1rem;
             color: #fff;
         }
 
-        .t-fund {
+        .cc-metrics {
+            text-align: right;
+        }
+
+        .cc-apr {
+            color: var(--accent);
+            font-weight: 800;
+            font-size: 1rem;
+        }
+
+        .cc-profit {
             font-family: monospace;
-            font-size: 0.8rem;
+            color: var(--pos);
+            font-size: 0.9rem;
+        }
+
+        .cc-sides {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            border-bottom: 1px solid #222;
+        }
+
+        .cc-side {
+            padding: 10px 15px;
+        }
+
+        .cc-side.long {
+            border-right: 1px solid #222;
+        }
+
+        .cc-lbl {
+            font-size: 0.7rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+
+        .cc-ex {
+            font-weight: 700;
+            font-size: 1rem;
+        }
+
+        .cc-long {
+            color: var(--pos);
+        }
+
+        .cc-short {
+            color: var(--neg);
+        }
+
+        .cc-steps {
+            padding: 15px;
+            background: #0c0c0c;
+            font-size: 0.85rem;
+            color: #999;
+        }
+
+        .cc-step {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+        }
+
+        .cc-step.total {
+            margin-top: 10px;
+            padding-top: 8px;
+            border-top: 1px dashed #333;
+            color: #fff;
+            font-weight: 700;
+        }
+
+        .cc-val {
+            font-family: monospace;
         }
 
         .pos {
-            color: var(--green);
+            color: var(--pos);
         }
 
         .neg {
-            color: var(--red);
+            color: var(--neg);
         }
 
-        /* BOTTOM NAV */
-        .nav-bar {
+        /* NAV */
+        .nav {
             position: fixed;
             bottom: 0;
-            left: 0;
             width: 100%;
-            height: calc(60px + var(--safe-bottom));
-            background: #111;
-            border-top: 1px solid var(--border);
+            height: 60px;
+            background: #080808;
+            border-top: 1px solid #222;
             display: flex;
             justify-content: space-around;
-            align-items: flex-start;
-            padding-top: 10px;
-            z-index: 900;
+            align-items: center;
+            z-index: 50;
+            padding-bottom: env(safe-area-inset-bottom);
         }
 
         .nav-item {
@@ -303,80 +389,47 @@
             flex-direction: column;
             align-items: center;
             gap: 4px;
-            padding: 0 10px;
         }
 
         .nav-item.active {
             color: var(--accent);
         }
-
-        .nav-icon {
-            font-size: 1.4rem;
-        }
-
-        /* TRY ARB SECTION */
-        .try-group {
-            background: #151515;
-            border: 1px solid #333;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 15px;
-        }
-
-        .try-head {
-            font-weight: 700;
-            color: #fff;
-            margin-bottom: 10px;
-            font-size: 0.9rem;
-            border-bottom: 1px solid #2a2a2a;
-            padding-bottom: 8px;
-        }
     </style>
+
 </head>
 
 <body>
-    <div class="sidebar-overlay" onclick="ui.toggleMenu(false)"></div>
-    <div class="app-layout" style="height:100%">
-        <!-- Header -->
-        <header class="header">
-            <div class="logo"><span>R</span>bit</div>
-            <button class="menu-btn" id="menuBtn" onclick="ui.toggleMenu(true)">☰</button>
+    <div class="overlay" onclick="ui.toggle(false)"></div>
+    <div class="layout" style="height:100vh; padding-top:50px; padding-bottom:60px;">
+        <header class="header" style="position:fixed; top:0; width:100%;">
+            <div class="logo">R<span>bit</span></div>
+            <button class="menu-btn" onclick="ui.toggle(true)">☰</button>
         </header>
 
-        <div class="layout">
-            <!-- Sidebar -->
-            <aside class="sidebar" id="sidebar">
-                <div id="sidebarContent"></div>
-            </aside>
+        <aside class="sidebar" id="sidebar">
+            <div id="sbContent"></div>
+        </aside>
 
-            <!-- Main View -->
-            <main class="main" id="mainView"></main>
-        </div>
+        <main class="main" id="mainView"></main>
 
-        <!-- Bottom Nav -->
-        <nav class="nav-bar">
-            <button class="nav-item active" onclick="ui.nav('funding')"><span class="nav-icon">📊</span>Funding</button>
-            <button class="nav-item" onclick="ui.nav('try')"><span class="nav-icon">₺</span>TRY Arb</button>
-            <button class="nav-item" onclick="ui.nav('usdc')"><span class="nav-icon">💲</span>USDC</button>
-            <button class="nav-item" onclick="ui.nav('settings')"><span class="nav-icon">⚙️</span>Settings</button>
+        <nav class="nav">
+            <button class="nav-item active" onclick="ui.nav('funding')"><span>📊</span>Funding</button>
+            <button class="nav-item" onclick="ui.nav('try')"><span>₺</span>TRY Arb</button>
+            <button class="nav-item" onclick="ui.nav('usdc')"><span>💲</span>USDC</button>
+            <button class="nav-item" onclick="ui.nav('settings')"><span>⚙️</span>Settings</button>
         </nav>
     </div>
 
+
     <script>
         const PAIR_GROUPS = [
-            { t: 'Market', i: [{ id: 'all-opps', l: 'All Opportunities' }, { id: 'all-coins', l: 'All Coins Table' }] },
-            { t: 'Binance', i: [{ id: 'binance-okx', l: 'Binance / OKX' }, { id: 'binance-bybit', l: 'Binance / Bybit' }, { id: 'binance-hyperliquid', l: 'Binance / HL' }] },
-            { t: 'OKX', i: [{ id: 'okx-bybit', l: 'OKX / Bybit' }, { id: 'okx-hyperliquid', l: 'OKX / HL' }] },
-            { t: 'DeFi', i: [{ id: 'hyperliquid-asterdex', l: 'Hyperliquid / Aster' }] }
+            { t: 'Overview', i: [{ id: 'all-opps', l: 'All Opportunities (Top 100)' }, { id: 'all-coins', l: 'All Data (Table)' }] },
+            { t: 'Binance', i: [{ id: 'binance-okx', l: 'Binance <> OKX' }, { id: 'binance-bybit', l: 'Binance <> Bybit' }, { id: 'binance-hyperliquid', l: 'Binance <> HL' }] },
+            { t: 'OKX', i: [{ id: 'okx-bybit', l: 'OKX <> Bybit' }, { id: 'okx-hyperliquid', l: 'OKX <> HL' }] },
+            { t: 'Bybit', i: [{ id: 'bybit-hyperliquid', l: 'Bybit <> HL' }] }
         ];
 
-        const state = {
-            tab: 'funding',
-            filter: 'all-opps',
-            data: {},
-            allData: [],
-            ws: null
-        };
+        const state = { tab: 'funding', filter: 'all-opps', data: {}, allData: [] };
 
         const ui = {
             init: () => {
@@ -387,123 +440,178 @@
 
             nav: (t) => {
                 state.tab = t;
-                document.querySelectorAll('.nav-item').forEach((b, i) => {
-                    b.classList.toggle('active', ['funding', 'try', 'usdc', 'settings'][i] === t);
-                });
-                document.getElementById('menuBtn').style.display = (t === 'funding') ? 'block' : 'none';
+                document.querySelectorAll('.nav-item').forEach((b, i) => b.classList.toggle('active', ['funding', 'try', 'usdc', 'settings'][i] === t));
+                document.querySelector('.menu-btn').style.display = t === 'funding' ? 'block' : 'none';
                 ui.render();
             },
 
-            toggleMenu: (show) => {
+            toggle: (s) => {
                 const sb = document.getElementById('sidebar');
-                const ov = document.querySelector('.sidebar-overlay');
-                if (show) { sb.classList.add('show'); ov.classList.add('show'); }
-                else { sb.classList.remove('show'); ov.classList.remove('show'); }
+                const ov = document.querySelector('.overlay');
+                if (s) { sb.classList.add('active'); ov.classList.add('active'); }
+                else { sb.classList.remove('active'); ov.classList.remove('active'); }
             },
 
             buildSidebar: () => {
                 let h = '';
                 PAIR_GROUPS.forEach(g => {
-                    h += `<div class="sb-section"><div class="sb-title">${g.t}</div>`;
+                    h += `<div class="sb-sec"><div class="sb-head">${g.t}</div>`;
                     g.i.forEach(it => {
                         h += `<button class="sb-btn" id="btn-${it.id}" onclick="ui.setFilter('${it.id}')">${it.l}</button>`;
                     });
                     h += `</div>`;
                 });
-                document.getElementById('sidebarContent').innerHTML = h;
+                document.getElementById('sbContent').innerHTML = h;
             },
 
             setFilter: (f) => {
                 state.filter = f;
-                ui.toggleMenu(false);
+                ui.toggle(false);
                 ui.render();
             },
 
             render: () => {
-                const view = document.getElementById('mainView');
+                const v = document.getElementById('mainView');
                 if (state.tab !== 'funding') {
-                    if (state.tab === 'try') ui.renderTRY(view);
-                    else if (state.tab === 'usdc') view.innerHTML = '<div style="padding:20px; text-align:center;">Module Inactive</div>';
-                    else if (state.tab === 'settings') view.innerHTML = '<div style="padding:20px; text-align:center;">Settings Placeholder</div>';
-                    return;
+                    v.innerHTML = `<div style="padding:20px;text-align:center;">Module ${state.tab}</div>`; return;
                 }
 
-                // Update Sidebar Active
                 document.querySelectorAll('.sb-btn').forEach(b => b.classList.remove('active'));
-                const btn = document.getElementById('btn-' + state.filter);
-                if (btn) btn.classList.add('active');
+                const b = document.getElementById('btn-' + state.filter);
+                if (b) b.classList.add('active');
 
-                // --- ALL COINS TABLE VIEW ---
-                if (state.filter === 'all-coins') {
-                    if (!state.allData || state.allData.length === 0) {
-                        view.innerHTML = '<div style="padding:20px; text-align:center; color:#666;">Loading Market Data...</div>';
-                        return;
-                    }
-                    let h = `<table class="data-table">
-                    <thead><tr><th>Coin</th><th class="col-right">Binance</th><th class="col-right">OKX</th><th class="col-right">HL</th></tr></thead>
-                    <tbody>`;
-                    state.allData.sort((a, b) => a.symbol.localeCompare(b.symbol)).forEach(c => {
-                        h += `<tr>
-                        <td><div class="t-sym">${c.symbol}</div></td>
-                        <td class="col-right t-fund ${parseFloat(c.binance?.funding) > 0 ? 'pos' : 'neg'}">${c.binance ? (parseFloat(c.binance.funding) * 100).toFixed(4) + '%' : '-'}</td>
-                        <td class="col-right t-fund ${parseFloat(c.okx?.funding) > 0 ? 'pos' : 'neg'}">${c.okx ? (parseFloat(c.okx.funding) * 100).toFixed(4) + '%' : '-'}</td>
-                        <td class="col-right t-fund ${parseFloat(c.hyperliquid?.funding) > 0 ? 'pos' : 'neg'}">${c.hyperliquid ? (parseFloat(c.hyperliquid.funding) * 100).toFixed(4) + '%' : '-'}</td>
-                    </tr>`;
-                    });
-                    h += `</tbody></table>`;
-                    view.innerHTML = h;
-                    return;
-                }
+                if (state.filter === 'all-coins') return ui.renderAllCoins(v);
+                if (state.filter === 'all-opps') return ui.renderAllOpps(v);
+                ui.renderDetailed(v);
+            },
 
-                // --- CARDS VIEW ---
+            renderAllCoins: (v) => {
+                if (!state.allData.length) { v.innerHTML = '<div style="padding:20px;">Loading...</div>'; return; }
+                const sorted = [...state.allData].sort((a, b) => a.symbol.localeCompare(b.symbol));
+                // Corrected: Backend sends 'markPrice' not 'price'
+                const cell = (ex) => {
+                    if (!ex) return `<div class="ct-cell"><span class="ct-price">-</span></div>`;
+                    const f = parseFloat(ex.fundingRate) * 100; // Corrected: fundingRate
+                    return `<div class="ct-cell">
+                    <span class="ct-fund ${f > 0 ? 'pos' : 'neg'}">${f.toFixed(4)}%</span>
+                    <span class="ct-price">${parseFloat(ex.markPrice).toFixed(4)}</span>
+                </div>`;
+                };
+
+                let h = `<div style="overflow-x:auto;"><table class="coin-table">
+            <thead class="ct-head"><tr>
+                <th>COIN</th>
+                <th style="color:var(--binance)">BINANCE</th>
+                <th style="color:var(--okx)">OKX</th>
+                <th style="color:var(--bybit)">BYBIT</th>
+                <th style="color:var(--hl)">HYPER</th>
+            </tr></thead><tbody>`;
+                sorted.forEach(c => {
+                    h += `<tr class="ct-row">
+                    <td class="ct-sym">${c.symbol}</td>
+                    <td>${cell(c.binance)}</td>
+                    <td>${cell(c.okx)}</td>
+                    <td>${cell(c.bybit)}</td>
+                    <td>${cell(c.hyperliquid)}</td>
+                </tr>`;
+                });
+                h += `</tbody></table></div>`;
+                v.innerHTML = h;
+            },
+
+            renderAllOpps: (v) => {
                 let list = [];
-                if (state.filter === 'all-opps') {
-                    Object.values(state.data).forEach(arr => { if (Array.isArray(arr)) list.push(...arr); });
-                } else {
-                    list = state.data[state.filter] || [];
-                }
-                list.sort((a, b) => b.profit - a.profit);
+                Object.values(state.data).forEach(a => { if (Array.isArray(a)) list.push(...a); });
+                if (!list.length) { v.innerHTML = '<div style="padding:20px;">No Opps...</div>'; return; }
 
-                if (list.length === 0) {
-                    view.innerHTML = `<div style="padding:40px; text-align:center; color:#555;">No Opportunities Found<br><small>${state.filter}</small></div>`;
-                    return;
-                }
+                list.sort((a, b) => (b.analysis?.annualAPR || 0) - (a.analysis?.annualAPR || 0));
+                list = list.slice(0, 100);
 
-                view.innerHTML = list.map(d => {
-                    const profit = d.profit || 0;
-                    return `
-                <div class="card">
-                    <div class="card-header">
-                        <span class="c-sym">${d.symbol}</span>
-                        <span class="c-profit ${profit < 0 ? 'neg' : ''}">${profit.toFixed(4)}%</span>
+                let h = '<div style="font-size:0.8rem; font-weight:700; color:#666; margin-bottom:10px; padding:0 5px;">TOP 100 APR OPPORTUNITIES</div>';
+                list.forEach(d => {
+                    const an = d.analysis || {};
+                    const apr = an.annualAPR || 0;
+
+                    // Determine Sides based on Strategy
+                    let openLong = {}, openShort = {};
+                    if (an.strategy === 'LONG_A_SHORT_B') {
+                        openLong = d.exchangeA; openShort = d.exchangeB;
+                    } else {
+                        openLong = d.exchangeB; openShort = d.exchangeA;
+                    }
+
+                    h += `<div class="opp-row">
+                    <div class="or-sym">${d.symbol}</div>
+                    <div class="or-ex">
+                        <span style="color:var(--pos)">L: ${openLong.name}</span>
+                        <span class="or-val">${parseFloat(openLong.markPrice).toFixed(4)}</span>
                     </div>
-                    <div class="c-row">
-                        <span>LONG <b class="c-b">${d.longEx}</b></span>
-                        <span class="c-val">${d.longPrice}</span>
+                    <div class="or-ex">
+                        <span style="color:var(--neg)">S: ${openShort.name}</span>
+                        <span class="or-val">${parseFloat(openShort.markPrice).toFixed(4)}</span>
                     </div>
-                    <div class="c-row">
-                        <span>SHORT <b class="c-b">${d.shortEx}</b></span>
-                        <span class="c-val">${d.shortPrice}</span>
+                    <div class="or-apr">${apr.toFixed(0)}%</div>
+                </div>`;
+                });
+                v.innerHTML = h;
+            },
+
+            renderDetailed: (v) => {
+                // Sort by Net Profit (as requested by User) or APR. User said "Highest APR for top 10".
+                // But card should show "first cycle net profit".
+                const list = (state.data[state.filter] || []).sort((a, b) => (b.analysis?.annualAPR || 0) - (a.analysis?.annualAPR || 0)).slice(0, 10);
+                if (!list.length) { v.innerHTML = `<div style="padding:20px;">No data for ${state.filter}</div>`; return; }
+
+                v.innerHTML = list.map(d => {
+                    const an = d.analysis || {};
+
+                    // Identify Sides
+                    let openLong = {}, openShort = {};
+                    if (an.strategy === 'LONG_A_SHORT_B') {
+                        openLong = d.exchangeA; openShort = d.exchangeB;
+                    } else {
+                        openLong = d.exchangeB; openShort = d.exchangeA;
+                    }
+
+                    const apr = an.annualAPR || 0;
+                    const netProfit = an.netCycleProfit || 0;
+                    // Note: netCycleProfit in backend is an absolute USD value based on tradeSize=100.
+                    // To get %, we use tradeSize. tradeSize is 100.
+                    const netProfitPercent = netProfit; // Since base is 100, val IS percent.
+
+                    const fees = (an.fees?.open || 0) + (an.fees?.close || 0);
+                    const pDiff = an.priceDiffPnL || 0;
+                    const fundInc = an.fundingIncomeCycle || 0;
+
+                    return `<div class="calc-card">
+                    <div class="cc-head">
+                        <div class="cc-title">${d.symbol}</div>
+                        <div class="cc-metrics">
+                            <div class="cc-apr">${apr.toFixed(1)}% APR</div>
+                            <div class="cc-profit">Net: ${netProfitPercent.toFixed(4)}%</div>
+                        </div>
                     </div>
-                    <div class="c-row" style="margin-top:8px; border-top:1px dashed #333; padding-top:5px;">
-                        <span>APR: <span class="c-hl">${(d.analysis?.annualAPR || 0).toFixed(0)}%</span></span>
-                        <span>Next: ${d.analysis?.durationHours || 8}h</span>
+                    <div class="cc-sides">
+                        <div class="cc-side long">
+                            <div class="cc-lbl cc-long">LONG BUY</div>
+                            <div class="cc-ex">${openLong.name}</div>
+                            <div style="font-family:monospace; color:#888;">$${parseFloat(openLong.markPrice).toFixed(4)}</div>
+                        </div>
+                        <div class="cc-side">
+                            <div class="cc-lbl cc-short">SHORT SELL</div>
+                            <div style="font-family:monospace; color:#888;">$${parseFloat(openShort.markPrice).toFixed(4)}</div>
+                            <div class="cc-ex">${openShort.name}</div>
+                        </div>
+                    </div>
+                    <div class="cc-steps">
+                        <div class="cc-step"><span>Pos Size</span><span class="cc-val">$${(an.tradeSize || 100) * 2}</span></div>
+                        <div class="cc-step"><span>Total Fees</span><span class="cc-val neg">-$${fees.toFixed(3)}</span></div>
+                        <div class="cc-step"><span>Price Diff Impact</span><span class="cc-val ${pDiff > 0 ? 'pos' : 'neg'}">$${pDiff.toFixed(3)}</span></div>
+                        <div class="cc-step"><span>Funding Income</span><span class="cc-val pos">+$${fundInc.toFixed(3)}</span></div>
+                        <div class="cc-step total"><span>Est. Net Profit</span><span class="cc-val ${netProfit > 0 ? 'pos' : 'neg'}">$${netProfit.toFixed(4)}</span></div>
                     </div>
                 </div>`;
                 }).join('');
-            },
-
-            renderTRY: (view) => {
-                // Simple TRY View
-                const data = [
-                    { n: 'Binance TR', p: 34.20 }, { n: 'Paribu', p: 34.28 }, { n: 'OKX TR', p: 34.18 }
-                ];
-                view.innerHTML = data.map(i => `
-                <div class="try-group">
-                    <div class="try-head">${i.n} USDT/TRY</div>
-                    <div style="font-size:1.5rem; font-family:monospace; color:#fff;">${i.p.toFixed(2)} ₺</div>
-                </div>
-            `).join('');
             }
         };
 
@@ -524,7 +632,6 @@
                 ws.onclose = () => setTimeout(app.connect, 2000);
             }
         };
-
         window.onload = ui.init;
     </script>
 </body>
