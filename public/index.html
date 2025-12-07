@@ -307,34 +307,25 @@
                 /* Single column */
                 gap: 15px;
                 padding-bottom: 80px;
-                width: 100%;
+
+                /* Ensure Backdrop is gone */
+                .backdrop {
+                    display: none !important;
+                }
+
+                /* Restore Bottom Nav */
+                .bottom-nav {
+                    display: flex !important;
+                    height: 55px;
+                    background: #0a0a0a;
+                    border-top: 1px solid var(--border);
+                    position: fixed;
+                    bottom: 0;
+                    left: 0;
+                    width: 100%;
+                    z-index: 1000;
+                }
             }
-
-            .backdrop {
-                display: none !important;
-            }
-
-            /* Hide bottom nav on mobile if it exists in HTML, sidebar is enough */
-            .bottom-nav {
-                display: none !important;
-            }
-        }
-
-        /* Old HEADER styles - removed as replaced by .app-header */
-        /* .top-header {
-            padding: 15px 20px;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: rgba(20, 20, 20, 0.5);
-            backdrop-filter: blur(10px);
-        } */
-
-        .page-title {
-            font-size: 1.1rem;
-            font-weight: 700;
-            color: #fff;
         }
 
         .status-pill {
@@ -566,488 +557,691 @@
 
         .nc-p-box {
             display: flex;
-            flex-direction: column;
-            gap: 2px;
-        }
-
-        .nc-p-role {
-            font-size: 0.75rem;
-            font-weight: 800;
-            /* Assigned color inline */
-        }
-
-        .nc-p-price {
-            font-size: 0.85rem;
-            color: #fff;
-            font-family: monospace;
-        }
-
-        .nc-p-time {
-            font-size: 0.65rem;
-            color: #666;
-        }
-
-        .breakdown-list {
-            margin-top: 10px;
-            font-family: monospace;
-            font-size: 0.8rem;
-            color: #999;
-        }
-
-        .bd-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 2px 0;
-        }
-
-        .bd-row.total {
-            border-top: 1px solid #444;
-            margin-top: 5px;
-            padding-top: 5px;
-            font-weight: 800;
-            color: #fff;
-            font-size: 0.9rem;
-        }
-
-        .breakdown-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-top: 15px;
-            border-top: 1px solid var(--border);
-            padding-top: 10px;
-        }
-
-        .bd-col {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-
-        .bd-title {
-            font-size: 0.7rem;
-            color: #666;
-            font-weight: 700;
-            margin-bottom: 5px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .bd-item {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.75rem;
-            color: #999;
-        }
-
-        .bd-final {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.9rem;
-            font-weight: 800;
-            color: #fff;
-            margin-top: 8px;
-            padding-top: 8px;
-            border-top: 1px dashed #333;
-        }
-
-        .fee-tags {
-            display: flex;
-            gap: 10px;
-            margin-top: 5px;
-            font-size: 0.7rem;
-            color: #555;
-        }
-
-        .fee-tag span {
-            color: #888;
-        }
-
-        /* BOTTOM NAV */
-        .bottom-nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 65px;
-            background: #080808;
-            border-top: 1px solid var(--border);
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            z-index: 200;
-        }
-
-        .bn-item {
-            background: none;
-            border: none;
-            color: #555;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
-            font-size: 0.7rem;
-            cursor: pointer;
-            width: 100%;
-        }
-
-        .bn-item.active {
-            color: #fff;
-        }
-
-        .bn-item.active span {
-            color: var(--accent);
-        }
-
-        .bn-icon {
-            font-size: 1.3rem;
-            margin-bottom: 2px;
-        }
-
-        /* NO DATA */
-        .empty-state {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 300px;
-            color: #444;
-            text-align: center;
-        }
-
-        .empty-icon {
-            font-size: 2rem;
-            margin-bottom: 10px;
-            opacity: 0.3;
-        }
-
-        /* LOADING */
-        .loader-bar {
-            height: 2px;
-            width: 100%;
-            background: #222;
-            position: absolute;
-            top: 0;
-            left: 0;
-            z-index: 300;
-        }
-
-        .loader-progress {
-            height: 100%;
-            background: var(--accent);
-            width: 0%;
-            transition: width 0.2s;
-            box-shadow: 0 0 10px var(--accent);
         }
     </style>
 </head>
 
 <body>
 
-    <div class="app-container">
+    /* MODULES */
+    .module-container {
+    display: none;
+    height: 100%;
+    flex-direction: column;
+    }
 
-        <!-- SIDEBAR (Dynamic Content) -->
-        <aside id="mainSidebar" class="sidebar">
-            <div style="padding: 20px; font-weight:800; font-size:1.2rem; color:#fff;">
-                ARBITRAGE <span style="color:var(--accent)">.IO</span>
-            </div>
+    .module-container.active {
+    display: flex;
+    }
 
-            <div id="sbContent" class="sidebar-content">
-                <!-- Injected via JS -->
-            </div>
-        </aside>
+    /* GRID */
+    .opp-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 15px;
+    padding-bottom: 80px;
+    }
 
-        <!-- MAIN AREA -->
-        <main class="main-content">
-            <div class="loader-bar">
-                <div id="loadProgress" class="loader-progress"></div>
-            </div>
+    /* CARD */
+    .new-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+    }
 
-            <!-- MODULE: FUNDING -->
-            <div id="mod-funding" class="module-container active">
-                <header class="top-header">
-                    <div class="page-title" id="pageTitle">Exchange Overview</div>
-                    <div class="status-pill">
-                        <div id="wsDot" class="dot"></div>
-                        <span id="wsStatus">Connecting...</span>
-                    </div>
-                </header>
+    .new-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 3px;
+    height: 100%;
+    background: var(--border);
+    opacity: 0.5;
+    }
 
-                <!-- VIEWS -->
-                <div id="view-exchanges" class="view-frame active">
-                    <div id="gridTarget" class="opp-grid"></div>
+    .new-card.profit::before {
+    background: var(--positive);
+    opacity: 1;
+    }
+
+    .nc-head {
+    padding: 10px 15px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.01);
+    }
+
+    .nc-sym {
+    font-weight: 700;
+    color: #fff;
+    }
+
+    .nc-cycle {
+    font-size: 0.7rem;
+    color: var(--accent);
+    background: var(--accent-dim);
+    padding: 2px 6px;
+    border-radius: 4px;
+    }
+
+    .nc-body {
+    padding: 12px 15px;
+    }
+
+    .nc-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    margin-bottom: 8px;
+    }
+
+    .nc-val-big {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #fff;
+    }
+
+    .pos {
+    color: var(--positive);
+    }
+
+    .neg {
+    color: var(--negative);
+    }
+
+    .mute {
+    color: #666;
+    font-size: 0.7rem;
+    }
+
+    /* TABLES */
+    .data-list {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8rem;
+    }
+
+    .data-list th {
+    text-align: left;
+    padding: 12px;
+    font-weight: 700;
+    border-bottom: 2px solid var(--border);
+    position: sticky;
+    top: -20px;
+    /* Offset to cover gap */
+    background: #0f172a;
+    /* Dark Blue-ish Tone */
+    color: #38bdf8;
+    /* Light Blue Text */
+    z-index: 10;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+    }
+
+    .data-list td {
+    padding: 12px;
+    border-bottom: 1px solid var(--border);
+    color: #ccc;
+    }
+
+    .data-list tr:hover {
+    background: rgba(255, 255, 255, 0.03);
+    }
+
+    /* DETAILED CARD DESIGN */
+    /* The previous .new-card and related styles were replaced by the new ones above */
+    /* The .nc-head was also replaced by the new one above */
+
+    .nc-badges {
+    display: flex;
+    gap: 5px;
+    }
+
+    .nc-badge {
+    font-size: 0.65rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    color: #aaa;
+    }
+
+    .nc-badge.accent {
+    background: var(--accent-dim);
+    color: var(--accent);
+    }
+
+    /* The .nc-body was replaced by the new one above */
+
+    .nc-section {
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .nc-section:last-child {
+    border: none;
+    margin: 0;
+    padding: 0;
+    }
+
+    .nc-row-sp {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 6px;
+    }
+
+    .nc-label {
+    color: #666;
+    font-size: 0.75rem;
+    }
+
+    .nc-val {
+    font-weight: 600;
+    color: #ddd;
+    }
+
+    .nc-price-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    text-align: center;
+    background: rgba(0, 0, 0, 0.4);
+    padding: 10px;
+    border-radius: 6px;
+    margin-bottom: 12px;
+    }
+
+    .nc-p-box {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    }
+
+    .nc-p-role {
+    font-size: 0.75rem;
+    font-weight: 800;
+    /* Assigned color inline */
+    }
+
+    .nc-p-price {
+    font-size: 0.85rem;
+    color: #fff;
+    font-family: monospace;
+    }
+
+    .nc-p-time {
+    font-size: 0.65rem;
+    color: #666;
+    }
+
+    .breakdown-list {
+    margin-top: 10px;
+    font-family: monospace;
+    font-size: 0.8rem;
+    color: #999;
+    }
+
+    .bd-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 2px 0;
+    }
+
+    .bd-row.total {
+    border-top: 1px solid #444;
+    margin-top: 5px;
+    padding-top: 5px;
+    font-weight: 800;
+    color: #fff;
+    font-size: 0.9rem;
+    }
+
+    .breakdown-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-top: 15px;
+    border-top: 1px solid var(--border);
+    padding-top: 10px;
+    }
+
+    .bd-col {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    }
+
+    .bd-title {
+    font-size: 0.7rem;
+    color: #666;
+    font-weight: 700;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    }
+
+    .bd-item {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    color: #999;
+    }
+
+    .bd-final {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9rem;
+    font-weight: 800;
+    color: #fff;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px dashed #333;
+    }
+
+    .fee-tags {
+    display: flex;
+    gap: 10px;
+    margin-top: 5px;
+    font-size: 0.7rem;
+    color: #555;
+    }
+
+    .fee-tag span {
+    color: #888;
+    }
+
+    /* BOTTOM NAV */
+    .bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 65px;
+    background: #080808;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    z-index: 200;
+    }
+
+    .bn-item {
+    background: none;
+    border: none;
+    color: #555;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.7rem;
+    cursor: pointer;
+    width: 100%;
+    }
+
+    .bn-item.active {
+    color: #fff;
+    }
+
+    .bn-item.active span {
+    color: var(--accent);
+    }
+
+    .bn-icon {
+    font-size: 1.3rem;
+    margin-bottom: 2px;
+    }
+
+    /* NO DATA */
+    .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 300px;
+    color: #444;
+    text-align: center;
+    }
+
+    .empty-icon {
+    font-size: 2rem;
+    margin-bottom: 10px;
+    opacity: 0.3;
+    }
+
+    /* LOADING */
+    .loader-bar {
+    height: 2px;
+    width: 100%;
+    background: #222;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 300;
+    }
+
+    .loader-progress {
+    height: 100%;
+    background: var(--accent);
+    width: 0%;
+    transition: width 0.2s;
+    box-shadow: 0 0 10px var(--accent);
+    }
+    </style>
+    </head>
+
+    <body>
+
+        <div class="app-container">
+
+            <!-- SIDEBAR (Dynamic Content) -->
+            <aside id="mainSidebar" class="sidebar">
+                <div style="padding: 20px; font-weight:800; font-size:1.2rem; color:#fff;">
+                    ARBITRAGE <span style="color:var(--accent)">.IO</span>
                 </div>
 
-                <div id="view-list" class="view-frame">
-                    <table class="data-list">
-                        <thead>
-                            <tr>
-                                <th>Coin</th>
-                                <th>Strategy</th>
-                                <th>Net Cycle PnL</th>
-                                <th>APR</th>
-                            </tr>
-                        </thead>
-                        <tbody id="listTarget"></tbody>
-                    </table>
+                <div id="sbContent" class="sidebar-content">
+                    <!-- Injected via JS -->
+                </div>
+            </aside>
+
+            <!-- MAIN AREA -->
+            <main class="main-content">
+                <div class="loader-bar">
+                    <div id="loadProgress" class="loader-progress"></div>
                 </div>
 
-                <div id="view-data" class="view-frame">
-                    <table class="data-list">
-                        <thead>
-                            <tr>
-                                <th>Coin</th>
-                                <th>BN</th>
-                                <th>OKX</th>
-                                <th>BYB</th>
-                                <th>HL</th>
-                                <th>AST</th>
-                            </tr>
-                        </thead>
-                        <tbody id="dataTarget"></tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- MODULE: TRY -->
-            <div id="mod-try" class="module-container" style="justify-content:center; align-items:center;">
-                <h2>TRY Arbitrage</h2>
-                <p style="color:#666; margin-top:10px;">Module Inactive</p>
-            </div>
-
-            <!-- MODULE: USDC -->
-            <div id="mod-usdc" class="module-container" style="justify-content:center; align-items:center;">
-                <h2>USDC Arbitrage</h2>
-                <p style="color:#666; margin-top:10px;">Module Inactive</p>
-            </div>
-
-            <!-- MODULE: SETTINGS -->
-            <div id="mod-settings" class="module-container">
-                <header class="top-header">
-                    <div class="page-title">Fee Configuration</div>
-                </header>
-                <div style="flex:1; overflow-y:auto; padding:20px;">
-                    <div style="max-width:500px; margin:0 auto;">
-                        <div
-                            style="background:rgba(255,255,255,0.05); border-radius:10px; padding:20px; border:1px solid var(--border);">
-                            <div style="font-size:0.9rem; color:#aaa; margin-bottom:15px;">Configure trading fees
-                                (Maker/Taker) to get accurate Net Profit calculations.</div>
-
-                            <div id="settingsForm"></div>
-
-                            <button onclick="app.saveSettings()"
-                                style="width:100%; padding:15px; background:var(--accent); color:#000; font-weight:bold; border:none; border-radius:6px; cursor:pointer; margin-top:20px;">
-                                Save Configuration
-                            </button>
+                <!-- MODULE: FUNDING -->
+                <div id="mod-funding" class="module-container active">
+                    <header class="top-header">
+                        <div class="page-title" id="pageTitle">Exchange Overview</div>
+                        <div class="status-pill">
+                            <div id="wsDot" class="dot"></div>
+                            <span id="wsStatus">Connecting...</span>
                         </div>
-                        <div style="text-align:center; margin-top:30px; color:#444; font-size:0.8rem;">
-                            Arbitrage Terminal v1.2
+                    </header>
+
+                    <!-- VIEWS -->
+                    <div id="view-exchanges" class="view-frame active">
+                        <div id="gridTarget" class="opp-grid"></div>
+                    </div>
+
+                    <div id="view-list" class="view-frame">
+                        <table class="data-list">
+                            <thead>
+                                <tr>
+                                    <th>Coin</th>
+                                    <th>Strategy</th>
+                                    <th>Net Cycle PnL</th>
+                                    <th>APR</th>
+                                </tr>
+                            </thead>
+                            <tbody id="listTarget"></tbody>
+                        </table>
+                    </div>
+
+                    <div id="view-data" class="view-frame">
+                        <table class="data-list">
+                            <thead>
+                                <tr>
+                                    <th>Coin</th>
+                                    <th>BN</th>
+                                    <th>OKX</th>
+                                    <th>BYB</th>
+                                    <th>HL</th>
+                                    <th>AST</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dataTarget"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- MODULE: TRY -->
+                <div id="mod-try" class="module-container" style="justify-content:center; align-items:center;">
+                    <h2>TRY Arbitrage</h2>
+                    <p style="color:#666; margin-top:10px;">Module Inactive</p>
+                </div>
+
+                <!-- MODULE: USDC -->
+                <div id="mod-usdc" class="module-container" style="justify-content:center; align-items:center;">
+                    <h2>USDC Arbitrage</h2>
+                    <p style="color:#666; margin-top:10px;">Module Inactive</p>
+                </div>
+
+                <!-- MODULE: SETTINGS -->
+                <div id="mod-settings" class="module-container">
+                    <header class="top-header">
+                        <div class="page-title">Fee Configuration</div>
+                    </header>
+                    <div style="flex:1; overflow-y:auto; padding:20px;">
+                        <div style="max-width:500px; margin:0 auto;">
+                            <div
+                                style="background:rgba(255,255,255,0.05); border-radius:10px; padding:20px; border:1px solid var(--border);">
+                                <div style="font-size:0.9rem; color:#aaa; margin-bottom:15px;">Configure trading fees
+                                    (Maker/Taker) to get accurate Net Profit calculations.</div>
+
+                                <div id="settingsForm"></div>
+
+                                <button onclick="app.saveSettings()"
+                                    style="width:100%; padding:15px; background:var(--accent); color:#000; font-weight:bold; border:none; border-radius:6px; cursor:pointer; margin-top:20px;">
+                                    Save Configuration
+                                </button>
+                            </div>
+                            <div style="text-align:center; margin-top:30px; color:#444; font-size:0.8rem;">
+                                Arbitrage Terminal v1.2
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        </main>
-    </div>
+            </main>
+        </div>
 
-    <!-- BOTTOM NAVIGATION -->
-    <nav class="bottom-nav">
-        <button class="bn-item active" onclick="app.nav('funding', this)">
-            <span class="bn-icon">⚡</span>
-            <span>Funding</span>
-        </button>
-        <button class="bn-item" onclick="app.nav('try', this)">
-            <span class="bn-icon">₺</span>
-            <span>TRY Arb</span>
-        </button>
-        <button class="bn-item" onclick="app.nav('usdc', this)">
-            <span class="bn-icon">💲</span>
-            <span>USDC Arb</span>
-        </button>
-        <button class="bn-item" onclick="app.nav('settings', this)">
-            <span class="bn-icon">⚙️</span>
-            <span>Settings</span>
-        </button>
-    </nav>
+        <!-- BOTTOM NAVIGATION -->
+        <nav class="bottom-nav">
+            <button class="bn-item active" onclick="app.nav('funding', this)">
+                <span class="bn-icon">⚡</span>
+                <span>Funding</span>
+            </button>
+            <button class="bn-item" onclick="app.nav('try', this)">
+                <span class="bn-icon">₺</span>
+                <span>TRY Arb</span>
+            </button>
+            <button class="bn-item" onclick="app.nav('usdc', this)">
+                <span class="bn-icon">💲</span>
+                <span>USDC Arb</span>
+            </button>
+            <button class="bn-item" onclick="app.nav('settings', this)">
+                <span class="bn-icon">⚙️</span>
+                <span>Settings</span>
+            </button>
+        </nav>
 
-    <script>
-        // --- APP ENGINE ---
-        const app = {
-            state: {
-                module: 'funding',
-                view: 'exchanges', // exchanges, list, data
-                pair: 'binance-okx',
-                data: {},
-                allCoins: [],
-                fees: JSON.parse(localStorage.getItem('userFees')) || {
-                    Binance: { maker: 0.02, taker: 0.05 },
-                    OKX: { maker: 0.02, taker: 0.05 },
-                    Bybit: { maker: 0.02, taker: 0.05 },
-                    Hyperliquid: { maker: 0.02, taker: 0.05 },
-                    Asterdex: { maker: 0, taker: 0.05 }
-                }
-            },
-
-            // FEE & SCENARIO CALCULATOR
-            calc: (opp) => {
-                const exA = opp.exchangeA.name;
-                const exB = opp.exchangeB.name;
-                const feesA = app.state.fees[exA] || { maker: 0.02, taker: 0.05 };
-                const feesB = app.state.fees[exB] || { maker: 0.02, taker: 0.05 };
-
-                const size = 100; // Fixed Trade Size for Display
-
-                // Scenario 1: Taker / Taker (Conservative)
-                const costTT = size * (feesA.taker / 100) + size * (feesB.taker / 100);
-
-                // Scenario 2: Maker / Maker (Optimistic)
-                const costMM = size * (feesA.maker / 100) + size * (feesB.maker / 100);
-
-                const backendNet = opp.analysis.netCycleProfit;
-                const income = opp.analysis.fundingIncomeCycle || 0;
-                // Use backend PricePnL but check variable name consistency
-                const pricePnL = opp.analysis.priceDiffPnL || opp.analysis.priceDifferencePnL || 0;
-
-                // Net Profit (Taker/Taker default)
-                // Formula: Income + PricePnL - (OpenFee + CloseFee)
-                // Note: PricePnL is already signed (+ profit, - loss)
-                // Fees apply twice (Open + Close)
-
-                const netTT = income + pricePnL - (costTT * 2);
-
-                return {
-                    costTakerTaker: costTT * 2,
-                    costMakerMaker: costMM * 2,
-                    netDefault: netTT,
-                    income: income,
-                    pricePnL: pricePnL
-                };
-            },
-
-            // MOBILE MENU (v2.0 - Horizontal Scroll, Always Visible)
-            toggleSidebar: (show) => {
-                // No-op: Sidebar is sticky horizontal scroll on mobile
-                // We keep this function to prevent errors if button is somehow clicked
-            },
-
-            checkMobileClose: () => {
-                // No-op: No need to close sidebar as it is horizontal menu
-            },
-
-            // NAVIGATION
-            nav: (modId, btn) => {
-                app.state.module = modId;
-                document.querySelectorAll('.module-container').forEach(el => el.classList.remove('active'));
-                document.getElementById(`mod-${modId}`).classList.add('active');
-                document.querySelectorAll('.bn-item').forEach(el => el.classList.remove('active'));
-                if (btn) btn.classList.add('active');
-
-                const sb = document.getElementById('mainSidebar');
-                // Always show sidebar (Desktop & Mobile Split Screen)
-                // Only hide if module is NOT funding (which is rare in this app structure)
-                sb.style.display = (modId === 'funding' || modId === 'settings') ? 'flex' : 'none';
-
-                if (modId === 'settings') app.renderSettings();
-                if (modId === 'funding') app.render();
-            },
-
-            setView: (viewId) => {
-                app.state.view = viewId;
-                app.checkMobileClose(); // Auto close on click
-                document.querySelectorAll('.view-frame').forEach(el => el.classList.remove('active'));
-                if (viewId === 'all-opps') {
-                    document.getElementById('view-list').classList.add('active');
-                    document.getElementById('pageTitle').innerText = 'All Opportunities';
-                } else if (viewId === 'all-data') {
-                    document.getElementById('view-data').classList.add('active');
-                    document.getElementById('pageTitle').innerText = 'All Market Data';
-                } else {
-                    document.getElementById('view-exchanges').classList.add('active');
-                }
-                app.updateSidebarActive();
-                app.render();
-            },
-
-            setPair: (pk) => {
-                app.state.pair = pk;
-                app.checkMobileClose(); // Auto close on click
-                app.setView('exchanges');
-                const p = pk.toUpperCase().split('-');
-                document.getElementById('pageTitle').innerText = `${p[0]} <> ${p[1]}`;
-            },
-            updateSidebarActive: () => {
-                document.querySelectorAll('.sb-btn').forEach(b => b.classList.remove('active'));
-                if (app.state.view === 'all-opps') document.querySelector(`button[onclick="app.setView('all-opps')"]`)?.classList.add('active');
-                else if (app.state.view === 'all-data') document.querySelector(`button[onclick="app.setView('all-data')"]`)?.classList.add('active');
-                else document.querySelector(`button[data-pair="${app.state.pair}"]`)?.classList.add('active');
-            },
-            renderSettings: () => {
-                const f = document.getElementById('settingsForm'); f.innerHTML = '';
-                Object.keys(app.state.fees).forEach(ex => {
-                    const row = document.createElement('div'); row.style.marginBottom = '20px';
-                    row.innerHTML = `<div style="font-weight:bold; color:#fff; margin-bottom:8px;">${ex}</div><div style="display:flex; gap:10px;"><div style="flex:1"><label style="font-size:0.7rem; color:#666;">Maker (%)</label><input id="mk-${ex}" type="number" step="0.01" value="${app.state.fees[ex].maker}" style="width:100%; background:#222; border:1px solid #444; color:#fff; padding:8px; border-radius:4px;"></div><div style="flex:1"><label style="font-size:0.7rem; color:#666;">Taker (%)</label><input id="tk-${ex}" type="number" step="0.01" value="${app.state.fees[ex].taker}" style="width:100%; background:#222; border:1px solid #444; color:#fff; padding:8px; border-radius:4px;"></div></div>`;
-                    f.appendChild(row);
-                });
-            },
-            saveSettings: () => {
-                const n = {}; Object.keys(app.state.fees).forEach(ex => { n[ex] = { maker: parseFloat(document.getElementById(`mk-${ex}`).value), taker: parseFloat(document.getElementById(`tk-${ex}`).value) } });
-                app.state.fees = n; localStorage.setItem('userFees', JSON.stringify(n)); alert('Fees updated!'); app.nav('funding');
-            },
-
-            // UTILS
-            fmtPrice: (p) => {
-                p = parseFloat(p);
-                if (isNaN(p)) return '0.00';
-                if (p > 999) return p.toFixed(2);
-                if (p > 1) return p.toFixed(4);
-                return p.toPrecision(5);
-            },
-
-            fmtTime: (ts) => {
-                if (!ts) return '-';
-                const diff = new Date(ts).getTime() - Date.now();
-                if (diff <= 0) return 'Funding Now';
-                const h = Math.floor(diff / 3600000);
-                const m = Math.floor((diff % 3600000) / 60000);
-                return `${h}h ${m}m`;
-            },
-
-            // RENDER LOGIC
-            lastRender: 0,
-            render: () => {
-                const now = Date.now();
-                if (now - app.lastRender < 2000) return; // Limit to 0.5fps
-                app.lastRender = now;
-
-                if (app.state.view === 'exchanges') {
-                    const data = app.state.data[app.state.pair] || [];
-                    const grid = document.getElementById('gridTarget');
-
-                    if (data.length === 0) {
-                        grid.innerHTML = '<div class="empty-state"><div class="empty-icon">📊</div><div>Waiting for market data...</div></div>';
-                        return;
+        <script>
+            // --- APP ENGINE ---
+            const app = {
+                state: {
+                    module: 'funding',
+                    view: 'exchanges', // exchanges, list, data
+                    pair: 'binance-okx',
+                    data: {},
+                    allCoins: [],
+                    fees: JSON.parse(localStorage.getItem('userFees')) || {
+                        Binance: { maker: 0.02, taker: 0.05 },
+                        OKX: { maker: 0.02, taker: 0.05 },
+                        Bybit: { maker: 0.02, taker: 0.05 },
+                        Hyperliquid: { maker: 0.02, taker: 0.05 },
+                        Asterdex: { maker: 0, taker: 0.05 }
                     }
+                },
 
-                    grid.innerHTML = data.map(opp => {
-                        const a = opp.analysis;
-                        if (!a || !a.detailed) return '';
+                // FEE & SCENARIO CALCULATOR
+                calc: (opp) => {
+                    const exA = opp.exchangeA.name;
+                    const exB = opp.exchangeB.name;
+                    const feesA = app.state.fees[exA] || { maker: 0.02, taker: 0.05 };
+                    const feesB = app.state.fees[exB] || { maker: 0.02, taker: 0.05 };
 
-                        const c = app.calc(opp);
-                        const isProfit = c.netDefault > 0;
-                        const profitClass = isProfit ? 'profit' : '';
+                    const size = 100; // Fixed Trade Size for Display
 
-                        const exA = opp.exchangeA.name;
-                        const exB = opp.exchangeB.name;
-                        const isLongA = a.strategy === 'LONG_A_SHORT_B';
+                    // Scenario 1: Taker / Taker (Conservative)
+                    const costTT = size * (feesA.taker / 100) + size * (feesB.taker / 100);
 
-                        const longEx = isLongA ? exA : exB;
-                        const shortEx = isLongA ? exB : exA;
-                        const longPrice = parseFloat(isLongA ? opp.exchangeA.markPrice : opp.exchangeB.markPrice);
-                        const shortPrice = parseFloat(isLongA ? opp.exchangeB.markPrice : opp.exchangeA.markPrice);
+                    // Scenario 2: Maker / Maker (Optimistic)
+                    const costMM = size * (feesA.maker / 100) + size * (feesB.maker / 100);
 
-                        const longTime = isLongA ? opp.exchangeA.nextFundingTime : opp.exchangeB.nextFundingTime;
-                        const shortTime = isLongA ? opp.exchangeB.nextFundingTime : opp.exchangeA.nextFundingTime;
+                    const backendNet = opp.analysis.netCycleProfit;
+                    const income = opp.analysis.fundingIncomeCycle || 0;
+                    // Use backend PricePnL but check variable name consistency
+                    const pricePnL = opp.analysis.priceDiffPnL || opp.analysis.priceDifferencePnL || 0;
 
-                        return `
+                    // Net Profit (Taker/Taker default)
+                    // Formula: Income + PricePnL - (OpenFee + CloseFee)
+                    // Note: PricePnL is already signed (+ profit, - loss)
+                    // Fees apply twice (Open + Close)
+
+                    const netTT = income + pricePnL - (costTT * 2);
+
+                    return {
+                        costTakerTaker: costTT * 2,
+                        costMakerMaker: costMM * 2,
+                        netDefault: netTT,
+                        income: income,
+                        pricePnL: pricePnL
+                    };
+                },
+
+                // MOBILE MENU (v2.0 - Horizontal Scroll, Always Visible)
+                toggleSidebar: (show) => {
+                    // No-op: Sidebar is sticky horizontal scroll on mobile
+                    // We keep this function to prevent errors if button is somehow clicked
+                },
+
+                checkMobileClose: () => {
+                    // No-op: No need to close sidebar as it is horizontal menu
+                },
+
+                // NAVIGATION
+                nav: (modId, btn) => {
+                    app.state.module = modId;
+                    document.querySelectorAll('.module-container').forEach(el => el.classList.remove('active'));
+                    document.getElementById(`mod-${modId}`).classList.add('active');
+                    document.querySelectorAll('.bn-item').forEach(el => el.classList.remove('active'));
+                    if (btn) btn.classList.add('active');
+
+                    const sb = document.getElementById('mainSidebar');
+                    // Always show sidebar (Desktop & Mobile Split Screen)
+                    // Only hide if module is NOT funding (which is rare in this app structure)
+                    sb.style.display = (modId === 'funding' || modId === 'settings') ? 'flex' : 'none';
+
+                    if (modId === 'settings') app.renderSettings();
+                    if (modId === 'funding') app.render();
+                },
+
+                setView: (viewId) => {
+                    app.state.view = viewId;
+                    app.checkMobileClose(); // Auto close on click
+                    document.querySelectorAll('.view-frame').forEach(el => el.classList.remove('active'));
+                    if (viewId === 'all-opps') {
+                        document.getElementById('view-list').classList.add('active');
+                        document.getElementById('pageTitle').innerText = 'All Opportunities';
+                    } else if (viewId === 'all-data') {
+                        document.getElementById('view-data').classList.add('active');
+                        document.getElementById('pageTitle').innerText = 'All Market Data';
+                    } else {
+                        document.getElementById('view-exchanges').classList.add('active');
+                    }
+                    app.updateSidebarActive();
+                    app.render();
+                },
+
+                setPair: (pk) => {
+                    app.state.pair = pk;
+                    app.checkMobileClose(); // Auto close on click
+                    app.setView('exchanges');
+                    const p = pk.toUpperCase().split('-');
+                    document.getElementById('pageTitle').innerText = `${p[0]} <> ${p[1]}`;
+                },
+                updateSidebarActive: () => {
+                    document.querySelectorAll('.sb-btn').forEach(b => b.classList.remove('active'));
+                    if (app.state.view === 'all-opps') document.querySelector(`button[onclick="app.setView('all-opps')"]`)?.classList.add('active');
+                    else if (app.state.view === 'all-data') document.querySelector(`button[onclick="app.setView('all-data')"]`)?.classList.add('active');
+                    else document.querySelector(`button[data-pair="${app.state.pair}"]`)?.classList.add('active');
+                },
+                renderSettings: () => {
+                    const f = document.getElementById('settingsForm'); f.innerHTML = '';
+                    Object.keys(app.state.fees).forEach(ex => {
+                        const row = document.createElement('div'); row.style.marginBottom = '20px';
+                        row.innerHTML = `<div style="font-weight:bold; color:#fff; margin-bottom:8px;">${ex}</div><div style="display:flex; gap:10px;"><div style="flex:1"><label style="font-size:0.7rem; color:#666;">Maker (%)</label><input id="mk-${ex}" type="number" step="0.01" value="${app.state.fees[ex].maker}" style="width:100%; background:#222; border:1px solid #444; color:#fff; padding:8px; border-radius:4px;"></div><div style="flex:1"><label style="font-size:0.7rem; color:#666;">Taker (%)</label><input id="tk-${ex}" type="number" step="0.01" value="${app.state.fees[ex].taker}" style="width:100%; background:#222; border:1px solid #444; color:#fff; padding:8px; border-radius:4px;"></div></div>`;
+                        f.appendChild(row);
+                    });
+                },
+                saveSettings: () => {
+                    const n = {}; Object.keys(app.state.fees).forEach(ex => { n[ex] = { maker: parseFloat(document.getElementById(`mk-${ex}`).value), taker: parseFloat(document.getElementById(`tk-${ex}`).value) } });
+                    app.state.fees = n; localStorage.setItem('userFees', JSON.stringify(n)); alert('Fees updated!'); app.nav('funding');
+                },
+
+                // UTILS
+                fmtPrice: (p) => {
+                    p = parseFloat(p);
+                    if (isNaN(p)) return '0.00';
+                    if (p > 999) return p.toFixed(2);
+                    if (p > 1) return p.toFixed(4);
+                    return p.toPrecision(5);
+                },
+
+                fmtTime: (ts) => {
+                    if (!ts) return '-';
+                    const diff = new Date(ts).getTime() - Date.now();
+                    if (diff <= 0) return 'Funding Now';
+                    const h = Math.floor(diff / 3600000);
+                    const m = Math.floor((diff % 3600000) / 60000);
+                    return `${h}h ${m}m`;
+                },
+
+                // RENDER LOGIC
+                lastRender: 0,
+                render: (force = false) => {
+                    const now = Date.now();
+                    if (!force && now - app.lastRender < 2000) return; // Limit to 0.5fps unless forced
+                    app.lastRender = now;
+
+                    if (app.state.view === 'exchanges') {
+                        // ... (rest of render logic remains same)
+                        // We just changed the throttle check at top
+
+                        const data = app.state.data[app.state.pair] || [];
+                        const grid = document.getElementById('gridTarget');
+
+                        if (data.length === 0) {
+                            grid.innerHTML = '<div class="empty-state"><div class="empty-icon">📊</div><div>Waiting for market data...</div></div>';
+                            return;
+                        }
+
+                        grid.innerHTML = data.map(opp => {
+                            const a = opp.analysis;
+                            if (!a || !a.detailed) return '';
+
+                            const c = app.calc(opp);
+                            const isProfit = c.netDefault > 0;
+                            const profitClass = isProfit ? 'profit' : '';
+
+                            const exA = opp.exchangeA.name;
+                            const exB = opp.exchangeB.name;
+                            const isLongA = a.strategy === 'LONG_A_SHORT_B';
+
+                            const longEx = isLongA ? exA : exB;
+                            const shortEx = isLongA ? exB : exA;
+                            const longPrice = parseFloat(isLongA ? opp.exchangeA.markPrice : opp.exchangeB.markPrice);
+                            const shortPrice = parseFloat(isLongA ? opp.exchangeB.markPrice : opp.exchangeA.markPrice);
+
+                            const longTime = isLongA ? opp.exchangeA.nextFundingTime : opp.exchangeB.nextFundingTime;
+                            const shortTime = isLongA ? opp.exchangeB.nextFundingTime : opp.exchangeA.nextFundingTime;
+
+                            return `
                         <div class="new-card ${profitClass}">
                             <div class="nc-head">
                                 <div class="nc-main-info">
@@ -1106,50 +1300,50 @@
                                 </div>
                             </div>
                         </div>`;
-                    }).join('');
+                        }).join('');
 
-                } else if (app.state.view === 'all-opps') {
-                    let all = [];
-                    Object.values(app.state.data).forEach(arr => {
-                        arr.forEach(o => { if (o.analysis) { o.calc = app.calc(o); all.push(o); } });
-                    });
+                    } else if (app.state.view === 'all-opps') {
+                        let all = [];
+                        Object.values(app.state.data).forEach(arr => {
+                            arr.forEach(o => { if (o.analysis) { o.calc = app.calc(o); all.push(o); } });
+                        });
 
-                    // SORT BY APR (High to Low)
-                    all.sort((a, b) => (b.analysis.annualAPR || 0) - (a.analysis.annualAPR || 0));
+                        // SORT BY APR (High to Low)
+                        all.sort((a, b) => (b.analysis.annualAPR || 0) - (a.analysis.annualAPR || 0));
 
-                    const tbody = document.getElementById('listTarget');
-                    if (all.length === 0) { tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:30px;">Waiting...</td></tr>'; return; }
+                        const tbody = document.getElementById('listTarget');
+                        if (all.length === 0) { tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:30px;">Waiting...</td></tr>'; return; }
 
-                    tbody.innerHTML = all.map(o => {
-                        const s = o.analysis.strategy === 'LONG_A_SHORT_B'
-                            ? `<span class="pos">${o.exchangeA.name}</span> | <span class="neg">${o.exchangeB.name}</span>`
-                            : `<span class="pos">${o.exchangeB.name}</span> | <span class="neg">${o.exchangeA.name}</span>`;
+                        tbody.innerHTML = all.map(o => {
+                            const s = o.analysis.strategy === 'LONG_A_SHORT_B'
+                                ? `<span class="pos">${o.exchangeA.name}</span> | <span class="neg">${o.exchangeB.name}</span>`
+                                : `<span class="pos">${o.exchangeB.name}</span> | <span class="neg">${o.exchangeA.name}</span>`;
 
-                        return `
+                            return `
                         <tr>
                             <td><b>${o.symbol}</b></td>
                             <td style="font-size:0.75rem">${s}</td>
                             <td class="${o.calc.netDefault > 0 ? 'pos' : 'neg'}" style="font-weight:bold">$${o.calc.netDefault.toFixed(4)}</td>
                             <td class="pos" style="font-weight:800; color:var(--accent);">${(o.analysis.annualAPR || 0).toFixed(2)}%</td>
                         </tr>`;
-                    }).join('');
+                        }).join('');
 
-                } else if (app.state.view === 'all-data') {
-                    const tbody = document.getElementById('dataTarget');
-                    if (app.state.allCoins.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Loading...</td></tr>'; return; }
+                    } else if (app.state.view === 'all-data') {
+                        const tbody = document.getElementById('dataTarget');
+                        if (app.state.allCoins.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Loading...</td></tr>'; return; }
 
-                    const fmt = (ex) => {
-                        if (!ex) return '<td style="text-align:center;">-</td>';
-                        return `<td><div>$${app.fmtPrice(ex.price)}</div><div class="${ex.funding >= 0 ? 'pos' : 'neg'}" style="font-size:0.7rem">${(parseFloat(ex.funding) * 100).toFixed(4)}%</div></td>`;
-                    };
-                    tbody.innerHTML = app.state.allCoins.map(c => `<tr><td><b>${c.symbol}</b></td>${fmt(c.binance)}${fmt(c.okx)}${fmt(c.bybit)}${fmt(c.hyperliquid)}${fmt(c.asterdex)}</tr>`).join('');
+                        const fmt = (ex) => {
+                            if (!ex) return '<td style="text-align:center;">-</td>';
+                            return `<td><div>$${app.fmtPrice(ex.price)}</div><div class="${ex.funding >= 0 ? 'pos' : 'neg'}" style="font-size:0.7rem">${(parseFloat(ex.funding) * 100).toFixed(4)}%</div></td>`;
+                        };
+                        tbody.innerHTML = app.state.allCoins.map(c => `<tr><td><b>${c.symbol}</b></td>${fmt(c.binance)}${fmt(c.okx)}${fmt(c.bybit)}${fmt(c.hyperliquid)}${fmt(c.asterdex)}</tr>`).join('');
+                    }
                 }
-            }
-        };
+            };
 
-        // --- INIT SIDEBAR ---
-        const sb = document.getElementById('sbContent');
-        sb.innerHTML = `
+            // --- INIT SIDEBAR ---
+            const sb = document.getElementById('sbContent');
+            sb.innerHTML = `
             <button class="sb-btn" onclick="app.setView('all-opps')">⚡ All Opportunities</button>
             <button class="sb-btn" onclick="app.setView('all-data')">📊 All Market Data</button>
             
@@ -1176,61 +1370,68 @@
             <button class="sb-btn" data-pair="hyperliquid-asterdex" onclick="app.setPair('hyperliquid-asterdex')">HL - Aster</button>
         `;
 
-        // --- WEBSOCKET WITH AUTO-RECONNECT ---
-        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        let ws;
-        let retryCount = 0;
-        const maxRetries = 10;
+            // --- WEBSOCKET WITH AUTO-RECONNECT ---
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            let ws;
+            let retryCount = 0;
+            const maxRetries = 10;
 
-        function connect() {
-            const wsUrl = `${protocol}//${window.location.host}`;
-            console.log('Connecting to:', wsUrl);
-            ws = new WebSocket(wsUrl);
+            function connect() {
+                const wsUrl = `${protocol}//${window.location.host}`;
+                console.log('Connecting to:', wsUrl);
+                ws = new WebSocket(wsUrl);
 
-            ws.onopen = () => {
-                console.log('WS Connected');
-                document.getElementById('wsStatus').innerText = 'Connected';
-                document.getElementById('wsDot').classList.add('connected');
-                document.getElementById('wsDot').style.background = 'var(--positive)';
-                retryCount = 0;
-            };
+                ws.onopen = () => {
+                    console.log('WS Connected');
+                    document.getElementById('wsStatus').innerText = 'Connected';
+                    document.getElementById('wsDot').classList.add('connected');
+                    document.getElementById('wsDot').style.background = 'var(--positive)';
+                    retryCount = 0;
+                };
 
-            ws.onmessage = (e) => {
-                try {
-                    const msg = JSON.parse(e.data);
-                    if (msg.type === 'ARBITRAGE_UPDATE') {
-                        app.state.data = msg.data;
-                        app.state.allCoins = msg.allData || [];
-                        app.render();
-                    }
-                } catch (err) { console.error('WS Data Error:', err); }
-            };
+                ws.onmessage = (e) => {
+                    try {
+                        const msg = JSON.parse(e.data);
+                        if (msg.type === 'ARBITRAGE_UPDATE') {
+                            app.state.data = msg.data;
+                            app.state.allCoins = msg.allData || [];
 
-            ws.onclose = (e) => {
-                console.log('WS Closed. Reconnecting...', e.reason);
-                document.getElementById('wsStatus').innerText = 'Connecting...';
-                document.getElementById('wsDot').classList.remove('connected');
-                document.getElementById('wsDot').style.background = 'var(--negative)';
+                            // Instant render on first load to remove "Connecting..."
+                            if (retryCount === 0 && document.getElementById('wsStatus').innerText !== 'Connected') {
+                                document.getElementById('wsStatus').innerText = 'Connected';
+                                app.render(true); // Force render
+                            } else {
+                                app.render(); // Throttled render
+                            }
+                        }
+                    } catch (err) { console.error('WS Data Error:', err); }
+                };
 
-                const timeout = Math.min(1000 * (retryCount + 1), 5000); // Backoff
-                setTimeout(() => {
-                    retryCount++;
-                    connect();
-                }, timeout);
-            };
+                ws.onclose = (e) => {
+                    console.log('WS Closed. Reconnecting...', e.reason);
+                    document.getElementById('wsStatus').innerText = 'Connecting...';
+                    document.getElementById('wsDot').classList.remove('connected');
+                    document.getElementById('wsDot').style.background = 'var(--negative)';
 
-            ws.onerror = (err) => {
-                console.error('WS Error:', err);
-                ws.close(); // Force close to trigger reconnect
-            };
-        }
+                    const timeout = Math.min(1000 * (retryCount + 1), 5000); // Backoff
+                    setTimeout(() => {
+                        retryCount++;
+                        connect();
+                    }, timeout);
+                };
 
-        connect(); // Initial Connect
+                ws.onerror = (err) => {
+                    console.error('WS Error:', err);
+                    ws.close(); // Force close to trigger reconnect
+                };
+            }
 
-        // --- STARTUP ---
-        app.nav('funding');
-        app.setPair('binance-okx'); // Default
-    </script>
-</body>
+            connect(); // Initial Connect
+
+            // --- STARTUP ---
+            app.nav('funding');
+            app.setPair('binance-okx'); // Default
+        </script>
+    </body>
 
 </html>
