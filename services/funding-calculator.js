@@ -1,178 +1,123 @@
-// Funding Intervals for Each Exchange (in hours)
-const FUNDING_INTERVALS = {
-    binance: 8,      // 00:00, 08:00, 16:00 UTC
-    okx: 8,          // 00:00, 08:00, 16:00 UTC
-    bybit: 8,        // 00:00, 08:00, 16:00 UTC
-    hyperliquid: 1,  // Every hour
-    asterdex: 8      // Assumed 8 hours
-};
-
-// Get next funding time for each exchange
-function getNextFundingTime(exchange) {
-    const now = new Date();
-    const interval = FUNDING_INTERVALS[exchange] || 8;
-
-    if (interval === 1) {
-        // Next full hour
-        const next = new Date(now);
-        next.setMinutes(0, 0, 0);
-        next.setHours(next.getHours() + 1);
-        return next;
-    } else {
-        // Next 8-hour mark (00:00, 08:00, 16:00 UTC)
-        const next = new Date(now);
-        const currentHour = next.getUTCHours();
-        const nextFundingHour = Math.ceil(currentHour / 8) * 8;
-        next.setUTCHours(nextFundingHour, 0, 0, 0);
-        if (nextFundingHour >= 24) {
-            next.setUTCDate(next.getUTCDate() + 1);
-            next.setUTCHours(0, 0, 0, 0);
-        }
-        return next;
-    }
-}
-
-// Get hours until next funding
-function getHoursUntilFunding(exchange) {
-    const now = new Date();
-    const next = getNextFundingTime(exchange);
-    return (next - now) / (1000 * 60 * 60);
-}
-
 const metadataService = require('./metadata.service');
 
-// Helper to estimate funding interval based on next funding hour (UTC)
+// API'den yanıt alınamazsa kullanılacak güvenli tahminci
 function estimateFundingInterval(nextTime) {
-    if (!nextTime) return 8; // Default fallback
-
+    if (!nextTime) return 8; // Standart 8 saat
     const now = Date.now();
-    const diffHours = (nextTime - now) / 3600000;
+    const diffHours = (new Date(nextTime) - now) / 3600000;
 
-    // If more than 4h away, it's likely 8h
+    // Eğer 4 saatten fazlaysa kesin 8 saattir
     if (diffHours > 4.1) return 8;
-    // If more than 1.1h away, it cannot be 1h. Must be 2h, 4h, or 8h.
 
     const date = new Date(nextTime);
     const hour = date.getUTCHours();
 
-    // If hour is odd (1, 3, 5...), it implies 1h interval (cannot be 2h, 4h, 8h which are even)
+    // Saat tek ise (13:00, 15:00) 1 saatliktir
     if (hour % 2 !== 0) return 1;
-
-    // If divisible by 2 but not 4 (2, 6, 10...), likely 2h
+    // 4'e bölünmüyorsa (14:00) 2 saatliktir
     if (hour % 4 !== 0) return 2;
-
-    // If divisible by 4 but not 8 (4, 12, 20...), likely 4h
+    // 8'e bölünmüyorsa (12:00, 20:00) 4 saatliktir
     if (hour % 8 !== 0) return 4;
 
     return 8;
 }
 
-// Calculate detailed funding analysis
+// İki sayının En Küçük Ortak Katını (EKOK/LCM) bulur
+function calculateLCM(a, b) {
+    const gcd = (x, y) => (!y ? x : gcd(y, x % y));
+    return (a * b) / gcd(a, b);
+}
+
 function calculateDetailedFunding(exchangeA, exchangeB, dataA, dataB, strategy, tradeSize = 100) {
-    const fundingRateA = dataA.fundingRate; // % per interval
-    const fundingRateB = dataB.fundingRate; // % per interval
+    // 1. Funding Interval ve Zaman Verilerini Al
+    // Metadata servisi veya verinin kendisi, yoksa tahmin
+    const intervalA = metadataService.getInterval(exchangeA, dataA.symbol) || dataA.fundingInterval || estimateFundingInterval(dataA.nextFundingTime);
+    const intervalB = metadataService.getInterval(exchangeB, dataB.symbol) || dataB.fundingInterval || estimateFundingInterval(dataB.nextFundingTime);
 
-    // Use nextFundingTime from WebSocket
-    const nextFundingTimeA = dataA.nextFundingTime ? new Date(dataA.nextFundingTime) : new Date();
-    const nextFundingTimeB = dataB.nextFundingTime ? new Date(dataB.nextFundingTime) : new Date();
+    const now = Date.now();
+    const nextTimeA = dataA.nextFundingTime ? new Date(dataA.nextFundingTime).getTime() : now + (intervalA * 3600000);
+    const nextTimeB = dataB.nextFundingTime ? new Date(dataB.nextFundingTime).getTime() : now + (intervalB * 3600000);
 
-    // PRIORITY: 1. Metadata Service (API), 2. WebSocket Data, 3. Estimate
-    const intervalA = metadataService.getInterval(exchangeA, dataA.symbol)
-        || dataA.fundingInterval
-        || estimateFundingInterval(nextFundingTimeA);
+    // 2. Döngü Süresini Belirle (Cycle Duration)
+    // İki intervalin ortak katı (Örn: 1h ve 8h -> 8h. 4h ve 8h -> 8h. 1h ve 1h -> 1h)
+    // Maksimum 24 saatle sınırla ki sonsuz döngü olmasın (örn: 7h ve 8h -> 56h olur ama biz 24h bakalım)
+    let cycleDurationHours = calculateLCM(intervalA, intervalB);
+    if (cycleDurationHours > 24) cycleDurationHours = 24;
 
-    const intervalB = metadataService.getInterval(exchangeB, dataB.symbol)
-        || dataB.fundingInterval
-        || estimateFundingInterval(nextFundingTimeB);
+    // 3. Döngü İçindeki Ödeme Sayısını Hesapla (Frequency Analysis)
+    // A Borsası için:
+    let paymentsA = 0;
+    // İlk ödeme zamanı döngü içinde mi?
+    let timeCursorA = nextTimeA;
+    const cycleEndTime = now + (cycleDurationHours * 3600000);
 
-    const now = new Date();
-    const hoursUntilNextA = Math.max(0, (nextFundingTimeA - now) / (1000 * 60 * 60));
-    const hoursUntilNextB = Math.max(0, (nextFundingTimeB - now) / (1000 * 60 * 60));
-
-    // Calculate minutes and hours for display
-    const minutesUntilNextA = Math.floor((hoursUntilNextA * 60) % 60);
-    const hoursOnlyA = Math.floor(hoursUntilNextA);
-    const minutesUntilNextB = Math.floor((hoursUntilNextB * 60) % 60);
-    const hoursOnlyB = Math.floor(hoursUntilNextB);
-
-    // Determine which side pays/receives
-    let receiveFromA, payToA, receiveFromB, payToB;
-
-    if (strategy === 'LONG_A_SHORT_B') {
-        payToA = fundingRateA > 0;
-        receiveFromA = fundingRateA < 0;
-        receiveFromB = fundingRateB > 0;
-        payToB = fundingRateB < 0;
-    } else {
-        receiveFromA = fundingRateA > 0;
-        payToA = fundingRateA < 0;
-        payToB = fundingRateB > 0;
-        receiveFromB = fundingRateB < 0;
+    while (timeCursorA <= cycleEndTime) {
+        paymentsA++;
+        timeCursorA += (intervalA * 3600000);
     }
 
-    // Calculate funding amounts
-    const fundingAmountA = (Math.abs(fundingRateA) / 100) * tradeSize;
-    const fundingAmountB = (Math.abs(fundingRateB) / 100) * tradeSize;
+    // B Borsası için:
+    let paymentsB = 0;
+    let timeCursorB = nextTimeB;
+    while (timeCursorB <= cycleEndTime) {
+        paymentsB++;
+        timeCursorB += (intervalB * 3600000);
+    }
 
-    // Net funding per interval
-    const netFundingPerInterval = strategy === 'LONG_A_SHORT_B'
-        ? -fundingRateA + fundingRateB
-        : fundingRateA - fundingRateB;
+    // 4. Funding Gelirini Hesapla
+    // Stratejiye göre kimden alıp kime ödüyoruz?
+    // Long A (%y): +y öder (eğer pozitifse eksi yazar, negatifse artı yazar ters mantık)
+    // Kural: Rate POZİTİF ise LONG ÖDER, SHORT ALIR.
+    // Kural: Rate NEGATİF ise LONG ALIR, SHORT ÖDER.
 
-    // Calculate when we'll receive first funding from both sides
-    const firstDualFundingHours = Math.max(hoursUntilNextA, hoursUntilNextB);
+    // Bizim Strateji Değişkeni: 'LONG_A_SHORT_B' veya 'SHORT_A_LONG_B'
+    // Funding Geliri = (Pozisyon Yönü * -1 * Rate)
+    // Long (+1) * -1 * PositiveRate (+0.01) = -0.01 (Öder)
+    // Short (-1) * -1 * PositiveRate (+0.01) = +0.01 (Alır)
 
-    // Calculate total funding in first dual collection
-    const collectionsInFirstPeriod = Math.min(
-        Math.ceil(firstDualFundingHours / intervalA),
-        Math.ceil(firstDualFundingHours / intervalB)
-    );
+    let rateA = parseFloat(dataA.fundingRate);
+    let rateB = parseFloat(dataB.fundingRate);
 
-    // Funding collected in first period
-    const fundingInFirstPeriod = (netFundingPerInterval / 100) * tradeSize * collectionsInFirstPeriod;
+    let directionA = strategy === 'LONG_A_SHORT_B' ? 1 : -1; // 1: Long, -1: Short
+    let directionB = strategy === 'LONG_A_SHORT_B' ? -1 : 1;
 
-    // Annualized funding
-    const fundingsPerYear = (365 * 24) / Math.max(intervalA, intervalB);
-    const annualFunding = (netFundingPerInterval / 100) * tradeSize * fundingsPerYear;
-    const annualAPR = netFundingPerInterval * fundingsPerYear;
+    // Her ödeme periyodu için kümülatif getiri
+    // Basit olması için rate'in sabit kaldığını varsayıyoruz (Conservative approach)
+    let totalFundingIncomePercent =
+        (paymentsA * (directionA * -1 * rateA)) +
+        (paymentsB * (directionB * -1 * rateB));
+
+    let totalFundingIncomeUsd = (totalFundingIncomePercent / 100) * tradeSize;
+
+    // 5. Yıllıklandırma (APR) - Sadece Funding üzerinden requested
+    // Cycle süresince kazanılan para buysa, 1 yılda (8760 saat) ne olur?
+    const cyclesPerYear = 8760 / cycleDurationHours;
+    const annualFundingUsd = totalFundingIncomeUsd * cyclesPerYear;
+    const annualAPR = (annualFundingUsd / tradeSize) * 100;
 
     return {
-        exchangeA: {
-            name: exchangeA,
-            fundingRate: fundingRateA,
-            fundingInterval: intervalA,
-            hoursUntilNext: hoursUntilNextA,
-            hoursOnly: hoursOnlyA,
-            minutesOnly: minutesUntilNextA,
-            nextFundingTime: nextFundingTimeA,
-            fundingAmount: fundingAmountA,
-            isPaying: payToA,
-            isReceiving: receiveFromA
+        intervals: { a: intervalA, b: intervalB },
+        cycle: {
+            durationHours: cycleDurationHours,
+            paymentsCountA: paymentsA,
+            paymentsCountB: paymentsB,
+            nextPaymentTimeA: nextTimeA,
+            nextPaymentTimeB: nextTimeB
         },
-        exchangeB: {
-            name: exchangeB,
-            fundingRate: fundingRateB,
-            fundingInterval: intervalB,
-            hoursUntilNext: hoursUntilNextB,
-            hoursOnly: hoursOnlyB,
-            minutesOnly: minutesUntilNextB,
-            nextFundingTime: nextFundingTimeB,
-            fundingAmount: fundingAmountB,
-            isPaying: payToB,
-            isReceiving: receiveFromB
+        funding: {
+            rateA: rateA,
+            rateB: rateB,
+            netCycleIncomeUsd: totalFundingIncomeUsd,
+            netCycleIncomePercent: totalFundingIncomePercent
         },
-        netFundingRate: netFundingPerInterval,
-        firstDualFundingHours: firstDualFundingHours,
-        fundingInFirstPeriod: fundingInFirstPeriod,
-        annualFunding: annualFunding,
-        annualAPR: annualAPR,
-        fundingsPerYear: fundingsPerYear
+        annual: {
+            usd: annualFundingUsd,
+            apr: annualAPR
+        }
     };
 }
 
 module.exports = {
-    FUNDING_INTERVALS,
-    getNextFundingTime,
-    getHoursUntilFunding,
-    calculateDetailedFunding
+    calculateDetailedFunding,
+    estimateFundingInterval
 };

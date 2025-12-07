@@ -134,108 +134,113 @@ class ArbitrageService {
     analyzeArbitrage(dataA, dataB, symbolA, symbolB) {
         if (!dataA || !dataB) return null;
 
-        const markA = dataA.markPrice;
-        const markB = dataB.markPrice;
-        const fundingA = dataA.fundingRate; // %
-        const fundingB = dataB.fundingRate; // %
+        const markA = parseFloat(dataA.markPrice);
+        const markB = parseFloat(dataB.markPrice);
+        const fundingA = parseFloat(dataA.fundingRate);
+        const fundingB = parseFloat(dataB.fundingRate);
 
-        // Strateji Belirleme: Hangi yönde funding kazanırız?
-        // Senaryo 1: Long A + Short B
-        const netFundingLongAShortB = -fundingA + fundingB;
+        // Strateji Belirleme: Funding yönüne göre
+        // (Funding A - Funding B) bize net akışı verir (basitçe)
+        // Eğer A > B ise: A Long (Öder), B Short (Alır). Net = B - A.
+        // Ama biz "Almak" istiyoruz. O zaman Funding'i düşük olana Long, yüksek olana Short açmalıyız (kabaca değil, detaylı analiz lazım).
 
-        // Senaryo 2: Short A + Long B
-        const netFundingShortALongB = fundingA - fundingB;
+        // Basit Mantık: Hangi kombinasyon daha çok funding getirir?
+        // 1. Long A (+1), Short B (-1)
+        //    Gelir = (A * -1 * sign) + (B * -1 * sign)
+        // 2. Short A (-1), Long B (+1)
 
-        let strategy = '';
-        let netFundingRate = 0;
+        // Bunu detaylı calculator zaten cycle içinde hesaplıyor. Biz iki senaryoyu da deneyip en iyisini seçelim.
 
-        if (netFundingLongAShortB > netFundingShortALongB) {
-            strategy = 'LONG_A_SHORT_B';
-            netFundingRate = netFundingLongAShortB;
-        } else {
-            strategy = 'SHORT_A_LONG_B';
-            netFundingRate = netFundingShortALongB;
-        }
+        const scenario1 = calculateDetailedFunding(
+            this.nameA, this.nameB, dataA, dataB, 'LONG_A_SHORT_B', 100
+        );
 
-        // Eğer en iyi senaryoda bile funding negatifse, işlem yapma
-        if (netFundingRate <= 0) {
-            return {
-                strategy: 'NO_OPPORTUNITY',
-                isOpportunity: false,
-                tradeSize: 100,
-                priceDifferencePercent: 0,
-                priceDifferencePnL: 0,
-                fundingDifferencePercent: 0,
-                fundingPnL8h: 0,
-                annualFundingPnL: 0,
-                annualAPR: 0,
-                detailedFunding: null
-            };
+        const scenario2 = calculateDetailedFunding(
+            this.nameA, this.nameB, dataA, dataB, 'SHORT_A_LONG_B', 100
+        );
+
+        // Hangisi daha karlı (Yıllık APR olarak)?
+        let bestScenario = scenario1.annual.apr > scenario2.annual.apr ? scenario1 : scenario2;
+        let strategy = scenario1.annual.apr > scenario2.annual.apr ? 'LONG_A_SHORT_B' : 'SHORT_A_LONG_B';
+
+        // Eğer en iyi senaryo bile negatif funding üretiyorsa hiç uğraşma
+        if (bestScenario.annual.apr <= 0) {
+            return { isOpportunity: false, reason: 'Negative APR' };
         }
 
         const tradeSize = 100;
 
-        // Calculate detailed funding with intervals
-        const detailedFunding = calculateDetailedFunding(
-            this.nameA,
-            this.nameB,
-            dataA,
-            dataB,
-            strategy,
-            tradeSize
-        );
+        // Maliyet Hesabı (Cost Analysis)
+        // 1. Fees (Open + Close)
+        const makerFeeA = this.fees.exchangeA.maker; // ratio
+        const takerFeeA = this.fees.exchangeA.taker;
+        const makerFeeB = this.fees.exchangeB.maker;
+        const takerFeeB = this.fees.exchangeB.taker;
 
-        // Initial fees (Maker + Taker)
-        const makerFeeA = this.fees.exchangeA.maker * 100; // %
-        const takerFeeA = this.fees.exchangeA.taker * 100; // %
-        const makerFeeB = this.fees.exchangeB.maker * 100; // %
-        const takerFeeB = this.fees.exchangeB.taker * 100; // %
+        // Varsayım: Taker girip Taker çıkıyoruz (En kötü senaryo - Conservative)
+        // Veya Maker girip Taker çıkıyoruz.
+        // Kullanıcı Taker (Market) ve Maker (Limit) ayrımı istemişti UI'da.
+        // Biz "Net Profit" filtresi için Taker/Taker (En pahalı) maliyeti kullanalım, garanti olsun.
+        const openCost = tradeSize * (takerFeeA + takerFeeB);
+        const closeCost = tradeSize * (takerFeeA + takerFeeB);
 
-        // Total initial fees
-        const totalInitialFeeMaker = (makerFeeA + makerFeeB) / 100 * tradeSize;
-        const totalInitialFeeTaker = (takerFeeA + takerFeeB) / 100 * tradeSize;
+        // 2. Price Difference Impact (Initial Loss)
+        // Fiyat farkı bizim aleyhimize ise maliyettir.
+        // Long A (100), Short B (101). Fark %1.
+        // Çıkışta fiyatlar eşitlenirse (100.5), B'den 0.5 kazanırız, A'dan 0.5 kazanırız. Fark cebe girer.
+        // Long A (101), Short B (100). Fark -%1.
+        // Çıkışta eşitlenirse, ikisinden de zarar ederiz.
+        // Yani: (Giriş Kısa Fiyatı - Giriş Uzun Fiyatı) / Giriş Uzun Fiyatı
+        // Eğer Short Fiyatı > Long Fiyatı ise (Premium), kar ederiz (Pozitif Diff).
+        // Eğer Short Fiyatı < Long Fiyatı ise (Discount), zarar ederiz (Negatif Diff).
 
-        // Breakeven calculation
-        const breakevenHoursMaker = totalInitialFeeMaker / (detailedFunding.fundingInFirstPeriod / detailedFunding.firstDualFundingHours);
-        const breakevenHoursTaker = totalInitialFeeTaker / (detailedFunding.fundingInFirstPeriod / detailedFunding.firstDualFundingHours);
-
-        // Fiyat Farkı (Bilgi Amaçlı)
         let priceDiffPercent = 0;
         if (strategy === 'LONG_A_SHORT_B') {
+            // Long A, Short B. Bizim için iyi olan B > A olması.
             priceDiffPercent = ((markB - markA) / markA) * 100;
         } else {
+            // Short A, Long B. Bizim için iyi olan A > B olması.
             priceDiffPercent = ((markA - markB) / markB) * 100;
         }
-        const priceDiffPnL = (priceDiffPercent / 100) * tradeSize;
 
+        const priceDiffPnL = tradeSize * (priceDiffPercent / 100);
+
+        // Toplam Döngü Kârı (Net Cycle Profit)
+        // Cycle Funding Geliri + Fiyat Farkı PnL - Komisyonlar
+        // NOT: Fiyat farkı "Cycle" sonunda kapanmayabilir. Ama "Initial Haircut" olarak düşersek güvenli olur.
+        // Kullanıcı "Price Difference"ı hesaba katmamızı istedi.
+        const totalNetProfit = bestScenario.funding.netCycleIncomeUsd + priceDiffPnL - openCost - closeCost;
+
+        // EĞER ZARAR YAZIYORSA GÖSTERME (Filtre)
+        if (totalNetProfit <= -1) { // -1$ tolerans (çok küçük zararları da ele, sadece net karları göster)
+            return { isOpportunity: false, reason: 'Net Loss' };
+        }
+
+        // Data Hazırla
         return {
             strategy,
             tradeSize,
-            priceDifferencePercent: priceDiffPercent,
-            priceDifferencePnL: priceDiffPnL,
-            fundingDifferencePercent: netFundingRate,
-            fundingPnL8h: detailedFunding.fundingInFirstPeriod,
-            annualFundingPnL: detailedFunding.annualFunding,
-            annualAPR: detailedFunding.annualAPR,
+            priceDifferencePercent,
+            priceDifferencePnL,
+
+            // Funding Info
+            cycleDuration: bestScenario.cycle.durationHours,
+            fundingIncomeCycle: bestScenario.funding.netCycleIncomeUsd,
+            netCycleProfit: totalNetProfit,
+
+            // Fees
+            fees: {
+                open: openCost,
+                close: closeCost
+            },
+
+            // Annual (Saf Funding APR + Net Profit projection?)
+            // Kullanıcı: "ARP hesabını da feeleri ve initial price hesaba katmadan funding feeler üzerinden yap"
+            annualAPR: bestScenario.annual.apr,
+            annualFunding: bestScenario.annual.usd,
+
             isOpportunity: true,
-            // Detailed funding info
-            detailedFunding: {
-                ...detailedFunding,
-                fees: {
-                    makerFeeA,
-                    takerFeeA,
-                    makerFeeB,
-                    takerFeeB,
-                    totalInitialFeeMaker,
-                    totalInitialFeeTaker
-                },
-                breakeven: {
-                    hoursMaker: breakevenHoursMaker,
-                    hoursTaker: breakevenHoursTaker,
-                    daysMaker: breakevenHoursMaker / 24,
-                    daysTaker: breakevenHoursTaker / 24
-                }
-            }
+            detailed: bestScenario
         };
     }
 
