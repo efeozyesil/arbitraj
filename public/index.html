@@ -305,12 +305,14 @@
         .data-list th {
             text-align: left;
             padding: 12px;
-            color: #666;
+            color: #888;
             font-weight: 600;
-            border-bottom: 1px solid var(--border);
+            border-bottom: 2px solid var(--border);
             position: sticky;
-            top: 0;
-            background: var(--bg-color);
+            top: -20px;
+            /* Offset for padding */
+            background: #080808;
+            /* Solid background to hide scroll */
             z-index: 10;
         }
 
@@ -322,6 +324,166 @@
 
         .data-list tr:hover {
             background: rgba(255, 255, 255, 0.03);
+        }
+
+        /* DETAILED CARD DESIGN */
+        .new-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 20px;
+        }
+
+        /* Profit/Loss Border Indicator */
+        .new-card.profit {
+            border-left: 4px solid var(--positive);
+        }
+
+        .new-card:not(.profit) {
+            border-left: 4px solid var(--negative);
+        }
+
+        .nc-head {
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .nc-main-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nc-sym {
+            font-weight: 800;
+            font-size: 1.1rem;
+            color: #fff;
+        }
+
+        .nc-badges {
+            display: flex;
+            gap: 5px;
+        }
+
+        .nc-badge {
+            font-size: 0.65rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #aaa;
+        }
+
+        .nc-badge.accent {
+            background: var(--accent-dim);
+            color: var(--accent);
+        }
+
+        .nc-body {
+            padding: 15px;
+            font-size: 0.8rem;
+        }
+
+        .nc-section {
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .nc-section:last-child {
+            border: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .nc-row-sp {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+        }
+
+        .nc-label {
+            color: #666;
+            font-size: 0.75rem;
+        }
+
+        .nc-val {
+            font-weight: 600;
+            color: #ddd;
+        }
+
+        .nc-price-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            text-align: center;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 8px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+        }
+
+        .nc-p-box {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .nc-p-role {
+            font-size: 0.7rem;
+            font-weight: 800;
+            color: var(--accent);
+        }
+
+        .nc-p-price {
+            font-size: 0.9rem;
+            color: #fff;
+        }
+
+        .nc-p-time {
+            font-size: 0.65rem;
+            color: #555;
+        }
+
+        .breakdown-list {
+            margin-top: 10px;
+            font-family: monospace;
+            font-size: 0.8rem;
+            color: #999;
+        }
+
+        .bd-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 2px 0;
+        }
+
+        .bd-row.total {
+            border-top: 1px solid #444;
+            margin-top: 5px;
+            padding-top: 5px;
+            font-weight: 800;
+            color: #fff;
+            font-size: 0.9rem;
+        }
+
+        .fee-tags {
+            display: flex;
+            gap: 10px;
+            margin-top: 5px;
+            font-size: 0.7rem;
+            color: #555;
+        }
+
+        .fee-tag span {
+            color: #888;
         }
 
         /* BOTTOM NAV */
@@ -548,68 +710,58 @@
                 }
             },
 
-            // FEE CALCULATOR
-            calculateNet: (opp) => {
-                // Backend sends raw income and price risk. We recalculate fees here.
+            // FEE & SCENARIO CALCULATOR
+            calc: (opp) => {
                 const exA = opp.exchangeA.name;
                 const exB = opp.exchangeB.name;
                 const feesA = app.state.fees[exA] || { maker: 0.02, taker: 0.05 };
                 const feesB = app.state.fees[exB] || { maker: 0.02, taker: 0.05 };
 
-                // Assumption: Taker Open, Taker Close (Conservative)
-                const tradeSize = 100;
+                const size = 100; // Fixed Trade Size for Display
 
-                // Percent to decimal (0.05% -> 0.0005)
-                const costA = tradeSize * (feesA.taker / 100);
-                const costB = tradeSize * (feesB.taker / 100);
-                const totalFees = (costA + costB) * 2; // Open + Close
+                // Scenario 1: Taker / Taker (Conservative)
+                const costTT = size * (feesA.taker / 100) + size * (feesB.taker / 100);
 
-                const a = opp.analysis;
-                const backendNet = a.netCycleProfit;
+                // Scenario 2: Maker / Maker (Optimistic)
+                const costMM = size * (feesA.maker / 100) + size * (feesB.maker / 100);
 
-                // Reconstruct Net: (Income + Risk) - NewFees
-                // Backend 'netCycleProfit' includes backend-hardcoded fees. 
-                // Better approach: Use components.
-                // Income and Risk are fixed.
+                const backendNet = opp.analysis.netCycleProfit;
+                const income = opp.analysis.fundingIncomeCycle || 0;
+                // Use backend PricePnL but check variable name consistency
+                const pricePnL = opp.analysis.priceDiffPnL || opp.analysis.priceDifferencePnL || 0;
 
-                const income = a.fundingIncomeCycle || 0;
-                const risk = a.priceDifferencePnL || 0;
+                // Net Profit (Taker/Taker default)
+                // Formula: Income + PricePnL - (OpenFee + CloseFee)
+                // Note: PricePnL is already signed (+ profit, - loss)
+                // Fees apply twice (Open + Close)
 
-                const clientNet = income + risk - totalFees;
+                const netTT = income + pricePnL - (costTT * 2);
 
                 return {
-                    net: clientNet,
-                    fees: totalFees
+                    costTakerTaker: costTT * 2,
+                    costMakerMaker: costMM * 2,
+                    netDefault: netTT,
+                    income: income,
+                    pricePnL: pricePnL
                 };
             },
 
             // NAVIGATION
             nav: (modId, btn) => {
                 app.state.module = modId;
-
-                // Toggle Module Visibility
                 document.querySelectorAll('.module-container').forEach(el => el.classList.remove('active'));
                 document.getElementById(`mod-${modId}`).classList.add('active');
-
-                // Toggle Nav Btn
                 document.querySelectorAll('.bn-item').forEach(el => el.classList.remove('active'));
                 if (btn) btn.classList.add('active');
-
-                // Toggle Sidebar (Only Visible in Funding)
                 const sb = document.getElementById('mainSidebar');
-                if (window.innerWidth > 768) {
-                    sb.style.display = (modId === 'funding') ? 'flex' : 'none';
-                }
-
+                if (window.innerWidth > 768) sb.style.display = (modId === 'funding') ? 'flex' : 'none';
                 if (modId === 'settings') app.renderSettings();
                 if (modId === 'funding') app.render();
             },
 
-            // SIDEBAR ACTIONS
             setView: (viewId) => {
                 app.state.view = viewId;
                 document.querySelectorAll('.view-frame').forEach(el => el.classList.remove('active'));
-
                 if (viewId === 'all-opps') {
                     document.getElementById('view-list').classList.add('active');
                     document.getElementById('pageTitle').innerText = 'All Opportunities';
@@ -618,82 +770,36 @@
                     document.getElementById('pageTitle').innerText = 'All Market Data';
                 } else {
                     document.getElementById('view-exchanges').classList.add('active');
-                    // Page Title set by Pair
                 }
-
-                // Active State for Sidebar Buttons
                 app.updateSidebarActive();
                 app.render();
             },
 
-            setPair: (pairKey) => {
-                app.state.pair = pairKey;
-                app.setView('exchanges'); // Auto switch to grid
-
-                // Update Title
-                const parts = pairKey.toUpperCase().split('-');
-                document.getElementById('pageTitle').innerText = `${parts[0]} <> ${parts[1]}`;
-            },
-
+            setPair: (pk) => { app.state.pair = pk; app.setView('exchanges'); const p = pk.toUpperCase().split('-'); document.getElementById('pageTitle').innerText = `${p[0]} <> ${p[1]}`; },
             updateSidebarActive: () => {
                 document.querySelectorAll('.sb-btn').forEach(b => b.classList.remove('active'));
-
-                if (app.state.view === 'all-opps') {
-                    document.querySelector(`button[onclick="app.setView('all-opps')"]`)?.classList.add('active');
-                } else if (app.state.view === 'all-data') {
-                    document.querySelector(`button[onclick="app.setView('all-data')"]`)?.classList.add('active');
-                } else {
-                    // Start matching pairs
-                    document.querySelector(`button[data-pair="${app.state.pair}"]`)?.classList.add('active');
-                }
+                if (app.state.view === 'all-opps') document.querySelector(`button[onclick="app.setView('all-opps')"]`)?.classList.add('active');
+                else if (app.state.view === 'all-data') document.querySelector(`button[onclick="app.setView('all-data')"]`)?.classList.add('active');
+                else document.querySelector(`button[data-pair="${app.state.pair}"]`)?.classList.add('active');
             },
-
-            // RENDER SETTINGS
             renderSettings: () => {
-                const f = document.getElementById('settingsForm');
-                f.innerHTML = '';
-
+                const f = document.getElementById('settingsForm'); f.innerHTML = '';
                 Object.keys(app.state.fees).forEach(ex => {
-                    const row = document.createElement('div');
-                    row.style.marginBottom = '20px';
-                    row.innerHTML = `
-                        <div style="font-weight:bold; color:#fff; margin-bottom:8px;">${ex}</div>
-                        <div style="display:flex; gap:10px;">
-                            <div style="flex:1">
-                                <label style="font-size:0.7rem; color:#666;">Maker (%)</label>
-                                <input id="mk-${ex}" type="number" step="0.01" value="${app.state.fees[ex].maker}" 
-                                style="width:100%; background:#222; border:1px solid #444; color:#fff; padding:8px; border-radius:4px;">
-                            </div>
-                            <div style="flex:1">
-                                <label style="font-size:0.7rem; color:#666;">Taker (%)</label>
-                                <input id="tk-${ex}" type="number" step="0.01" value="${app.state.fees[ex].taker}" 
-                                style="width:100%; background:#222; border:1px solid #444; color:#fff; padding:8px; border-radius:4px;">
-                            </div>
-                        </div>
-                    `;
+                    const row = document.createElement('div'); row.style.marginBottom = '20px';
+                    row.innerHTML = `<div style="font-weight:bold; color:#fff; margin-bottom:8px;">${ex}</div><div style="display:flex; gap:10px;"><div style="flex:1"><label style="font-size:0.7rem; color:#666;">Maker (%)</label><input id="mk-${ex}" type="number" step="0.01" value="${app.state.fees[ex].maker}" style="width:100%; background:#222; border:1px solid #444; color:#fff; padding:8px; border-radius:4px;"></div><div style="flex:1"><label style="font-size:0.7rem; color:#666;">Taker (%)</label><input id="tk-${ex}" type="number" step="0.01" value="${app.state.fees[ex].taker}" style="width:100%; background:#222; border:1px solid #444; color:#fff; padding:8px; border-radius:4px;"></div></div>`;
                     f.appendChild(row);
                 });
             },
-
             saveSettings: () => {
-                const newFees = {};
-                Object.keys(app.state.fees).forEach(ex => {
-                    newFees[ex] = {
-                        maker: parseFloat(document.getElementById(`mk-${ex}`).value),
-                        taker: parseFloat(document.getElementById(`tk-${ex}`).value)
-                    };
-                });
-                app.state.fees = newFees;
-                localStorage.setItem('userFees', JSON.stringify(newFees));
-                alert('Fees updated! Net Profit calculations will now use these values.');
-                app.nav('funding'); // Go back
+                const n = {}; Object.keys(app.state.fees).forEach(ex => { n[ex] = { maker: parseFloat(document.getElementById(`mk-${ex}`).value), taker: parseFloat(document.getElementById(`tk-${ex}`).value) } });
+                app.state.fees = n; localStorage.setItem('userFees', JSON.stringify(n)); alert('Fees updated!'); app.nav('funding');
             },
 
-            // RENDER LOGIC (Throttled)
+            // RENDER LOGIC
             lastRender: 0,
             render: () => {
                 const now = Date.now();
-                if (now - app.lastRender < 500) return; // Limit 2fps
+                if (now - app.lastRender < 500) return;
                 app.lastRender = now;
 
                 if (app.state.view === 'exchanges') {
@@ -701,7 +807,7 @@
                     const grid = document.getElementById('gridTarget');
 
                     if (data.length === 0) {
-                        grid.innerHTML = '<div class="empty-state"><div class="empty-icon">📊</div><div>No active opportunities for this pair.<br>Wait for market update...</div></div>';
+                        grid.innerHTML = '<div class="empty-state"><div class="empty-icon">📊</div><div>Waiting for market data...</div></div>';
                         return;
                     }
 
@@ -709,99 +815,115 @@
                         const a = opp.analysis;
                         if (!a || !a.detailed) return '';
 
-                        // CLIENT SIDE CALC
-                        const calc = app.calculateNet(opp);
-                        const net = calc.net;
-                        const isProfit = net > 0;
+                        const c = app.calc(opp);
+                        const isProfit = c.netDefault > 0;
                         const profitClass = isProfit ? 'profit' : '';
-                        const valClass = isProfit ? 'pos' : 'neg';
 
+                        // Strategy Names
                         const exA = opp.exchangeA.name;
                         const exB = opp.exchangeB.name;
-                        const st = a.strategy === 'LONG_A_SHORT_B' ? `L: ${exA} | S: ${exB}` : `L: ${exB} | S: ${exA}`;
+                        const isLongA = a.strategy === 'LONG_A_SHORT_B';
+                        const longEx = isLongA ? exA : exB;
+                        const shortEx = isLongA ? exB : exA;
+                        const longPrice = isLongA ? opp.exchangeA.markPrice : opp.exchangeB.markPrice;
+                        const shortPrice = isLongA ? opp.exchangeB.markPrice : opp.exchangeA.markPrice;
+
+                        // Time Info
+                        const timeMsg = (ts) => {
+                            if (!ts) return 'Unknown';
+                            const diff = (new Date(ts) - now) / 3600000;
+                            return `Next: ${new Date(ts).getHours()}:00 (${diff.toFixed(1)}h)`;
+                        };
 
                         return `
                         <div class="new-card ${profitClass}">
                             <div class="nc-head">
-                                <div class="nc-sym">${opp.symbol}</div>
-                                <div class="nc-cycle">${a.cycleDuration}h</div>
+                                <div class="nc-main-info">
+                                    <div class="nc-sym">${opp.symbol}</div>
+                                    <div class="nc-badge accent">${a.cycleDuration}h Cycle</div>
+                                </div>
+                                <div class="nc-val ${c.netDefault > 0 ? 'pos' : 'neg'}" style="font-size:1.1rem">
+                                    $${c.netDefault.toFixed(2)}
+                                </div>
                             </div>
+                            
                             <div class="nc-body">
-                                <div class="nc-row mute"><div>${st}</div></div>
-                                <div class="nc-row">
-                                    <span class="mute">Net Cycle PnL</span>
-                                    <span class="nc-val-big ${valClass}">$${net.toFixed(2)}</span>
+                                <!-- Price & Strategy Block -->
+                                <div class="nc-price-row">
+                                    <div class="nc-p-box">
+                                        <span class="nc-p-role">LONG ${longEx}</span>
+                                        <span class="nc-p-price">$${parseFloat(longPrice).toFixed(2)}</span>
+                                        <span class="nc-p-time">${timeMsg(isLongA ? opp.exchangeA.nextFundingTime : opp.exchangeB.nextFundingTime)}</span>
+                                    </div>
+                                    <div class="nc-p-box">
+                                        <span class="nc-p-role">SHORT ${shortEx}</span>
+                                        <span class="nc-p-price">$${parseFloat(shortPrice).toFixed(2)}</span>
+                                        <span class="nc-p-time">${timeMsg(isLongA ? opp.exchangeB.nextFundingTime : opp.exchangeA.nextFundingTime)}</span>
+                                    </div>
                                 </div>
-                                <div class="nc-row">
-                                    <span class="mute">Funding Income</span>
-                                    <span class="pos">+$${(a.fundingIncomeCycle || 0).toFixed(2)}</span>
+
+                                <!-- Breakdown List -->
+                                <div class="breakdown-list">
+                                    <div class="bd-row">
+                                        <span>Initial Price Impact (${(a.priceDiffPercent || 0).toFixed(2)}%)</span>
+                                        <span class="${c.pricePnL >= 0 ? 'pos' : 'neg'}">${c.pricePnL.toFixed(2)}</span>
+                                    </div>
+                                    <div class="bd-row">
+                                        <span>Funding Income</span>
+                                        <span class="pos">+$${c.income.toFixed(2)}</span>
+                                    </div>
+                                    <div class="bd-row">
+                                        <span>Open Fees (Taker)</span>
+                                        <span class="neg">-$${(c.costTakerTaker / 2).toFixed(2)}</span>
+                                    </div>
+                                    <div class="bd-row">
+                                        <span>Close Fees (Taker)</span>
+                                        <span class="neg">-$${(c.costTakerTaker / 2).toFixed(2)}</span>
+                                    </div>
+                                    <div class="bd-row total">
+                                        <span>NET PROFIT (Est.)</span>
+                                        <span class="${c.netDefault > 0 ? 'pos' : 'neg'}">$${c.netDefault.toFixed(2)}</span>
+                                    </div>
                                 </div>
-                                <div class="nc-row">
-                                    <span class="mute">Total Fees (User)</span>
-                                    <span class="neg">-$${calc.fees.toFixed(2)}</span>
-                                </div>
-                                <div class="nc-row">
-                                    <span class="mute">Annual APR</span>
-                                    <span class="pos">${(a.annualAPR || 0).toFixed(1)}%</span>
+                                
+                                <div class="fee-tags">
+                                    <div class="fee-tag">Maker/Maker Net: <span style="font-weight:bold">$${(c.income + c.pricePnL - c.costMakerMaker).toFixed(2)}</span></div>
                                 </div>
                             </div>
                         </div>`;
                     }).join('');
 
                 } else if (app.state.view === 'all-opps') {
-                    // Flatten & Recalculate Sort
                     let all = [];
                     Object.values(app.state.data).forEach(arr => {
-                        arr.forEach(o => {
-                            if (o && o.analysis) {
-                                o.clientNet = app.calculateNet(o).net; // Attach for sorting
-                                all.push(o);
-                            }
-                        });
+                        arr.forEach(o => { if (o.analysis) { o.calc = app.calc(o); all.push(o); } });
                     });
-
-                    all.sort((a, b) => b.clientNet - a.clientNet);
+                    all.sort((a, b) => b.calc.netDefault - a.calc.netDefault);
 
                     const tbody = document.getElementById('listTarget');
-                    if (all.length === 0) {
-                        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:30px;">No opportunities detected yet.</td></tr>';
-                        return;
-                    }
+                    if (all.length === 0) { tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:30px;">Waiting...</td></tr>'; return; }
 
                     tbody.innerHTML = all.map(o => {
-                        const net = o.clientNet;
+                        const s = o.analysis.strategy === 'LONG_A_SHORT_B'
+                            ? `<span class="pos">Long ${o.exchangeA.name}</span> | <span class="neg">Short ${o.exchangeB.name}</span>`
+                            : `<span class="pos">Long ${o.exchangeB.name}</span> | <span class="neg">Short ${o.exchangeA.name}</span>`;
+
                         return `
                         <tr>
                             <td><b>${o.symbol}</b></td>
-                            <td class="mute">${o.analysis.strategy === 'LONG_A_SHORT_B' ? 'Long A' : 'Long B'}</td>
-                            <td class="${net > 0 ? 'pos' : 'neg'}" style="font-weight:bold">$${net.toFixed(4)}</td>
+                            <td style="font-size:0.75rem">${s}</td>
+                            <td class="${o.calc.netDefault > 0 ? 'pos' : 'neg'}" style="font-weight:bold">$${o.calc.netDefault.toFixed(2)}</td>
                             <td class="pos">${(o.analysis.annualAPR || 0).toFixed(1)}%</td>
                         </tr>`;
                     }).join('');
-
                 } else if (app.state.view === 'all-data') {
                     const tbody = document.getElementById('dataTarget');
-                    // FIX: Ensure scroll works by rendering all, but valid HTML
-                    if (app.state.allCoins.length === 0) {
-                        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:30px;">Loading market data...</td></tr>';
-                        return;
-                    }
-
+                    if (app.state.allCoins.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Loading...</td></tr>'; return; }
                     const fmt = (ex) => {
-                        if (!ex) return '<td style="text-align:center; color:#333">-</td>';
-                        return `<td><div style="font-weight:bold">$${parseFloat(ex.price).toFixed(2)}</div><div class="${ex.funding >= 0 ? 'pos' : 'neg'}" style="font-size:0.75rem">${(parseFloat(ex.funding) * 100).toFixed(4)}%</div></td>`;
+                        if (!ex) return '<td style="text-align:center;">-</td>';
+                        return `<td><div>$${parseFloat(ex.price).toFixed(2)}</div><div class="${ex.funding >= 0 ? 'pos' : 'neg'}" style="font-size:0.7rem">${(parseFloat(ex.funding) * 100).toFixed(4)}%</div></td>`;
                     };
-
-                    tbody.innerHTML = app.state.allCoins.map(c => `
-                        <tr>
-                            <td><b style="color:#fff">${c.symbol}</b></td>
-                            ${fmt(c.binance)}
-                            ${fmt(c.okx)}
-                            ${fmt(c.bybit)}
-                            ${fmt(c.hyperliquid)}
-                            ${fmt(c.asterdex)}
-                        </tr>
-                    `).join('');
+                    tbody.innerHTML = app.state.allCoins.map(c => `<tr><td><b>${c.symbol}</b></td>${fmt(c.binance)}${fmt(c.okx)}${fmt(c.bybit)}${fmt(c.hyperliquid)}${fmt(c.asterdex)}</tr>`).join('');
                 }
             }
         };
