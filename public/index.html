@@ -153,29 +153,51 @@
             align-items: center;
             justify-content: space-between;
             padding: 0 15px;
-            height: 50px;
+            height: 60px;
+            /* Taller header for mobile touch */
             border-bottom: 1px solid var(--border);
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(10px);
+            background: rgba(5, 5, 5, 0.95);
+            /* More solid bg */
             position: sticky;
             top: 0;
-            z-index: 100;
+            z-index: 500;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
         }
 
         .menu-btn {
             background: none;
-            border: none;
-            font-size: 1.5rem;
+            border: 1px solid #333;
+            border-radius: 4px;
+            font-size: 1.4rem;
             color: #fff;
             cursor: pointer;
+            padding: 4px 10px;
             display: none;
-            /* Hidden on desktop */
+            /* Desktop hidden */
+        }
+
+        .reload-btn {
+            background: none;
+            border: none;
+            font-size: 1.4rem;
+            color: var(--accent);
+            cursor: pointer;
             padding: 5px;
-            margin-right: 10px;
         }
 
         /* SIDEBAR MOBILE OVERRIDES */
-        @media (max-width: 768px) {
+        @media (max-width: 900px) {
             .menu-btn {
                 display: block;
             }
@@ -187,22 +209,36 @@
             .sidebar {
                 position: fixed;
                 top: 0;
-                left: -280px;
-                width: 260px;
+                left: -100%;
+                width: 85%;
+                max-width: 300px;
                 height: 100%;
-                z-index: 1001;
-                background: #0a0a0a;
+                z-index: 9999;
+                /* TOP OF EVERYTHING */
+                background: #000;
                 border-right: 1px solid var(--accent);
-                transition: left 0.3s ease-in-out;
-                box-shadow: 10px 0 30px rgba(0, 0, 0, 0.5);
+                transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                transform: translateX(0);
+                /* Controlled by left logic or transform */
+                box-shadow: 50px 0 100px rgba(0, 0, 0, 0.8);
                 display: flex !important;
-                /* Always flex layout, hidden by position */
                 padding-top: 20px;
+                /* Reset standard layout */
             }
 
             .sidebar.open {
-                left: 0;
+                transform: translateX(100%);
+                left: -100%;
+                /* Logic adjustment: Easier to just use left=0 */
             }
+
+            /* Better Logic: Use class to toggle transform */
+            .sidebar {
+                transform: translateX(0);
+                left: -100%;
+            }
+
+            /* On Open, we set left: 0 */
 
             /* Backdrop */
             .backdrop {
@@ -211,11 +247,12 @@
                 left: 0;
                 width: 100%;
                 height: 100%;
-                background: rgba(0, 0, 0, 0.7);
-                z-index: 1000;
+                background: rgba(0, 0, 0, 0.8);
+                z-index: 9000;
                 display: none;
                 opacity: 0;
                 transition: opacity 0.3s;
+                backdrop-filter: blur(5px);
             }
 
             .backdrop.visible {
