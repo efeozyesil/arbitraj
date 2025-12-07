@@ -521,26 +521,55 @@
         </nav>
     </div>
 
+
     <script>
-        // --- DATA & CONFIG ---
-        const CONFIG = {
-            pairs: [
-                { t: 'Overview', i: [{ id: 'all-opps', l: 'All Opportunities' }, { id: 'all-coins', l: 'All Coins List' }] },
-                { t: 'Binance Combinations', i: [{ id: 'binance-okx', l: 'Binance <> OKX' }, { id: 'binance-bybit', l: 'Binance <> Bybit' }, { id: 'binance-hyperliquid', l: 'Binance <> HL' }, { id: 'binance-asterdex', l: 'Binance <> Aster' }] },
-                { t: 'OKX Combinations', i: [{ id: 'okx-bybit', l: 'OKX <> Bybit' }, { id: 'okx-hyperliquid', l: 'OKX <> HL' }, { id: 'okx-asterdex', l: 'OKX <> Aster' }] },
-                { t: 'Bybit Combinations', i: [{ id: 'bybit-hyperliquid', l: 'Bybit <> HL' }, { id: 'bybit-asterdex', l: 'Bybit <> Aster' }] },
-                { t: 'DeFi Only', i: [{ id: 'hyperliquid-asterdex', l: 'Hyperliquid <> Aster' }] }
-            ],
-            tryPairs: [
-                { n: 'Binance TR', p: 34.20 }, { n: 'Paribu', p: 34.28 },
-                { n: 'OKX TR', p: 34.18 }, { n: 'Bybit TR', p: 34.19 }
-            ]
+        // --- CONFIG & STATE ---
+        const COLORS = {
+            'BINANCE': '#FCD535', 'OKX': '#46e8b2', 'BYBIT': '#FFB119',
+            'HYPERLIQUID': '#00D4FF', 'ASTERDEX': '#888', 'PARIBU': '#6bf'
         };
+
+        // New Hierarchy Logic
+        const PAIR_GROUPS = [
+            {
+                title: 'Overview', items: [
+                    { id: 'all-opps', label: 'All Opportunities' },
+                    { id: 'all-coins', label: 'All Coins List' }
+                ]
+            },
+            {
+                title: 'Binance Combinations', items: [
+                    { id: 'binance-okx', label: 'Binance <> OKX' },
+                    { id: 'binance-bybit', label: 'Binance <> Bybit' },
+                    { id: 'binance-hyperliquid', label: 'Binance <> HL' },
+                    { id: 'binance-asterdex', label: 'Binance <> Aster' }
+                ]
+            },
+            {
+                title: 'OKX Combinations', items: [
+                    { id: 'okx-bybit', label: 'OKX <> Bybit' },
+                    { id: 'okx-hyperliquid', label: 'OKX <> HL' },
+                    { id: 'okx-asterdex', label: 'OKX <> Aster' }
+                ]
+            },
+            {
+                title: 'Bybit Combinations', items: [
+                    { id: 'bybit-hyperliquid', label: 'Bybit <> HL' },
+                    { id: 'bybit-asterdex', label: 'Bybit <> Aster' }
+                ]
+            },
+            {
+                title: 'DeFi Only', items: [
+                    { id: 'hyperliquid-asterdex', label: 'Hyperliquid <> Aster' }
+                ]
+            }
+        ];
 
         const state = {
             tab: 'funding',
             fundingFilter: 'all-opps',
-            data: {},
+            data: {},     // Arbitrage Opps
+            allData: [],  // All Coins Raw Data
             wsConnected: false
         };
 
@@ -549,21 +578,17 @@
                 ui.buildSidebar();
                 ui.nav('funding');
                 app.connect();
-                // Start TRY updater simulation
                 setInterval(ui.updateTryData, 2000);
             },
 
             nav: (tab) => {
                 state.tab = tab;
-                // Update Nav UI
                 document.querySelectorAll('.nav-btn').forEach((b, i) => {
-                    b.classList.toggle('active', ['funding', 'try', 'usdc', 'settings'][i] === tab);
+                    const names = ['funding', 'try', 'usdc', 'settings'];
+                    b.classList.toggle('active', names[i] === tab);
                 });
-
-                // Toggle Header Elements
                 const mBtn = document.getElementById('menuBtn');
-                mBtn.style.display = tab === 'funding' ? 'block' : 'none';
-
+                if (mBtn) mBtn.style.display = tab === 'funding' ? 'block' : 'none';
                 ui.render();
             },
 
@@ -577,12 +602,12 @@
             buildSidebar: () => {
                 const c = document.getElementById('sidebarContent');
                 let h = '';
-                CONFIG.pairs.forEach(g => {
-                    h += `<div class="sb-group-title">${g.t}</div>`;
-                    g.i.forEach(it => {
-                        h += `<button class="sb-item" id="sb-${it.id}" onclick="ui.setFilter('${it.id}')">${it.l}</button>`;
+                PAIR_GROUPS.forEach(g => {
+                    h += `<div class="sb-group-title">${g.title}</div>`;
+                    g.items.forEach(it => {
+                        h += `<button class="sb-item" id="sb-${it.id}" onclick="ui.setFilter('${it.id}')">${it.label}</button>`;
                     });
-                    if (g.t !== 'DeFi Only') h += `<div class="neon-sep"></div>`;
+                    if (g.title !== 'DeFi Only') h += `<div class="neon-sep"></div>`;
                 });
                 c.innerHTML = h;
             },
@@ -595,7 +620,6 @@
 
             render: () => {
                 const mv = document.getElementById('mainView');
-                // Update Sidebar Active State
                 document.querySelectorAll('.sb-item').forEach(b => b.classList.remove('active'));
                 const sbBtn = document.getElementById(`sb-${state.fundingFilter}`);
                 if (sbBtn) sbBtn.classList.add('active');
@@ -612,15 +636,41 @@
             },
 
             renderFunding: (container) => {
-                let list = [];
                 const filter = state.fundingFilter;
 
-                if (filter === 'all-opps') {
-                    Object.values(state.data).forEach(arr => list.push(...arr));
-                    list.sort((a, b) => (b.profit || 0) - (a.profit || 0));
-                } else if (filter === 'all-coins') {
-                    container.innerHTML = `<div class="empty-view">All Coins List (Coming Soon)</div>`;
+                // --- ALL COINS VIEW ---
+                if (filter === 'all-coins') {
+                    if (!state.allData || state.allData.length === 0) {
+                        container.innerHTML = `<div class="empty-view"><div>Loading Coins...</div></div>`;
+                        return;
+                    }
+
+                    let html = '<div style="padding:10px;">';
+                    state.allData.forEach(c => {
+                        // Simple Coin Card
+                        html += `
+                    <div style="background:#111; margin-bottom:10px; border-radius:10px; padding:12px; border:1px solid #222;">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                            <span style="font-weight:800; color:#fff;">${c.symbol}</span>
+                            <span style="font-size:0.75rem; color:#666;">${c.name}</span>
+                        </div>
+                        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:5px; font-size:0.7rem;">
+                           ${c.binance ? `<div style="color:${COLORS.BINANCE}">Bin: ${c.binance.funding}%</div>` : ''}
+                           ${c.okx ? `<div style="color:${COLORS.OKX}">OKX: ${c.okx.funding}%</div>` : ''}
+                           ${c.hyperliquid ? `<div style="color:${COLORS.HYPERLIQUID}">HL: ${c.hyperliquid.funding}%</div>` : ''}
+                        </div>
+                    </div>`;
+                    });
+                    html += '</div>';
+                    container.innerHTML = html;
                     return;
+                }
+
+                // --- ARBITRAGE OPPORTUNITIES VIEW ---
+                let list = [];
+                if (filter === 'all-opps') {
+                    Object.values(state.data).forEach(arr => { if (Array.isArray(arr)) list.push(...arr); });
+                    list.sort((a, b) => (b.profit || 0) - (a.profit || 0));
                 } else {
                     list = state.data[filter] || [];
                 }
@@ -634,13 +684,21 @@
                     const profit = d.profit || 0;
                     const pClass = profit > 0 ? 'profit' : '';
                     const valClass = profit > 0 ? 'pos' : (profit < 0 ? 'neg' : '');
-                    const c1 = d.longEx.toUpperCase().includes('BINANCE') ? '#FCD535' : (d.longEx.toUpperCase().includes('OKX') ? '#46e8b2' : '#888');
+
+                    // Safety checks for colors to avoid crash
+                    const longEx = d.longEx || 'Unknown';
+                    const shortEx = d.shortEx || 'Unknown';
+                    const c1 = longEx.toUpperCase().includes('BINANCE') ? COLORS.BINANCE :
+                        (longEx.toUpperCase().includes('OKX') ? COLORS.OKX :
+                            (longEx.toUpperCase().includes('BYBIT') ? COLORS.BYBIT : '#888'));
+
+                    const apr = d.analysis ? d.analysis.annualAPR : 0;
 
                     return `
                 <div class="opp-card ${pClass}">
                     <div class="oc-header">
                         <div class="oc-symbol">${d.symbol}</div>
-                        <div class="oc-badge">APR ${(d.analysis?.annualAPR || 0).toFixed(0)}%</div>
+                        <div class="oc-badge">APR ${apr.toFixed(0)}%</div>
                     </div>
                     <div class="oc-body">
                         <div class="oc-main">
@@ -650,12 +708,12 @@
                         <div class="oc-ex-row">
                             <div class="oc-box">
                                 <span class="oc-role">Long Side</span>
-                                <span class="oc-price" style="color:${c1}">${d.longEx}</span>
+                                <span class="oc-price" style="color:${c1}">${longEx}</span>
                                 <span class="oc-funding">${d.longPrice}</span>
                             </div>
                             <div class="oc-box">
                                 <span class="oc-role">Short Side</span>
-                                <span class="oc-price" style="color:#fff">${d.shortEx}</span>
+                                <span class="oc-price" style="color:#fff">${shortEx}</span>
                                 <span class="oc-funding">${d.shortPrice}</span>
                             </div>
                         </div>
@@ -665,9 +723,14 @@
             },
 
             renderTRY: (container) => {
-                // Using internal mock data for immediate feedback
+                const pairs = [
+                    { n: 'Binance TR', p: 34.20 }, { n: 'Paribu', p: 34.28 },
+                    { n: 'OKX TR', p: 34.18 }, { n: 'Bybit TR', p: 34.19 }
+                ];
+
+                // Using internal mock data for immediate feedback if no global config
                 let h = `<div style="padding:16px 16px 0 16px; font-weight:800; color:#444; font-size:0.8rem;">USDT/TRY LIVE</div>`;
-                h += CONFIG.tryPairs.map(p => {
+                h += pairs.map(p => {
                     // Simulate fluctuation
                     const spread = 0.05;
                     const ask = p.p + Math.random() * 0.02;
@@ -707,12 +770,6 @@
             },
 
             updateTryData: () => {
-                // Simulate price updates for visual feedback
-                CONFIG.tryPairs.forEach(p => {
-                    const change = (Math.random() - 0.5) * 0.02;
-                    p.p = Math.max(30, p.p + change);
-                });
-                // Only re-render if visible
                 if (state.tab === 'try') ui.renderTRY(document.getElementById('mainView'));
             }
         };
@@ -724,12 +781,10 @@
                 ws.onopen = () => {
                     state.wsConnected = true;
                     document.getElementById('statusDot').style.background = '#00C853';
-                    document.getElementById('statusDot').style.boxShadow = '0 0 10px #00C853';
                 };
                 ws.onclose = () => {
                     state.wsConnected = false;
                     document.getElementById('statusDot').style.background = '#FF3D00';
-                    document.getElementById('statusDot').style.boxShadow = 'none';
                     setTimeout(app.connect, 2000);
                 };
                 ws.onmessage = (e) => {
@@ -737,6 +792,7 @@
                         const msg = JSON.parse(e.data);
                         if (msg.type === 'ARBITRAGE_UPDATE') {
                             state.data = msg.data;
+                            if (msg.allData) state.allData = msg.allData; // Capture All Data
                             if (state.tab === 'funding') ui.render();
                         }
                     } catch (e) { }
