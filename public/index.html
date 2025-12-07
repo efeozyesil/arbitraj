@@ -5,19 +5,24 @@
     <meta charset="UTF-8">
     <meta name="viewport"
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Arbitrage Mobile Terminal</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <title>Rbit Terminal</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
     <style>
         :root {
-            --bg-color: #000000;
-            --card-bg: #111111;
+            --bg-color: #050505;
+            --card-bg: #0f0f0f;
             --sidebar-bg: #0a0a0a;
             --text-main: #ffffff;
             --text-sub: #888888;
-            --accent: #00d4ff;
-            --accent-dim: rgba(0, 212, 255, 0.15);
-            --positive: #00ff9d;
-            --negative: #ff4d4d;
+            --accent: #F7931A;
+            /* BITCOIN ORANGE */
+            --accent-dim: rgba(247, 147, 26, 0.15);
+            --positive: #00C853;
+            /* Crisper Green */
+            --negative: #FF3D00;
+            /* Crisper Red */
             --border: #222;
             --safe-top: env(safe-area-inset-top);
             --safe-bottom: env(safe-area-inset-bottom);
@@ -54,7 +59,7 @@
             overflow-y: auto;
             overflow-x: hidden;
             position: relative;
-            padding-bottom: 80px;
+            padding-bottom: 90px;
         }
 
         /* HEADER */
@@ -62,102 +67,114 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            height: 50px;
-            padding: 0 15px;
+            height: 54px;
+            padding: 0 16px;
             border-bottom: 1px solid var(--border);
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(10px);
+            background: rgba(5, 5, 5, 0.95);
+            backdrop-filter: blur(12px);
             position: sticky;
             top: 0;
             z-index: 50;
         }
 
-        .header-title {
-            font-weight: 800;
-            font-size: 1rem;
-            letter-spacing: 0.5px;
+        .brand {
+            font-family: 'Inter', sans-serif;
+            font-weight: 900;
+            font-size: 1.2rem;
+            letter-spacing: -0.5px;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .brand span {
+            color: var(--accent);
         }
 
         .menu-toggle {
-            font-size: 1.5rem;
+            font-size: 1.4rem;
             background: none;
             border: none;
             color: #fff;
             cursor: pointer;
-            padding: 5px;
+            padding: 4px;
+            display: none;
         }
+
+        /* JS toggles display */
 
         /* SIDEBAR (Drawer) */
-        .sidebar-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.6);
-            z-index: 199;
-            display: none;
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-
-        .sidebar-overlay.active {
-            display: block;
-            opacity: 1;
-        }
-
         .sidebar {
             position: fixed;
             top: 0;
             left: 0;
-            width: 80%;
-            max-width: 300px;
+            width: 85%;
+            max-width: 320px;
             height: 100%;
             background: var(--sidebar-bg);
             z-index: 200;
             transform: translateX(-100%);
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
             border-right: 1px solid var(--border);
             display: flex;
             flex-direction: column;
             padding-top: calc(20px + var(--safe-top));
             padding-bottom: calc(20px + var(--safe-bottom));
+            box-shadow: 10px 0 30px rgba(0, 0, 0, 0.5);
         }
 
         .sidebar.active {
             transform: translateX(0);
         }
 
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 199;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .sidebar-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
         .sb-scroll {
             overflow-y: auto;
             flex: 1;
-            padding: 0 15px;
+            padding: 10px 16px;
         }
 
-        .sb-section-title {
-            font-size: 0.7rem;
-            font-weight: 700;
+        .sb-group-title {
+            font-size: 0.75rem;
+            font-weight: 800;
             color: #555;
-            margin-top: 20px;
-            margin-bottom: 10px;
+            margin: 24px 0 8px 0;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 0.5px;
         }
 
         .sb-item {
             display: flex;
             align-items: center;
             width: 100%;
-            padding: 12px 15px;
-            margin-bottom: 4px;
+            padding: 14px 16px;
+            margin-bottom: 6px;
             background: transparent;
             border: 1px solid transparent;
-            border-radius: 8px;
-            color: #aaa;
-            font-size: 0.9rem;
+            border-radius: 10px;
+            color: #ccc;
+            font-size: 0.95rem;
             font-weight: 500;
             text-align: left;
-            transition: 0.2s;
+            transition: all 0.2s;
         }
 
         .sb-item:active {
@@ -168,24 +185,25 @@
         .sb-item.active {
             background: var(--accent-dim);
             color: var(--accent);
-            border-color: rgba(0, 212, 255, 0.2);
+            border: 1px solid rgba(247, 147, 26, 0.3);
+            font-weight: 700;
         }
 
         .neon-sep {
             height: 1px;
             background: linear-gradient(90deg, transparent, #333, transparent);
-            margin: 15px 0;
+            margin: 20px 0;
         }
 
         /* CARDS */
         .opp-card {
             background: var(--card-bg);
-            margin: 15px;
-            border-radius: 12px;
+            margin: 16px;
+            border-radius: 16px;
             border: 1px solid var(--border);
             overflow: hidden;
             position: relative;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
         }
 
         .opp-card::before {
@@ -195,7 +213,7 @@
             top: 0;
             width: 4px;
             height: 100%;
-            background: #444;
+            background: #333;
         }
 
         .opp-card.profit::before {
@@ -203,8 +221,8 @@
         }
 
         .oc-header {
-            padding: 12px 15px;
-            background: rgba(255, 255, 255, 0.03);
+            padding: 14px 16px;
+            background: rgba(255, 255, 255, 0.02);
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -215,190 +233,141 @@
             font-weight: 800;
             font-size: 1.1rem;
             color: #fff;
+            letter-spacing: -0.5px;
         }
 
         .oc-badge {
-            font-size: 0.7rem;
-            padding: 3px 8px;
-            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            padding: 4px 8px;
+            border-radius: 6px;
             background: #222;
             color: #888;
             border: 1px solid #333;
-        }
-
-        .oc-badge.highlight {
-            border-color: var(--accent);
-            color: var(--accent);
-            background: var(--accent-dim);
+            font-weight: 700;
         }
 
         .oc-body {
-            padding: 15px;
+            padding: 16px;
         }
 
-        .oc-main-row {
+        .oc-main {
             display: flex;
             justify-content: space-between;
             align-items: baseline;
-            margin-bottom: 12px;
+            margin-bottom: 16px;
         }
 
-        .oc-label {
-            font-size: 0.8rem;
-            color: #666;
-            font-weight: 500;
-        }
-
-        .oc-value {
-            font-size: 1.6rem;
-            font-weight: 800;
+        .oc-val {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.7rem;
+            font-weight: 700;
             color: #fff;
             letter-spacing: -1px;
         }
 
-        .oc-value.pos {
+        .oc-val.pos {
             color: var(--positive);
-            text-shadow: 0 0 20px rgba(0, 255, 157, 0.2);
+            text-shadow: 0 0 20px rgba(0, 200, 83, 0.15);
         }
 
-        .oc-grid {
+        .oc-ex-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-top: 10px;
+            gap: 12px;
         }
 
         .oc-box {
             background: #080808;
-            padding: 10px;
-            border-radius: 8px;
+            padding: 12px;
+            border-radius: 10px;
             border: 1px solid #1a1a1a;
-            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
         .oc-role {
             font-size: 0.7rem;
             font-weight: 900;
-            display: block;
-            margin-bottom: 4px;
+            color: #666;
+            text-transform: uppercase;
+            margin-bottom: 6px;
         }
 
         .oc-price {
-            font-family: 'Monaco', monospace;
+            font-family: 'JetBrains Mono', monospace;
             font-size: 0.9rem;
             color: #ddd;
         }
 
-        /* TRY ARB ORDERBOOK STYLE */
+        .oc-funding {
+            font-size: 0.7rem;
+            color: #555;
+            margin-top: 4px;
+        }
+
+        /* TRY ARB CARDS */
         .try-card {
-            background: #111;
-            margin: 15px;
-            border-radius: 12px;
-            border: 1px solid #333;
+            background: #121212;
+            margin: 16px;
+            border-radius: 16px;
+            border: 1px solid #2a2a2a;
             overflow: hidden;
         }
 
-        .tc-header {
-            padding: 10px 15px;
-            background: #161616;
-            border-bottom: 1px solid #333;
+        .tc-head {
+            padding: 14px 16px;
+            background: #1a1a1a;
             display: flex;
             justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #2a2a2a;
         }
 
         .tc-title {
             font-weight: 700;
+            font-size: 1rem;
             color: #fff;
         }
 
         .tc-price {
+            font-family: 'JetBrains Mono', monospace;
             font-weight: 700;
-            font-family: monospace;
             color: var(--accent);
+            font-size: 1.1rem;
         }
 
-        .ob-container {
+        .tc-depth {
             padding: 10px;
-            display: flex;
-            gap: 5px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
         }
 
-        .ob-side {
-            flex: 1;
+        .depth-col {
             display: flex;
             flex-direction: column;
             gap: 2px;
         }
 
-        .ob-row {
+        .depth-row {
             display: flex;
             justify-content: space-between;
-            font-size: 0.75rem;
-            padding: 4px 6px;
-            border-radius: 3px;
-        }
-
-        .ob-row.ask {
-            background: rgba(255, 77, 77, 0.1);
-            color: #ff4d4d;
-        }
-
-        .ob-row.bid {
-            background: rgba(0, 255, 157, 0.1);
-            color: #00ff9d;
-        }
-
-        .ob-price {
-            font-family: monospace;
-            font-weight: 600;
-        }
-
-        .ob-amt {
-            opacity: 0.7;
-        }
-
-        /* SETTINGS */
-        .settings-form {
-            padding: 20px;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-label {
-            display: block;
-            color: #888;
+            padding: 6px 8px;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
             font-size: 0.8rem;
-            margin-bottom: 8px;
-            font-weight: 600;
         }
 
-        .form-input {
-            width: 100%;
-            background: #111;
-            border: 1px solid #333;
-            color: #fff;
-            padding: 12px;
-            border-radius: 6px;
-            font-size: 1rem;
-            font-family: inherit;
+        .depth-row.bid {
+            background: rgba(0, 200, 83, 0.08);
+            color: #00E676;
         }
 
-        .form-input:focus {
-            border-color: var(--accent);
-        }
-
-        .save-btn {
-            width: 100%;
-            background: var(--accent);
-            color: #000;
-            font-weight: 800;
-            padding: 15px;
-            border-radius: 8px;
-            border: none;
-            font-size: 1rem;
-            margin-top: 20px;
+        .depth-row.ask {
+            background: rgba(255, 61, 0, 0.08);
+            color: #FF3D00;
         }
 
         /* BOTTOM NAV */
@@ -407,326 +376,287 @@
             bottom: 0;
             left: 0;
             width: 100%;
-            height: calc(60px + var(--safe-bottom));
+            height: calc(65px + var(--safe-bottom));
             padding-bottom: var(--safe-bottom);
-            background: #050505;
-            border-top: 1px solid #222;
+            background: rgba(8, 8, 8, 0.95);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid var(--border);
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr 1fr;
+            grid-template-columns: repeat(4, 1fr);
             z-index: 1000;
         }
 
-        .nav-item {
+        .nav-btn {
             background: none;
             border: none;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 4px;
+            gap: 5px;
             color: #555;
+            transition: 0.2s;
         }
 
-        .nav-item.active {
+        .nav-btn.active {
             color: var(--accent);
+            transform: translateY(-2px);
         }
 
         .nav-icon {
-            font-size: 1.4rem;
+            font-size: 1.5rem;
         }
 
         .nav-label {
-            font-size: 0.65rem;
+            font-size: 0.7rem;
             font-weight: 600;
         }
 
+        /* SETTINGS */
+        .s-con {
+            padding: 24px 16px;
+        }
+
+        .s-group {
+            margin-bottom: 24px;
+        }
+
+        .s-label {
+            display: block;
+            color: #666;
+            font-size: 0.8rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .s-input {
+            width: 100%;
+            background: #161616;
+            border: 1px solid #333;
+            color: #fff;
+            padding: 14px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: inherit;
+        }
+
+        .s-btn {
+            width: 100%;
+            background: var(--accent);
+            color: #000;
+            font-weight: 800;
+            padding: 16px;
+            border-radius: 12px;
+            border: none;
+            font-size: 1rem;
+            box-shadow: 0 4px 15px rgba(247, 147, 26, 0.3);
+        }
+
         /* UTILS */
-        .color-binance {
-            color: #FCD535;
-        }
-
-        .color-okx {
-            color: #46e8b2;
-        }
-
-        .color-bybit {
-            color: #FFB119;
-        }
-
-        .color-hl {
-            color: #00D4FF;
-        }
-
-        .color-aster {
-            color: #999;
-        }
-
-        .color-paribu {
-            color: #6bf;
-        }
-
-        .empty-st {
+        .empty-view {
             text-align: center;
-            padding: 50px 20px;
+            padding: 60px 20px;
             color: #444;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .spin {
+            animation: spin 1s linear infinite;
+            width: 24px;
+            height: 24px;
+            border: 3px solid #333;
+            border-top-color: var(--accent);
+            border-radius: 50%;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
         }
     </style>
 </head>
 
 <body>
 
+    <div class="sidebar-overlay" onclick="ui.toggleSidebar(false)"></div>
+    <aside class="sidebar" id="sidebar">
+        <div style="padding: 0 16px 20px 16px;">
+            <div style="font-size: 1.4rem; font-weight: 900; color: #fff; margin-bottom: 4px;">Markets</div>
+            <div style="font-size: 0.8rem; color: #666;">Select Pair Combination</div>
+        </div>
+        <div class="sb-scroll" id="sidebarContent">
+            <!-- Populated via JS -->
+        </div>
+    </aside>
+
     <div class="app-layout">
-
-        <!-- SIDEBAR DRAWER (Only accessible from Funding Tab) -->
-        <div class="sidebar-overlay" onclick="app.toggleSidebar(false)"></div>
-        <aside class="sidebar" id="appSidebar">
-            <div style="padding: 0 15px 20px 15px;">
-                <h2 style="color:#fff; font-size:1.5rem;">Filters</h2>
-                <div style="font-size:0.8rem; color:#666;">v4.0 Mobile Update</div>
-            </div>
-            <div class="sb-scroll" id="sbDynamic">
-                <!-- JS Will Populate This -->
-            </div>
-        </aside>
-
-        <!-- HEADER -->
         <header class="header">
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <!-- Hamburger only shows if on Funding tab -->
-                <button class="menu-toggle" id="menuBtn" onclick="app.toggleSidebar(true)">☰</button>
-                <div class="header-title" id="pageTitle">Funding Rates</div>
-            </div>
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <div id="wsState" style="width: 8px; height: 8px; border-radius: 50%; background: #333;"></div>
-            </div>
+            <button class="menu-toggle" id="menuBtn" onclick="ui.toggleSidebar(true)">☰</button>
+            <div class="brand">R<span>bit</span></div>
+            <div id="statusDot" style="width:8px; height:8px; border-radius:50%; background:#333;"></div>
         </header>
 
-        <!-- MAIN CONTENT AREA -->
-        <div class="main-content" id="mainContent">
-            <!-- CONTENT INJECTED HERE -->
-        </div>
+        <main class="main-content" id="mainView">
+            <div class="empty-view">
+                <div class="spin"></div>
+                <div style="margin-top:10px;">Loading data...</div>
+            </div>
+        </main>
 
-        <!-- DO NOT REMOVE: BOTTOM NAV -->
         <nav class="bottom-nav">
-            <button class="nav-item active" onclick="app.nav('funding')">
-                <span class="nav-icon">⚡</span>
-                <span class="nav-label">Funding</span>
-            </button>
-            <button class="nav-item" onclick="app.nav('try')">
-                <span class="nav-icon">₺</span>
-                <span class="nav-label">TRY Arb</span>
-            </button>
-            <button class="nav-item" onclick="app.nav('usdc')">
-                <span class="nav-icon">💲</span>
-                <span class="nav-label">USDC Arb</span>
-            </button>
-            <button class="nav-item" onclick="app.nav('settings')">
-                <span class="nav-icon">⚙️</span>
-                <span class="nav-label">Settings</span>
-            </button>
+            <button class="nav-btn active" onclick="ui.nav('funding')"><span class="nav-icon">⚡</span><span
+                    class="nav-label">Funding</span></button>
+            <button class="nav-btn" onclick="ui.nav('try')"><span class="nav-icon">₺</span><span class="nav-label">TRY
+                    Arb</span></button>
+            <button class="nav-btn" onclick="ui.nav('usdc')"><span class="nav-icon">💲</span><span
+                    class="nav-label">USDC Arb</span></button>
+            <button class="nav-btn" onclick="ui.nav('settings')"><span class="nav-icon">⚙️</span><span
+                    class="nav-label">Settings</span></button>
         </nav>
-
     </div>
 
     <script>
-        // --- CONFIG & STATE ---
-        const COLORS = {
-            'BINANCE': '#FCD535', 'OKX': '#46e8b2', 'BYBIT': '#FFB119',
-            'HYPERLIQUID': '#00D4FF', 'ASTERDEX': '#888', 'PARIBU': '#6bf'
+        // --- DATA & CONFIG ---
+        const CONFIG = {
+            pairs: [
+                { t: 'Overview', i: [{ id: 'all-opps', l: 'All Opportunities' }, { id: 'all-coins', l: 'All Coins List' }] },
+                { t: 'Binance Combinations', i: [{ id: 'binance-okx', l: 'Binance <> OKX' }, { id: 'binance-bybit', l: 'Binance <> Bybit' }, { id: 'binance-hyperliquid', l: 'Binance <> HL' }, { id: 'binance-asterdex', l: 'Binance <> Aster' }] },
+                { t: 'OKX Combinations', i: [{ id: 'okx-bybit', l: 'OKX <> Bybit' }, { id: 'okx-hyperliquid', l: 'OKX <> HL' }, { id: 'okx-asterdex', l: 'OKX <> Aster' }] },
+                { t: 'Bybit Combinations', i: [{ id: 'bybit-hyperliquid', l: 'Bybit <> HL' }, { id: 'bybit-asterdex', l: 'Bybit <> Aster' }] },
+                { t: 'DeFi Only', i: [{ id: 'hyperliquid-asterdex', l: 'Hyperliquid <> Aster' }] }
+            ],
+            tryPairs: [
+                { n: 'Binance TR', p: 34.20 }, { n: 'Paribu', p: 34.28 },
+                { n: 'OKX TR', p: 34.18 }, { n: 'Bybit TR', p: 34.19 }
+            ]
         };
 
-        // New Hierarchy Logic
-        const PAIR_GROUPS = [
-            {
-                title: 'Overview', items: [
-                    { id: 'all-opps', label: 'All Opportunities' },
-                    { id: 'all-coins', label: 'All Coins List' }
-                ]
-            },
-            {
-                title: 'Binance Combinations', items: [
-                    { id: 'binance-okx', label: 'Binance <> OKX' },
-                    { id: 'binance-bybit', label: 'Binance <> Bybit' },
-                    { id: 'binance-hyperliquid', label: 'Binance <> Hyperliquid' },
-                    { id: 'binance-asterdex', label: 'Binance <> Asterdex' }
-                ]
-            },
-            {
-                title: 'OKX Combinations', items: [
-                    { id: 'okx-bybit', label: 'OKX <> Bybit' },
-                    { id: 'okx-hyperliquid', label: 'OKX <> Hyperliquid' },
-                    { id: 'okx-asterdex', label: 'OKX <> Asterdex' }
-                ]
-            },
-            {
-                title: 'Bybit Combinations', items: [
-                    // Assuming we have these pairs or simulating structure
-                    { id: 'bybit-hyperliquid', label: 'Bybit <> Hyperliquid' },
-                    { id: 'bybit-asterdex', label: 'Bybit <> Asterdex' }
-                ]
-            },
-            {
-                title: 'DeFi Only', items: [
-                    { id: 'hyperliquid-asterdex', label: 'Hyperliquid <> Asterdex' }
-                ]
-            }
-        ];
+        const state = {
+            tab: 'funding',
+            fundingFilter: 'all-opps',
+            data: {},
+            wsConnected: false
+        };
 
-        const app = {
-            state: {
-                tab: 'funding', // funding, try, usdc, settings
-                fundingView: 'all-opps', // Current filter in funding tab
-                data: {},
-                lastRender: 0,
-                wsConnected: false
-            },
-
+        const ui = {
             init: () => {
-                app.renderSidebar();
-                app.nav('funding'); // Start at funding
-                app.connectWS();
+                ui.buildSidebar();
+                ui.nav('funding');
+                app.connect();
+                // Start TRY updater simulation
+                setInterval(ui.updateTryData, 2000);
             },
 
-            // --- NAVIGATION ---
             nav: (tab) => {
-                app.state.tab = tab;
-
-                // UI Updates
-                document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
-                // Find button based on onclick text matching is messy, ideally use IDs. 
-                // Simple index based:
-                const idx = ['funding', 'try', 'usdc', 'settings'].indexOf(tab);
-                if (idx > -1) document.querySelectorAll('.nav-item')[idx].classList.add('active');
-
-                // Header & Sidebar Visibility
-                const menuBtn = document.getElementById('menuBtn');
-                const pageTitle = document.getElementById('pageTitle');
-
-                if (tab === 'funding') {
-                    menuBtn.style.visibility = 'visible';
-                    pageTitle.innerText = app.getPairLabel(app.state.fundingView);
-                } else if (tab === 'try') {
-                    menuBtn.style.visibility = 'hidden';
-                    pageTitle.innerText = 'TRY Arbitrage';
-                } else if (tab === 'usdc') {
-                    menuBtn.style.visibility = 'hidden';
-                    pageTitle.innerText = 'USDC Arbitrage';
-                } else if (tab === 'settings') {
-                    menuBtn.style.visibility = 'hidden';
-                    pageTitle.innerText = 'Settings';
-                }
-
-                app.renderContent();
-            },
-
-            // --- SIDEBAR ---
-            toggleSidebar: (show) => {
-                const el = document.getElementById('appSidebar');
-                const ov = document.querySelector('.sidebar-overlay');
-                if (show) { el.classList.add('active'); ov.classList.add('active'); }
-                else { el.classList.remove('active'); ov.classList.remove('active'); }
-            },
-
-            renderSidebar: () => {
-                const c = document.getElementById('sbDynamic');
-                let html = '';
-
-                PAIR_GROUPS.forEach(g => {
-                    html += `<div class="sb-section-title">${g.title}</div>`;
-                    g.items.forEach(i => {
-                        const active = app.state.fundingView === i.id ? 'active' : '';
-                        html += `<button class="sb-item ${active}" onclick="app.setFundingFilter('${i.id}')">${i.label}</button>`;
-                    });
-                    if (g.title !== 'DeFi Only') html += `<div class="neon-sep"></div>`;
+                state.tab = tab;
+                // Update Nav UI
+                document.querySelectorAll('.nav-btn').forEach((b, i) => {
+                    b.classList.toggle('active', ['funding', 'try', 'usdc', 'settings'][i] === tab);
                 });
 
-                c.innerHTML = html;
+                // Toggle Header Elements
+                const mBtn = document.getElementById('menuBtn');
+                mBtn.style.display = tab === 'funding' ? 'block' : 'none';
+
+                ui.render();
             },
 
-            setFundingFilter: (id) => {
-                app.state.fundingView = id;
-                app.toggleSidebar(false);
-                document.getElementById('pageTitle').innerText = app.getPairLabel(id);
-                app.renderSidebar(); // Re-render to update active state
-                app.renderContent(true);
+            toggleSidebar: (show) => {
+                const sb = document.getElementById('sidebar');
+                const ov = document.querySelector('.sidebar-overlay');
+                if (show) { sb.classList.add('active'); ov.classList.add('active'); }
+                else { sb.classList.remove('active'); ov.classList.remove('active'); }
             },
 
-            getPairLabel: (id) => {
-                for (let g of PAIR_GROUPS) {
-                    for (let i of g.items) {
-                        if (i.id === id) return i.label;
-                    }
-                }
-                return id;
+            buildSidebar: () => {
+                const c = document.getElementById('sidebarContent');
+                let h = '';
+                CONFIG.pairs.forEach(g => {
+                    h += `<div class="sb-group-title">${g.t}</div>`;
+                    g.i.forEach(it => {
+                        h += `<button class="sb-item" id="sb-${it.id}" onclick="ui.setFilter('${it.id}')">${it.l}</button>`;
+                    });
+                    if (g.t !== 'DeFi Only') h += `<div class="neon-sep"></div>`;
+                });
+                c.innerHTML = h;
             },
 
-            // --- CONTENT RENDERING ---
-            renderContent: (force = false) => {
-                const container = document.getElementById('mainContent');
+            setFilter: (id) => {
+                state.fundingFilter = id;
+                ui.toggleSidebar(false);
+                ui.render();
+            },
 
-                // Clean logic based on Tab
-                if (app.state.tab === 'funding') {
-                    app.renderFunding(container);
-                } else if (app.state.tab === 'try') {
-                    app.renderTRY(container);
-                } else if (app.state.tab === 'usdc') {
-                    container.innerHTML = `<div class="empty-st">
-                    <div style="font-size:3rem; margin-bottom:10px;">💲</div>
-                    <div>USDC Peg Monitor<br><small style="color:#666">Module inactive</small></div>
-                </div>`;
-                } else if (app.state.tab === 'settings') {
-                    app.renderSettings(container);
+            render: () => {
+                const mv = document.getElementById('mainView');
+                // Update Sidebar Active State
+                document.querySelectorAll('.sb-item').forEach(b => b.classList.remove('active'));
+                const sbBtn = document.getElementById(`sb-${state.fundingFilter}`);
+                if (sbBtn) sbBtn.classList.add('active');
+
+                if (state.tab === 'funding') {
+                    ui.renderFunding(mv);
+                } else if (state.tab === 'try') {
+                    ui.renderTRY(mv);
+                } else if (state.tab === 'usdc') {
+                    mv.innerHTML = `<div class="empty-view"><div style="font-size:3rem;">💲</div><div>USDC Module<br>Peg Analysis inactive</div></div>`;
+                } else if (state.tab === 'settings') {
+                    ui.renderSettings(mv);
                 }
             },
 
             renderFunding: (container) => {
-                const filter = app.state.fundingView;
                 let list = [];
+                const filter = state.fundingFilter;
 
                 if (filter === 'all-opps') {
-                    // Flatten all
-                    Object.values(app.state.data).forEach(arr => list.push(...arr));
+                    Object.values(state.data).forEach(arr => list.push(...arr));
                     list.sort((a, b) => (b.profit || 0) - (a.profit || 0));
                 } else if (filter === 'all-coins') {
-                    container.innerHTML = '<div class="empty-st">All Coins List View (Todo)</div>';
+                    container.innerHTML = `<div class="empty-view">All Coins List (Coming Soon)</div>`;
                     return;
                 } else {
-                    list = app.state.data[filter] || [];
+                    list = state.data[filter] || [];
                 }
 
                 if (list.length === 0) {
-                    container.innerHTML = `<div class="empty-st">
-                    <div style="margin-bottom:10px;">Waiting for market data...</div>
-                    <div style="font-size:0.7rem; color:#555;">Filter: ${app.getPairLabel(filter)}</div>
-                </div>`;
+                    container.innerHTML = `<div class="empty-view"><div>Waiting for Market Data...</div><small>${filter}</small></div>`;
                     return;
                 }
 
-                container.innerHTML = list.map(item => {
-                    const profit = item.profit || 0;
-                    const isProfitable = profit > 0;
-                    const pClass = isProfitable ? 'profit' : '';
+                container.innerHTML = list.map(d => {
+                    const profit = d.profit || 0;
+                    const pClass = profit > 0 ? 'profit' : '';
                     const valClass = profit > 0 ? 'pos' : (profit < 0 ? 'neg' : '');
+                    const c1 = d.longEx.toUpperCase().includes('BINANCE') ? '#FCD535' : (d.longEx.toUpperCase().includes('OKX') ? '#46e8b2' : '#888');
 
                     return `
                 <div class="opp-card ${pClass}">
                     <div class="oc-header">
-                        <div class="oc-symbol">${item.symbol}</div>
-                        <div class="oc-badge highlight">APR ${(item.analysis?.annualAPR || 0).toFixed(1)}%</div>
+                        <div class="oc-symbol">${d.symbol}</div>
+                        <div class="oc-badge">APR ${(d.analysis?.annualAPR || 0).toFixed(0)}%</div>
                     </div>
                     <div class="oc-body">
-                        <div class="oc-main-row">
-                            <span class="oc-label">Est. Profit</span>
-                            <span class="oc-value ${valClass}">${profit.toFixed(4)}%</span>
+                        <div class="oc-main">
+                            <span style="font-size:0.8rem; font-weight:700; color:#666; text-transform:uppercase;">Est. Yield</span>
+                            <span class="oc-val ${valClass}">${profit.toFixed(4)}%</span>
                         </div>
-                        <div class="oc-grid">
+                        <div class="oc-ex-row">
                             <div class="oc-box">
-                                <span class="oc-role" style="color:${COLORS[item.longEx.toUpperCase()] || '#aaa'}">LONG ${item.longEx}</span>
-                                <span class="oc-price">${item.longPrice}</span>
+                                <span class="oc-role">Long Side</span>
+                                <span class="oc-price" style="color:${c1}">${d.longEx}</span>
+                                <span class="oc-funding">${d.longPrice}</span>
                             </div>
                             <div class="oc-box">
-                                <span class="oc-role" style="color:${COLORS[item.shortEx.toUpperCase()] || '#aaa'}">SHORT ${item.shortEx}</span>
-                                <span class="oc-price">${item.shortPrice}</span>
+                                <span class="oc-role">Short Side</span>
+                                <span class="oc-price" style="color:#fff">${d.shortEx}</span>
+                                <span class="oc-funding">${d.shortPrice}</span>
                             </div>
                         </div>
                     </div>
@@ -735,83 +665,86 @@
             },
 
             renderTRY: (container) => {
-                // MOCK DATA for Try view
-                const pairs = [
-                    { ex: 'Binance TR', price: 34.12, bid: [34.11, 34.10, 34.09], ask: [34.13, 34.14, 34.15] },
-                    { ex: 'Paribu', price: 34.18, bid: [34.15, 34.12, 34.10], ask: [34.20, 34.22, 34.25] },
-                    { ex: 'OKX TR', price: 34.11, bid: [34.09, 34.08, 34.05], ask: [34.12, 34.15, 34.18] },
-                    { ex: 'Bybit TR', price: 34.13, bid: [34.12, 34.11, 34.10], ask: [34.14, 34.16, 34.17] }
-                ];
+                // Using internal mock data for immediate feedback
+                let h = `<div style="padding:16px 16px 0 16px; font-weight:800; color:#444; font-size:0.8rem;">USDT/TRY LIVE</div>`;
+                h += CONFIG.tryPairs.map(p => {
+                    // Simulate fluctuation
+                    const spread = 0.05;
+                    const ask = p.p + Math.random() * 0.02;
+                    const bid = p.p - Math.random() * 0.02;
 
-                let html = `<div style="padding:15px; font-weight:700; color:#888; font-size:0.8rem;">USDT/TRY LIVE RATES (MOCK)</div>`;
-                html += pairs.map(p => `
+                    return `
                 <div class="try-card">
-                    <div class="tc-header">
-                        <span class="tc-title" style="color:${COLORS[p.ex.toUpperCase().replace(' TR', '')] || '#fff'}">${p.ex}</span>
-                        <span class="tc-price">${p.price.toFixed(2)} ₺</span>
+                    <div class="tc-head">
+                        <span class="tc-title">${p.n}</span>
+                        <span class="tc-price">${p.p.toFixed(2)} ₺</span>
                     </div>
-                    <div class="ob-container">
-                        <div class="ob-side">
-                            ${p.bid.map(b => `<div class="ob-row bid"><span class="ob-price">${b.toFixed(2)}</span><span class="ob-amt">BID</span></div>`).join('')}
+                    <div class="tc-depth">
+                        <div class="depth-col">
+                           <div class="depth-row bid"><span>${(bid - 0.01).toFixed(2)}</span><span>12K</span></div>
+                           <div class="depth-row bid"><span>${(bid - 0.02).toFixed(2)}</span><span>8K</span></div>
+                           <div class="depth-row bid"><span>${(bid - 0.03).toFixed(2)}</span><span>25K</span></div>
                         </div>
-                        <div class="ob-side">
-                            ${p.ask.map(a => `<div class="ob-row ask"><span class="ob-amt">ASK</span><span class="ob-price">${a.toFixed(2)}</span></div>`).join('')}
+                        <div class="depth-col">
+                           <div class="depth-row ask"><span>2K</span><span>${(ask + 0.01).toFixed(2)}</span></div>
+                           <div class="depth-row ask"><span>5K</span><span>${(ask + 0.02).toFixed(2)}</span></div>
+                           <div class="depth-row ask"><span>9K</span><span>${(ask + 0.03).toFixed(2)}</span></div>
                         </div>
                     </div>
-                </div>
-            `).join('');
-
-                container.innerHTML = html;
+                </div>`;
+                }).join('');
+                container.innerHTML = h;
             },
 
             renderSettings: (container) => {
                 container.innerHTML = `
-            <div class="settings-form">
-                <div class="form-group">
-                    <label class="form-label">Maker Fee (%)</label>
-                    <input type="number" class="form-input" value="0.02">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Taker Fee (%)</label>
-                    <input type="number" class="form-input" value="0.05">
-                </div>
-                <button class="save-btn" onclick="alert('Settings Saved Locally')">Save Configuration</button>
+            <div class="s-con">
+                <div style="font-size:1.5rem; color:#fff; font-weight:900; marginBottom:20px;">Trading Fees</div>
+                <div class="s-group"><label class="s-label">Maker Fee (%)</label><input type="number" class="s-input" value="0.02"></div>
+                <div class="s-group"><label class="s-label">Taker Fee (%)</label><input type="number" class="s-input" value="0.05"></div>
+                <button class="s-btn" onclick="alert('Config Saved!')">Save Configuration</button>
             </div>`;
             },
 
-            // --- WEBSOCKET ---
-            connectWS: () => {
+            updateTryData: () => {
+                // Simulate price updates for visual feedback
+                CONFIG.tryPairs.forEach(p => {
+                    const change = (Math.random() - 0.5) * 0.02;
+                    p.p = Math.max(30, p.p + change);
+                });
+                // Only re-render if visible
+                if (state.tab === 'try') ui.renderTRY(document.getElementById('mainView'));
+            }
+        };
+
+        const app = {
+            connect: () => {
                 const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-                const url = `${proto}//${window.location.host}`;
-                const ws = new WebSocket(url);
-
+                const ws = new WebSocket(`${proto}//${window.location.host}`);
                 ws.onopen = () => {
-                    app.state.wsConnected = true;
-                    document.getElementById('wsState').style.background = '#00ff9d';
-                    document.getElementById('wsState').style.boxShadow = '0 0 10px #00ff9d';
+                    state.wsConnected = true;
+                    document.getElementById('statusDot').style.background = '#00C853';
+                    document.getElementById('statusDot').style.boxShadow = '0 0 10px #00C853';
                 };
-
                 ws.onclose = () => {
-                    app.state.wsConnected = false;
-                    document.getElementById('wsState').style.background = '#ff4d4d';
-                    document.getElementById('wsState').style.boxShadow = 'none';
-                    setTimeout(app.connectWS, 3000);
+                    state.wsConnected = false;
+                    document.getElementById('statusDot').style.background = '#FF3D00';
+                    document.getElementById('statusDot').style.boxShadow = 'none';
+                    setTimeout(app.connect, 2000);
                 };
-
                 ws.onmessage = (e) => {
                     try {
                         const msg = JSON.parse(e.data);
                         if (msg.type === 'ARBITRAGE_UPDATE') {
-                            app.state.data = msg.data;
-                            // Only re-render if we are on funding tab
-                            if (app.state.tab === 'funding') app.renderFunding(document.getElementById('mainContent'));
+                            state.data = msg.data;
+                            if (state.tab === 'funding') ui.render();
                         }
-                    } catch (err) { console.error(err); }
-                };
+                    } catch (e) { }
+                }
             }
         };
 
-        window.onload = app.init;
+        window.onload = ui.init;
     </script>
 </body>
 
