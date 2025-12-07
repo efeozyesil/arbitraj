@@ -210,35 +210,24 @@
                 position: fixed;
                 top: 0;
                 left: -100%;
+                /* Hidden by default */
                 width: 85%;
-                max-width: 300px;
-                height: 100%;
-                z-index: 9999;
-                /* TOP OF EVERYTHING */
-                background: #000;
+                max-width: 320px;
+                height: 100vh;
+                background: #050505;
                 border-right: 1px solid var(--accent);
-                transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-                transform: translateX(0);
-                /* Controlled by left logic or transform */
-                box-shadow: 50px 0 100px rgba(0, 0, 0, 0.8);
+                z-index: 9999;
+                transition: left 0.3s ease-in-out;
                 display: flex !important;
-                padding-top: 20px;
-                /* Reset standard layout */
+                flex-direction: column;
+                padding-top: 0;
+                box-shadow: 20px 0 100px rgba(0, 0, 0, 0.9);
             }
 
             .sidebar.open {
-                transform: translateX(100%);
-                left: -100%;
-                /* Logic adjustment: Easier to just use left=0 */
+                left: 0 !important;
+                /* Slide in */
             }
-
-            /* Better Logic: Use class to toggle transform */
-            .sidebar {
-                transform: translateX(0);
-                left: -100%;
-            }
-
-            /* On Open, we set left: 0 */
 
             /* Backdrop */
             .backdrop {
@@ -252,7 +241,7 @@
                 display: none;
                 opacity: 0;
                 transition: opacity 0.3s;
-                backdrop-filter: blur(5px);
+                backdrop-filter: blur(4px);
             }
 
             .backdrop.visible {
@@ -864,23 +853,23 @@
                 };
             },
 
-            // MOBILE MENU
+            // MOBILE MENU (CSS Controlled)
             toggleSidebar: (show) => {
                 const sb = document.getElementById('mainSidebar');
                 const bd = document.getElementById('backdrop');
+                // Don't mess with inline styles, trust CSS classes
                 if (show) {
-                    sb.style.left = '0'; // Only affects mobile due to CSS
+                    sb.style.left = ''; // Clear any inline interference
                     sb.classList.add('open');
                     bd.classList.add('visible');
                 } else {
-                    sb.style.left = '';
                     sb.classList.remove('open');
                     bd.classList.remove('visible');
                 }
             },
 
             checkMobileClose: () => {
-                if (window.innerWidth <= 768) app.toggleSidebar(false);
+                if (window.innerWidth <= 900) app.toggleSidebar(false);
             },
 
             // NAVIGATION
@@ -890,8 +879,16 @@
                 document.getElementById(`mod-${modId}`).classList.add('active');
                 document.querySelectorAll('.bn-item').forEach(el => el.classList.remove('active'));
                 if (btn) btn.classList.add('active');
+
                 const sb = document.getElementById('mainSidebar');
-                if (window.innerWidth > 768) sb.style.display = (modId === 'funding') ? 'flex' : 'none';
+                // Desktop logic: Toggle display flex/none based on module
+                // Mobile logic: CSS handles display (always flex, positioned off-screen)
+                if (window.innerWidth > 900) {
+                    sb.style.display = (modId === 'funding') ? 'flex' : 'none';
+                } else {
+                    sb.style.display = ''; // Clear inline for mobile to use CSS
+                }
+
                 if (modId === 'settings') app.renderSettings();
                 if (modId === 'funding') app.render();
             },
