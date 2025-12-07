@@ -196,12 +196,14 @@
             padding: 5px;
         }
 
-        /* MOBILE: STATIC BLOCK MENU (v2.1 - Simple & Robust) */
+        /* MOBILE: SPLIT SCREEN (v3.0 - Desktop Style on Mobile) */
         @media (max-width: 900px) {
+
+            /* Force Row Layout (Sidebar Left | Content Right) */
             .content-wrapper {
-                flex-direction: column;
-                height: auto;
-                overflow: visible;
+                flex-direction: row !important;
+                height: calc(100vh - 60px);
+                overflow: hidden;
             }
 
             .menu-btn {
@@ -212,70 +214,135 @@
                 display: block;
             }
 
-            /* Sidebar becomes a simple block at the top */
+            /* Mini Sidebar on Left */
             .sidebar {
-                position: static;
-                /* No fixed/sticky magic */
-                width: 100%;
-                height: auto;
-                max-width: 100%;
+                position: relative;
+                /* Normal flow */
+                top: 0;
+                left: 0;
+                width: 105px !important;
+                /* Fixed narrow width */
+                min-width: 105px;
+                height: 100%;
                 background: #0a0a0a;
-                border-right: none;
-                border-bottom: 1px solid var(--accent);
-                display: block !important;
-                padding: 15px;
-                overflow: visible;
-                box-shadow: none;
-                z-index: 1;
+                border-right: 1px solid var(--border);
+                display: flex !important;
+                flex-direction: column;
+                padding: 10px 5px;
+                overflow-y: auto;
+                z-index: 10;
             }
 
-            /* Show Headers/Dividers again (Web-like) */
+            /* Hide headers to save space */
             .sb-header,
-            .neon-divider,
-            .sidebar>div:first-child {
-                display: block !important;
+            .neon-divider {
+                display: none !important;
             }
 
-            /* Sidebar Buttons as Chips/Grid */
             #sbContent {
                 display: flex;
-                flex-wrap: wrap;
-                gap: 8px;
+                flex-direction: column;
+                gap: 5px;
             }
 
             .sb-btn {
-                flex: 1 1 40%;
-                /* 2 columns */
                 margin: 0 !important;
+                width: 100%;
+                font-size: 0.7rem;
+                padding: 8px 4px;
                 text-align: center;
                 justify-content: center;
-                padding: 10px;
-                background: #111;
-                border: 1px solid #333;
+                white-space: normal;
+                /* Allow text wrap */
+                line-height: 1.1;
+                border: 1px solid transparent;
             }
 
             .sb-btn.active {
                 background: var(--accent);
                 color: #000;
+                font-weight: 700;
             }
 
-            /* Content Area Fix */
+            /* Content Area (Right Side) */
             .view-frame {
-                padding: 15px;
-                overflow: visible;
-                height: auto;
+                padding: 10px 5px;
+                overflow-y: auto;
+                flex: 1;
+                /* Take remaining space */
+                height: 100%;
+                width: calc(100% - 105px);
             }
 
+            .page-title {
+                font-size: 1rem;
+                margin-bottom: 10px;
+            }
+
+            /* Card Adjustments for Narrow Space */
             .cards-grid {
                 grid-template-columns: 1fr;
-                /* Single column cards */
-                gap: 20px;
+                /* Single column */
+                gap: 10px;
                 padding-bottom: 80px;
-                /* Space for bottom nav */
+            }
+
+            .new-card {
+                padding: 10px;
+            }
+
+            .nc-head {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 5px;
+            }
+
+            .nc-stats-right {
+                align-items: flex-start;
+                margin-top: 5px;
+            }
+
+            .nc-price-row {
+                flex-direction: column;
+                gap: 8px;
+                /* Stack prices vertically */
+            }
+
+            .nc-p-box {
+                width: 100%;
+                margin-bottom: 5px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .breakdown-grid {
+                grid-template-columns: 1fr;
+                /* Stack Maker/Taker vertical */
+            }
+
+            .bd-col {
+                border-left: none !important;
+                padding-left: 0 !important;
+                border-top: 1px solid #333;
+                padding-top: 10px;
+                margin-top: 10px;
+            }
+
+            .bd-item,
+            .bd-final {
+                display: flex;
+                justify-content: space-between;
+                width: 100%;
             }
 
             /* Ensure Backdrop is gone */
             .backdrop {
+                display: none !important;
+            }
+
+            /* Hide bottom nav on mobile if it exists in HTML, sidebar is enough */
+            .bottom-nav {
                 display: none !important;
             }
         }
@@ -902,11 +969,9 @@
                 if (btn) btn.classList.add('active');
 
                 const sb = document.getElementById('mainSidebar');
-                // Desktop: Flex/None logic
-                // Mobile: Always visible (Horizontal Scroll via CSS)
-                if (window.innerWidth > 900) {
-                    sb.style.display = (modId === 'funding') ? 'flex' : 'none';
-                }
+                // Always show sidebar (Desktop & Mobile Split Screen)
+                // Only hide if module is NOT funding (which is rare in this app structure)
+                sb.style.display = (modId === 'funding' || modId === 'settings') ? 'flex' : 'none';
 
                 if (modId === 'settings') app.renderSettings();
                 if (modId === 'funding') app.render();
