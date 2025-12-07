@@ -696,9 +696,6 @@
                 if (now - app.lastRender < 500) return; // Limit 2fps
                 app.lastRender = now;
 
-                document.getElementById('loadProgress').style.width = '100%';
-                setTimeout(() => document.getElementById('loadProgress').style.width = '0%', 200);
-
                 if (app.state.view === 'exchanges') {
                     const data = app.state.data[app.state.pair] || [];
                     const grid = document.getElementById('gridTarget');

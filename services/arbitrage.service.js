@@ -216,8 +216,8 @@ class ArbitrageService {
         return {
             strategy,
             tradeSize,
-            priceDifferencePercent,
-            priceDifferencePnL,
+            priceDiffPercent,
+            priceDiffPnL,
 
             // Funding Info
             cycleDuration: bestScenario.cycle.durationHours,
