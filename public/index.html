@@ -483,12 +483,31 @@
             </div>
 
             <!-- MODULE: SETTINGS -->
-            <div id="mod-settings" class="module-container" style="justify-content:center; align-items:center;">
-                <h2>Settings</h2>
-                <p style="color:#666; margin-top:10px;">Version 1.1.0</p>
+            <div id="mod-settings" class="module-container">
+                <header class="top-header">
+                    <div class="page-title">Fee Configuration</div>
+                </header>
+                <div style="flex:1; overflow-y:auto; padding:20px;">
+                    <div style="max-width:500px; margin:0 auto;">
+                        <div
+                            style="background:rgba(255,255,255,0.05); border-radius:10px; padding:20px; border:1px solid var(--border);">
+                            <div style="font-size:0.9rem; color:#aaa; margin-bottom:15px;">Configure trading fees
+                                (Maker/Taker) to get accurate Net Profit calculations.</div>
+
+                            <div id="settingsForm"></div>
+
+                            <button onclick="app.saveSettings()"
+                                style="width:100%; padding:15px; background:var(--accent); color:#000; font-weight:bold; border:none; border-radius:6px; cursor:pointer; margin-top:20px;">
+                                Save Configuration
+                            </button>
+                        </div>
+                        <div style="text-align:center; margin-top:30px; color:#444; font-size:0.8rem;">
+                            Arbitrage Terminal v1.2
+                        </div>
+                    </div>
+                </div>
             </div>
         </main>
-
     </div>
 
     <!-- BOTTOM NAVIGATION -->
@@ -519,7 +538,49 @@
                 view: 'exchanges', // exchanges, list, data
                 pair: 'binance-okx',
                 data: {},
-                allCoins: []
+                allCoins: [],
+                fees: JSON.parse(localStorage.getItem('userFees')) || {
+                    Binance: { maker: 0.02, taker: 0.05 },
+                    OKX: { maker: 0.02, taker: 0.05 },
+                    Bybit: { maker: 0.02, taker: 0.05 },
+                    Hyperliquid: { maker: 0.02, taker: 0.05 },
+                    Asterdex: { maker: 0, taker: 0.05 }
+                }
+            },
+
+            // FEE CALCULATOR
+            calculateNet: (opp) => {
+                // Backend sends raw income and price risk. We recalculate fees here.
+                const exA = opp.exchangeA.name;
+                const exB = opp.exchangeB.name;
+                const feesA = app.state.fees[exA] || { maker: 0.02, taker: 0.05 };
+                const feesB = app.state.fees[exB] || { maker: 0.02, taker: 0.05 };
+
+                // Assumption: Taker Open, Taker Close (Conservative)
+                const tradeSize = 100;
+
+                // Percent to decimal (0.05% -> 0.0005)
+                const costA = tradeSize * (feesA.taker / 100);
+                const costB = tradeSize * (feesB.taker / 100);
+                const totalFees = (costA + costB) * 2; // Open + Close
+
+                const a = opp.analysis;
+                const backendNet = a.netCycleProfit;
+
+                // Reconstruct Net: (Income + Risk) - NewFees
+                // Backend 'netCycleProfit' includes backend-hardcoded fees. 
+                // Better approach: Use components.
+                // Income and Risk are fixed.
+
+                const income = a.fundingIncomeCycle || 0;
+                const risk = a.priceDifferencePnL || 0;
+
+                const clientNet = income + risk - totalFees;
+
+                return {
+                    net: clientNet,
+                    fees: totalFees
+                };
             },
 
             // NAVIGATION
@@ -536,9 +597,11 @@
 
                 // Toggle Sidebar (Only Visible in Funding)
                 const sb = document.getElementById('mainSidebar');
-                sb.style.display = (modId === 'funding' && window.innerWidth > 768) ? 'flex' : 'none';
+                if (window.innerWidth > 768) {
+                    sb.style.display = (modId === 'funding') ? 'flex' : 'none';
+                }
 
-                // Trigger Render if needed
+                if (modId === 'settings') app.renderSettings();
                 if (modId === 'funding') app.render();
             },
 
@@ -585,6 +648,47 @@
                 }
             },
 
+            // RENDER SETTINGS
+            renderSettings: () => {
+                const f = document.getElementById('settingsForm');
+                f.innerHTML = '';
+
+                Object.keys(app.state.fees).forEach(ex => {
+                    const row = document.createElement('div');
+                    row.style.marginBottom = '20px';
+                    row.innerHTML = `
+                        <div style="font-weight:bold; color:#fff; margin-bottom:8px;">${ex}</div>
+                        <div style="display:flex; gap:10px;">
+                            <div style="flex:1">
+                                <label style="font-size:0.7rem; color:#666;">Maker (%)</label>
+                                <input id="mk-${ex}" type="number" step="0.01" value="${app.state.fees[ex].maker}" 
+                                style="width:100%; background:#222; border:1px solid #444; color:#fff; padding:8px; border-radius:4px;">
+                            </div>
+                            <div style="flex:1">
+                                <label style="font-size:0.7rem; color:#666;">Taker (%)</label>
+                                <input id="tk-${ex}" type="number" step="0.01" value="${app.state.fees[ex].taker}" 
+                                style="width:100%; background:#222; border:1px solid #444; color:#fff; padding:8px; border-radius:4px;">
+                            </div>
+                        </div>
+                    `;
+                    f.appendChild(row);
+                });
+            },
+
+            saveSettings: () => {
+                const newFees = {};
+                Object.keys(app.state.fees).forEach(ex => {
+                    newFees[ex] = {
+                        maker: parseFloat(document.getElementById(`mk-${ex}`).value),
+                        taker: parseFloat(document.getElementById(`tk-${ex}`).value)
+                    };
+                });
+                app.state.fees = newFees;
+                localStorage.setItem('userFees', JSON.stringify(newFees));
+                alert('Fees updated! Net Profit calculations will now use these values.');
+                app.nav('funding'); // Go back
+            },
+
             // RENDER LOGIC (Throttled)
             lastRender: 0,
             render: () => {
@@ -605,11 +709,12 @@
                     }
 
                     grid.innerHTML = data.map(opp => {
-                        // Relaxed Filter: Show all, but dim negatives
                         const a = opp.analysis;
                         if (!a || !a.detailed) return '';
 
-                        const net = a.netCycleProfit || 0;
+                        // CLIENT SIDE CALC
+                        const calc = app.calculateNet(opp);
+                        const net = calc.net;
                         const isProfit = net > 0;
                         const profitClass = isProfit ? 'profit' : '';
                         const valClass = isProfit ? 'pos' : 'neg';
@@ -635,6 +740,10 @@
                                     <span class="pos">+$${(a.fundingIncomeCycle || 0).toFixed(2)}</span>
                                 </div>
                                 <div class="nc-row">
+                                    <span class="mute">Total Fees (User)</span>
+                                    <span class="neg">-$${calc.fees.toFixed(2)}</span>
+                                </div>
+                                <div class="nc-row">
                                     <span class="mute">Annual APR</span>
                                     <span class="pos">${(a.annualAPR || 0).toFixed(1)}%</span>
                                 </div>
@@ -643,10 +752,18 @@
                     }).join('');
 
                 } else if (app.state.view === 'all-opps') {
-                    // Flatten
+                    // Flatten & Recalculate Sort
                     let all = [];
-                    Object.values(app.state.data).forEach(arr => all.push(...arr));
-                    all.sort((a, b) => (b.analysis?.netCycleProfit || 0) - (a.analysis?.netCycleProfit || 0));
+                    Object.values(app.state.data).forEach(arr => {
+                        arr.forEach(o => {
+                            if (o && o.analysis) {
+                                o.clientNet = app.calculateNet(o).net; // Attach for sorting
+                                all.push(o);
+                            }
+                        });
+                    });
+
+                    all.sort((a, b) => b.clientNet - a.clientNet);
 
                     const tbody = document.getElementById('listTarget');
                     if (all.length === 0) {
@@ -655,7 +772,7 @@
                     }
 
                     tbody.innerHTML = all.map(o => {
-                        const net = o.analysis?.netCycleProfit || 0;
+                        const net = o.clientNet;
                         return `
                         <tr>
                             <td><b>${o.symbol}</b></td>

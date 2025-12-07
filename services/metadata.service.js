@@ -56,6 +56,7 @@ class MetadataService {
         try {
             // Bybit V5 Instruments Info
             // category=linear for USDT perps
+            console.log('Fetching Bybit metadata...');
             const response = await axios.get('https://api.bybit.com/v5/market/instruments-info?category=linear');
             if (response.data && response.data.result && response.data.result.list) {
                 response.data.result.list.forEach(inst => {
@@ -64,7 +65,7 @@ class MetadataService {
                     const intervalHours = parseInt(inst.fundingInterval) / 60;
                     this.intervals.bybit[symbol] = intervalHours;
                 });
-                console.log(`Loaded ${Object.keys(this.intervals.bybit).length} Bybit funding intervals.`);
+                console.log(`✅ Loaded ${Object.keys(this.intervals.bybit).length} Bybit funding intervals.`);
             }
         } catch (e) {
             console.error('Bybit metadata fetch error:', e.message);
@@ -78,15 +79,19 @@ class MetadataService {
         if (ex === 'hyperliquid') return 1; // Always 1h
         if (ex === 'asterdex') return 8; // Assumed 8h
 
-        // Check specific loaded metadata
-        if (this.intervals[ex] && this.intervals[ex][symbol]) {
-            return this.intervals[ex][symbol];
-        }
+        // Normalize symbol (remove -SWAP, etc if needed)
+        // Bybit API uses BTCUSDT. Our app uses BTCUSDT. Match should be direct.
+        // OKX API uses BTC-USDT-SWAP.
 
-        // Bybit specific normalization if needed (e.g. BTCUSDT)
-        if (ex === 'bybit') {
-            // Try direct match
-            if (this.intervals.bybit[symbol]) return this.intervals.bybit[symbol];
+        // Debug first request for this exchange
+        // if (Math.random() < 0.001) console.log(`Checking interval for ${ex} ${symbol}`);
+
+        if (this.intervals[ex]) {
+            // Direct match
+            if (this.intervals[ex][symbol]) return this.intervals[ex][symbol];
+
+            // Try normalizing OKX symbol (if stored as BTC-USDT-SWAP but requested as BTCUSDT or vice versa)
+            // Our system usually stores OKX symbols as BTC-USDT-SWAP.
         }
 
         // OKX logic: If nextFundingTime is provided externally we might use that, 
