@@ -1,1055 +1,447 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Crypto Arbitrage Dashboard - Binance vs OKX</title>
-    <meta name="description" content="Real-time cryptocurrency arbitrage opportunities">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
-        rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Crypto Arbitrage Terminal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        /* Base Styles */
+        :root {
+            --bg-color: #0a0a0a;
+            --card-bg: #111;
+            --text-main: #fff;
+            --text-sub: #888;
+            --accent: #00d4ff;
+            --positive: #10b981;
+            --negative: #ef4444;
+            --maker: #3b82f6;
+            --taker: #f97316;
+            --border: rgba(255, 255, 255, 0.08);
+        }
+
         * {
+            box-sizing: border-box;
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
+            outline: none;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
             font-family: 'Inter', sans-serif;
-            background: #000000;
-            min-height: 100vh;
-            color: #e0e0e0;
-            overflow-x: hidden;
+            background: var(--bg-color);
+            color: var(--text-main);
+            height: 100vh;
+            overflow: hidden;
         }
 
-        .container {
-            max-width: 1800px;
-            margin: 0 auto;
-            padding: 1.5rem;
-            padding-bottom: 80px;
-            /* Space for bottom nav */
+        /* SCROLLBAR */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
         }
 
-        /* Header */
-        .header {
-            margin-bottom: 2rem;
-            animation: fadeInDown 0.6s ease-out;
+        ::-webkit-scrollbar-track {
+            background: transparent;
         }
 
-        .header h1 {
-            font-size: 2.5rem;
-            font-weight: 800;
-            background: linear-gradient(135deg, #00d4ff 0%, #00ff88 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 0.5rem;
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
         }
 
-        .status-bar {
-            display: flex;
-            align-items: center;
-            gap: 1.5rem;
-            flex-wrap: wrap;
-        }
-
-        .status-indicator {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.4rem 0.8rem;
-            background: rgba(0, 212, 255, 0.05);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            border: 1px solid rgba(0, 212, 255, 0.2);
-            font-size: 0.875rem;
-        }
-
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            animation: pulse 2s infinite;
-        }
-
-        .status-dot.connected {
-            background: #00ff88;
-            box-shadow: 0 0 10px #00ff88;
-        }
-
-        .status-dot.disconnected {
-            background: #ef4444;
-            box-shadow: 0 0 10px #ef4444;
-        }
-
-        /* Bottom Navigation - Mobile App Style */
-        .bottom-nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: #000000;
-            border-top: 1px solid rgba(0, 212, 255, 0.2);
-            display: flex;
-            justify-content: space-around;
-            padding: 8px 0;
-            z-index: 1000;
-            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.5);
-        }
-
-        .nav-item {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
-            padding: 8px;
-            color: rgba(255, 255, 255, 0.5);
-            text-align: center;
-            font-size: 0.7rem;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
-            background: none;
-            border: none;
-            cursor: pointer;
-        }
-
-        .nav-item.active {
-            color: #00d4ff;
-        }
-
-        .nav-icon {
-            font-size: 1.2rem;
-            margin-bottom: 2px;
-        }
-
-        /* Module Container */
-        .module-container {
-            display: none;
-            padding-bottom: 80px;
-        }
-
-        .module-container.active {
-            display: block;
-        }
-
-        /* Top Sub-Nav (Tabs) */
-        .top-sub-nav {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            background: rgba(255, 255, 255, 0.03);
-            padding: 5px;
-            border-radius: 12px;
-        }
-
-        .sub-tab {
-            flex: 1;
-            padding: 8px;
-            border: none;
-            background: none;
-            color: #888;
-            font-weight: 500;
-            cursor: pointer;
-            border-radius: 8px;
-            transition: all 0.2s;
-        }
-
-        .sub-tab.active {
-            background: #00d4ff;
-            color: #000;
-            font-weight: 700;
-        }
-
-        /* --- NEW LAYOUT CSS --- */
+        /* LAYOUT */
         .app-container {
             display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-            padding-bottom: 70px;
-            /* Space for Bottom Nav */
+            height: 100vh;
+            padding-bottom: 60px;
+            /* Nav space */
         }
 
-        .content-wrapper {
+        /* SIDEBAR (Stairs Menu) */
+        .sidebar {
+            width: 220px;
+            background: rgba(0, 0, 0, 0.3);
+            border-right: 1px solid var(--border);
             display: flex;
-            flex: 1;
-        }
-
-        /* Sidebar (Desktop) */
-        .sidebar-menu {
-            width: 200px;
-            background: rgba(0, 0, 0, 0.5);
-            border-right: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 20px 0;
-            display: none;
-            /* Hidden on mobile by default */
             flex-direction: column;
+            overflow-y: auto;
+            display: none;
+            /* Mobile hidden */
         }
 
-        .menu-title {
-            padding: 0 15px 10px;
-            font-size: 0.7rem;
-            color: rgba(255, 255, 255, 0.4);
-            font-weight: bold;
-            letter-spacing: 1px;
-        }
-
-        .main-content {
-            flex: 1;
-            padding: 20px;
-        }
-
-        @media (min-width: 768px) {
-            .sidebar-menu {
+        @media(min-width: 768px) {
+            .sidebar {
                 display: flex;
             }
         }
 
-        /* --- NEW NAVIGATION CSS --- */
-        .bottom-nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: #111;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            display: flex;
-            justify-content: space-around;
-            padding: 10px 0;
-            z-index: 1000;
+        .sidebar-header {
+            padding: 20px 15px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            color: var(--text-sub);
+            letter-spacing: 1px;
+            border-bottom: 1px solid var(--border);
         }
 
-        .nav-item {
-            color: rgba(255, 255, 255, 0.5);
-            text-align: center;
-            font-size: 0.7rem;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
-            background: none;
-            border: none;
-            cursor: pointer;
-            text-decoration: none;
-        }
-
-        .nav-item.active {
-            color: #00d4ff;
-        }
-
-        .nav-icon {
-            font-size: 1.2rem;
-            margin-bottom: 2px;
-        }
-
-        /* Module Views */
-        .module-view {
-            display: none;
-            width: 100%;
-            height: 100%;
-        }
-
-        .module-view.active {
-            display: block;
-        }
-
-        /* Top Tabs */
-        .top-sub-nav {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            background: rgba(255, 255, 255, 0.05);
-            padding: 4px;
-            border-radius: 8px;
-            width: fit-content;
-        }
-
-        .sub-tab {
-            padding: 6px 12px;
-            border: none;
-            background: none;
-            color: #aaa;
-            font-size: 0.85rem;
-            font-weight: 500;
-            cursor: pointer;
-            border-radius: 6px;
-        }
-
-        .sub-tab.active {
-            background: #00d4ff;
-            color: #000;
-            font-weight: bold;
-        }
-
-        /* Stair Menu */
         .stair-menu {
             display: flex;
             flex-direction: column;
-            gap: 2px;
+            padding-top: 10px;
         }
 
         .stair-btn {
             background: transparent;
             border: none;
-            color: #888;
-            cursor: pointer;
-            padding: 8px 15px;
+            color: var(--text-sub);
+            padding: 10px 15px;
             text-align: left;
+            cursor: pointer;
             font-size: 0.9rem;
+            font-weight: 500;
             border-left: 3px solid transparent;
             transition: all 0.2s;
         }
 
         .stair-btn:hover {
-            background: rgba(255, 255, 255, 0.05);
             color: #fff;
+            background: rgba(255, 255, 255, 0.03);
         }
 
         .stair-btn.active {
-            background: linear-gradient(90deg, rgba(0, 212, 255, 0.1), transparent);
-            border-left-color: #00d4ff;
-            color: #00d4ff;
-            font-weight: 600;
+            color: var(--accent);
+            background: linear-gradient(90deg, rgba(0, 212, 255, 0.08), transparent);
+            border-left-color: var(--accent);
+            font-weight: 700;
         }
 
-        /* Level Indentation */
-        .stair-level-1 {
+        .level-1 {
             padding-left: 15px;
         }
 
-        .stair-level-2 {
+        .level-2 {
             padding-left: 30px;
         }
 
-        .stair-level-3 {
+        .level-3 {
             padding-left: 45px;
         }
 
-        /* --- NEW CARD CSS --- */
-        .opp-card {
-            background: #111;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            margin-bottom: 15px;
+        /* MAIN CONTENT */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
             overflow: hidden;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            position: relative;
         }
 
-        .card-header-row {
+        /* HEADER */
+        .top-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border);
+            background: rgba(255, 255, 255, 0.02);
+            flex-shrink: 0;
+        }
+
+        .header-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 10px 15px;
-            background: rgba(255, 255, 255, 0.02);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .main-stats-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1px;
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-        .stat-box {
-            background: #141414;
-            padding: 15px;
-            text-align: center;
-        }
-
-        .breakdown-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
-            font-size: 0.75rem;
-            background: #111;
-        }
-
-        .break-item {
-            padding: 8px;
-            border-right: 1px solid rgba(255, 255, 255, 0.05);
-            text-align: center;
-        }
-
-        .break-val {
-            font-weight: 600;
-            margin-top: 2px;
-        }
-
-        .maker-color {
-            color: #3b82f6;
-        }
-
-        /* Blue */
-        .taker-color {
-            color: #f97316;
-        }
-
-        /* Orange */
-        .val-pos {
-            color: #10b981;
-        }
-
-        .val-neg {
-            color: #ef4444;
-        }
-
-        .opportunities-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 15px;
-        }
-
-        /* Stair Indentation (Merdiven Efekti) */
-        .stair-level-1 {
-            margin-left: 0px;
-        }
-
-        .stair-level-2 {
-            margin-left: 15px;
-        }
-
-        .stair-level-3 {
-            margin-left: 30px;
-        }
-
-        /* New Compact Card Design */
-        .opp-card {
-            background: #111;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            overflow: hidden;
             margin-bottom: 15px;
-            font-family: 'Inter', sans-serif;
         }
 
-        .card-header-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 15px;
-            background: rgba(255, 255, 255, 0.02);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        .page-title {
+            font-size: 1.25rem;
+            font-weight: 800;
         }
 
-        .coin-title {
-            font-size: 1.1rem;
-            font-weight: 700;
-            color: #fff;
-        }
-
-        .cycle-badge {
-            font-size: 0.75rem;
-            background: rgba(0, 212, 255, 0.1);
-            color: #00d4ff;
-            padding: 3px 8px;
-            border-radius: 4px;
-        }
-
-        .main-stats-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1px;
-            background: rgba(255, 255, 255, 0.05);
-            /* Separatör rengi */
-        }
-
-        .stat-box {
-            background: #111;
-            padding: 15px;
-            text-align: center;
-        }
-
-        .stat-label {
+        .status-pill {
             font-size: 0.7rem;
-            color: #666;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            padding: 4px 8px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #aaa;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
 
-        .stat-val-big {
-            font-size: 1.4rem;
-            font-weight: 700;
-            margin-top: 5px;
+        .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #666;
         }
 
-        .breakdown-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
-            font-size: 0.8rem;
+        .dot.connected {
+            background: var(--positive);
+            box-shadow: 0 0 8px var(--positive);
         }
 
-        .break-item {
-            padding: 10px;
-            border-right: 1px solid rgba(255, 255, 255, 0.05);
-            text-align: center;
+        /* TABS */
+        .tabs-row {
+            display: flex;
+            gap: 8px;
         }
 
-        .break-val {
+        .tab-btn {
+            padding: 6px 14px;
+            border-radius: 6px;
+            border: none;
+            background: transparent;
+            color: var(--text-sub);
+            font-size: 0.85rem;
             font-weight: 600;
-            margin-top: 4px;
-        }
-
-        .maker-color {
-            color: #3b82f6;
-        }
-
-        /* Blue */
-        .taker-color {
-            color: #f97316;
-        }
-
-        /* Orange */
-
-        .funding-timer-bar {
-            background: #000;
-            padding: 8px 15px;
-            font-size: 0.75rem;
-            color: #666;
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .pair-tabs-container {
-            display: flex;
-            overflow-x: auto;
-            gap: 10px;
-            padding: 10px 0;
-            margin-bottom: 15px;
-            scrollbar-width: thin;
-        }
-
-        .pair-tab {
-            white-space: nowrap;
-            padding: 8px 16px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            font-size: 0.8rem;
-            color: rgba(255, 255, 255, 0.6);
             cursor: pointer;
             transition: all 0.2s;
         }
 
-        .pair-tab.active {
-            background: rgba(0, 212, 255, 0.15);
-            border-color: #00d4ff;
-            color: #00d4ff;
+        .tab-btn:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+        }
+
+        .tab-btn.active {
+            background: var(--accent);
+            color: #000;
+        }
+
+        /* VIEWS */
+        .view-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: none;
+        }
+
+        .view-content.active {
+            display: block;
+        }
+
+        /* MODULES (Pages) */
+        .module-page {
+            display: none;
+            height: 100%;
+            width: 100%;
+        }
+
+        .module-page.active {
+            display: block;
+        }
+
+        /* CARDS GRID */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 15px;
+        }
+
+        /* NEW CARD DESIGN */
+        .opp-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .card-head {
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .coin-sym {
+            font-weight: 800;
+            font-size: 1.1rem;
+            color: #fff;
+        }
+
+        .cycle-badge {
+            font-size: 0.7rem;
+            font-weight: 600;
+            background: rgba(0, 212, 255, 0.1);
+            color: var(--accent);
+            padding: 3px 6px;
+            border-radius: 4px;
+        }
+
+        .card-body {
+            padding: 15px;
+        }
+
+        .ex-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: #aaa;
+            margin-bottom: 15px;
+        }
+
+        .long {
+            color: var(--positive);
             font-weight: 600;
         }
 
-        /* Stats */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
-            margin-bottom: 2rem;
-            animation: fadeInUp 0.6s ease-out 0.2s both;
+        .short {
+            color: var(--negative);
+            font-weight: 600;
         }
 
-        .stat-card {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(20px);
-            border-radius: 12px;
-            padding: 1rem;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .stat-label {
-            font-size: 0.75rem;
-            color: rgba(255, 255, 255, 0.6);
-            margin-bottom: 0.3rem;
-        }
-
-        .stat-value {
-            font-size: 1.5rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        /* Opportunities Grid - Prevent Layout Shifts */
-        .opportunities-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
-            gap: 1.5rem;
-            animation: fadeInUp 0.6s ease-out 0.4s both;
-            will-change: contents;
-        }
-
-        /* Card Styles */
-        .scenarios-grid {
+        .stats-main {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 10px;
-            margin: 12px 0;
-        }
-
-        .scenario-card {
-            background: rgba(0, 0, 0, 0.3);
+            margin-bottom: 15px;
+            background: rgba(255, 255, 255, 0.03);
             border-radius: 8px;
             padding: 10px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        .scenario-title {
-            font-size: 0.75rem;
-            font-weight: bold;
-            text-align: center;
-            margin-bottom: 8px;
-            padding-bottom: 6px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-            letter-spacing: 0.5px;
-        }
-
-        .maker-title {
-            color: #10b981;
-        }
-
-        .taker-title {
-            color: #ef4444;
-        }
-
-        .scenario-row {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.72rem;
-            margin-bottom: 4px;
-            padding: 2px 0;
-        }
-
-        .scenario-row .label {
-            color: rgba(255, 255, 255, 0.6);
-        }
-
-        .scenario-row .value {
-            font-weight: 600;
-        }
-
-        .scenario-row.net-profit {
-            margin-top: 6px;
-            padding-top: 6px;
-            border-top: 1px solid rgba(255, 255, 255, 0.15);
-            font-weight: bold;
-        }
-
-        .scenario-row.closing {
-            opacity: 0.6;
-            font-size: 0.68rem;
-        }
-
-        .opportunity-card {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 16px;
-            padding: 1.25rem;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .opportunity-card:hover {
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
-            border-color: rgba(255, 255, 255, 0.2);
-        }
-
-        .opportunity-card.has-opportunity {
-            border-color: rgba(16, 185, 129, 0.3);
-            background: rgba(16, 185, 129, 0.05);
-        }
-
-        .coin-header {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            margin-bottom: 0.75rem;
-        }
-
-        .coin-logo {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.1);
-            padding: 4px;
-        }
-
-        .coin-name {
-            font-size: 1rem;
-            font-weight: 700;
-        }
-
-        .coin-symbol {
-            font-size: 0.75rem;
-            color: rgba(255, 255, 255, 0.5);
-        }
-
-        .opportunity-badge {
-            padding: 0.3rem 0.6rem;
-            border-radius: 12px;
+        .stat-l {
             font-size: 0.65rem;
-            font-weight: 600;
+            color: #666;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            margin-bottom: 4px;
         }
 
-        .opportunity-badge.active {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            animation: glow 2s infinite;
-        }
-
-        .opportunity-badge.inactive {
-            background: rgba(255, 255, 255, 0.1);
-            color: rgba(255, 255, 255, 0.5);
-        }
-
-        .exchange-box {
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 8px;
-            padding: 0.6rem;
-        }
-
-        .exchange-header {
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-            margin-bottom: 0.4rem;
-        }
-
-        .exchange-logo {
-            width: 16px;
-            height: 16px;
-            border-radius: 4px;
-        }
-
-        .exchange-name {
-            font-size: 0.7rem;
-            font-weight: 600;
-            color: rgba(255, 255, 255, 0.7);
-        }
-
-        .price-value {
-            font-size: 0.95rem;
+        .stat-v {
+            font-size: 1.3rem;
             font-weight: 700;
-            font-family: 'Courier New', monospace;
-            margin-bottom: 0.3rem;
+            color: #fff;
         }
 
-        .funding-rate {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding-top: 0.3rem;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        .val-pos {
+            color: var(--positive);
         }
 
-        .funding-label {
-            font-size: 0.65rem;
-            color: rgba(255, 255, 255, 0.5);
+        .val-neg {
+            color: var(--negative);
         }
 
-        .funding-value {
-            font-size: 0.8rem;
-            font-weight: 700;
-            font-family: 'Courier New', monospace;
-        }
-
-        .positive {
-            color: #10b981;
-        }
-
-        .negative {
-            color: #ef4444;
-        }
-
-        /* Trading Steps */
-        .trading-steps {
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 8px;
-            padding: 0.75rem;
-            margin-top: 0.75rem;
-            display: none;
-            transition: all 0.3s ease;
-        }
-
-        .opportunity-card.expanded .trading-steps {
-            display: block;
-            animation: fadeInDown 0.3s ease;
-        }
-
-        .steps-header {
-            font-size: 0.75rem;
-            font-weight: 600;
-            color: rgba(255, 255, 255, 0.8);
-            margin-bottom: 0.5rem;
-        }
-
-        .step-item {
-            display: flex;
-            align-items: flex-start;
-            gap: 0.5rem;
-            padding: 0.4rem;
-            margin-bottom: 0.3rem;
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 6px;
-            border-left: 2px solid rgba(102, 126, 234, 0.5);
-        }
-
-        .step-number {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.7rem;
-            font-weight: 700;
-            flex-shrink: 0;
-        }
-
-        .step-content {
-            flex: 1;
-        }
-
-        .step-action {
-            font-size: 0.75rem;
-            font-weight: 600;
-            color: rgba(255, 255, 255, 0.9);
-        }
-
-        .step-details {
-            font-size: 0.65rem;
-            color: rgba(255, 255, 255, 0.6);
-        }
-
-        .expand-button {
+        .breakdown-table {
             width: 100%;
-            padding: 0.5rem;
-            background: rgba(102, 126, 234, 0.2);
-            border: 1px solid rgba(102, 126, 234, 0.3);
-            border-radius: 6px;
-            color: white;
             font-size: 0.75rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-top: 0.5rem;
-        }
-
-        .expand-button:hover {
-            background: rgba(102, 126, 234, 0.3);
-        }
-
-        /* Tables */
-        .opp-table-container {
-            width: 100%;
-            overflow-x: auto;
-            background: rgba(255, 255, 255, 0.02);
-            border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .opp-table {
-            width: 100%;
             border-collapse: collapse;
-            font-size: 0.9rem;
         }
 
-        .opp-table th {
-            text-align: left;
-            padding: 1rem;
-            background: rgba(255, 255, 255, 0.05);
-            color: rgba(255, 255, 255, 0.6);
-            font-weight: 600;
-            cursor: pointer;
-            user-select: none;
+        .breakdown-table td {
+            padding: 4px 0;
+            color: #888;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
         }
 
-        .opp-table th:hover {
-            color: white;
-            background: rgba(255, 255, 255, 0.08);
-        }
-
-        .opp-table td {
-            padding: 0.75rem 1rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            color: rgba(255, 255, 255, 0.9);
-        }
-
-        .opp-table tr:hover {
-            background: rgba(255, 255, 255, 0.03);
-        }
-
-        .exchange-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 4px 8px;
-            border-radius: 4px;
-            background: rgba(255, 255, 255, 0.05);
-            font-size: 0.8rem;
-        }
-
-        .exchange-badge img {
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-        }
-
-        /* All Data Table - Fixed Layout to Prevent Shifting */
-        #allDataTable {
-            overflow-x: auto;
-            will-change: scroll-position;
-        }
-
-        #allDataTable table {
-            border-collapse: collapse;
-            width: 100%;
-            font-size: 0.875rem;
-            table-layout: fixed;
-            /* Prevent column width changes */
-            min-width: 1400px;
-        }
-
-        #allDataTable th,
-        #allDataTable td {
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            padding: 12px 10px;
+        .breakdown-table td:last-child {
             text-align: right;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            font-weight: 500;
         }
 
-        #allDataTable th {
-            background: linear-gradient(135deg, rgba(102, 126, 234, 0.15), rgba(118, 75, 162, 0.15));
-            text-align: center;
-            font-weight: 600;
-            color: #a5b4fc;
-            position: sticky;
-            top: 0;
-            z-index: 10;
-            backdrop-filter: blur(10px);
+        /* DATA TABLE */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
         }
 
-        #allDataTable td:first-child {
+        .data-table th {
             text-align: left;
-            position: sticky;
+            padding: 10px;
+            color: #666;
+            border-bottom: 1px solid var(--border);
+            cursor: pointer;
+        }
+
+        .data-table td {
+            padding: 10px;
+            border-bottom: 1px solid var(--border);
+            color: #ccc;
+        }
+
+        .data-table tr:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        /* BOTTOM NAV */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
             left: 0;
-            background: linear-gradient(90deg, #1e1b4b 0%, #1e1b4b 95%, transparent 100%);
-            z-index: 5;
-            width: 180px;
-            /* Fixed width */
-            min-width: 180px;
-            font-weight: 600;
-            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
-        }
-
-        #allDataTable .coin-cell {
+            right: 0;
+            height: 60px;
+            background: #000;
+            border-top: 1px solid var(--border);
             display: flex;
+            justify-content: space-around;
             align-items: center;
-            gap: 0;
+            z-index: 999;
         }
 
-        #allDataTable .coin-name {
-            font-size: 0.9rem;
-            font-weight: 700;
-            color: #00d4ff;
-            text-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
-            letter-spacing: 0.5px;
+        .nav-btn {
+            background: none;
+            border: none;
+            color: #555;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
         }
 
-        #allDataTable td {
-            font-variant-numeric: tabular-nums;
-            transition: background-color 0.15s ease;
-            background: rgba(10, 14, 39, 0.6);
-            padding: 8px 10px;
-            /* More compact */
-            font-size: 0.8rem;
+        .nav-btn .icon {
+            font-size: 1.2rem;
         }
 
-        #allDataTable td:hover {
-            background: rgba(0, 212, 255, 0.08);
+        .nav-btn.active {
+            color: var(--accent);
         }
 
-        #allDataTable th {
-            padding: 10px !important;
-            font-size: 0.8rem;
+        /* MODAL */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
         }
 
-        .loading {
+        .modal-box {
+            background: #1a1a1a;
+            width: 90%;
+            max-width: 400px;
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        .no-data {
             text-align: center;
-            padding: 3rem;
-            font-size: 1.25rem;
-            color: rgba(255, 255, 255, 0.6);
+            margin-top: 50px;
+            color: #444;
+            font-style: italic;
         }
 
         .spinner {
             border: 3px solid rgba(255, 255, 255, 0.1);
-            border-top: 3px solid #667eea;
+            border-top: 3px solid var(--accent);
             border-radius: 50%;
-            width: 40px;
-            height: 40px;
+            width: 24px;
+            height: 24px;
             animation: spin 1s linear infinite;
-            margin: 0 auto 1rem;
-        }
-
-        @keyframes fadeInDown {
-            from {
-                opacity: 0;
-                transform: translateY(-20px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes pulse {
-
-            0%,
-            100% {
-                opacity: 1;
-            }
-
-            50% {
-                opacity: 0.5;
-            }
-        }
-
-        @keyframes glow {
-
-            0%,
-            100% {
-                box-shadow: 0 0 15px rgba(16, 185, 129, 0.5);
-            }
-
-            50% {
-                box-shadow: 0 0 25px rgba(16, 185, 129, 0.8);
-            }
+            margin: 0 auto 10px;
         }
 
         @keyframes spin {
@@ -1061,1008 +453,351 @@
                 transform: rotate(360deg);
             }
         }
-
-        @media(max-width: 768px) {
-            .header h1 {
-                font-size: 1.75rem;
-            }
-
-            .opportunities-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .tab-all {
-                font-size: 0.8rem;
-                padding: 0.75rem 0.5rem;
-            }
-        }
-
-        /* Settings Modal & Button */
-        .settings-btn {
-            background: rgba(255, 255, 255, 0.1);
-            border: none;
-            color: white;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s;
-        }
-
-        .settings-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
-            transform: rotate(90deg);
-        }
-
-        .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            backdrop-filter: blur(5px);
-        }
-
-        .modal {
-            background: #1a1b26;
-            padding: 2rem;
-            border-radius: 16px;
-            width: 90%;
-            max-width: 500px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
-            animation: fadeInDown 0.3s ease;
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1.5rem;
-        }
-
-        .modal-title {
-            font-size: 1.25rem;
-            font-weight: 700;
-        }
-
-        .close-btn {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 1.5rem;
-            cursor: pointer;
-        }
-
-        .form-group {
-            margin-bottom: 1rem;
-        }
-
-        .form-label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-size: 0.9rem;
-            color: rgba(255, 255, 255, 0.7);
-        }
-
-        .form-select {
-            width: 100%;
-            padding: 0.75rem;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 8px;
-            color: white;
-            font-size: 0.9rem;
-            outline: none;
-        }
-
-        .form-select:focus {
-            border-color: #667eea;
-        }
-
-        .save-btn {
-            width: 100%;
-            padding: 1rem;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border: none;
-            border-radius: 8px;
-            color: white;
-            font-weight: 700;
-            margin-top: 1rem;
-            cursor: pointer;
-            transition: opacity 0.3s;
-        }
-
-        .save-btn:hover {
-            opacity: 0.9;
-        }
-
-        .stat-card.compact {
-            padding: 0.75rem;
-        }
-
-        .stat-card.compact .stat-value {
-            font-size: 1.2rem;
-        }
-
-        /* Analysis Table & Break Even */
-        .analysis-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.75rem;
-            margin-bottom: 1rem;
-        }
-
-        .analysis-table th,
-        .analysis-table td {
-            padding: 4px 8px;
-            text-align: right;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .analysis-table th:first-child,
-        .analysis-table td:first-child {
-            text-align: left;
-        }
-
-        .analysis-table th {
-            color: rgba(255, 255, 255, 0.5);
-            font-weight: normal;
-        }
-
-        .break-even-info {
-            background: rgba(16, 185, 129, 0.1);
-            border: 1px solid rgba(16, 185, 129, 0.2);
-            padding: 8px;
-            border-radius: 6px;
-            font-size: 0.8rem;
-            margin-bottom: 1rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .break-even-info .highlight {
-            font-weight: bold;
-            color: #10b981;
-        }
-
-        .section-title {
-            font-size: 0.75rem;
-            font-weight: 600;
-            color: rgba(255, 255, 255, 0.8);
-            margin-bottom: 0.5rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            padding-bottom: 4px;
-        }
     </style>
 </head>
 
 <body>
-    <!-- New Layout Structure -->
+
+    <!-- APP CONTAINER -->
     <div class="app-container">
 
-        <!-- MODULE: FUNDING (Active by default) -->
-        <div id="module-funding" class="module-view active">
+        <!-- SIDEBAR (MENU) -->
+        <aside class="sidebar">
+            <div class="sidebar-header">TOKEN PAIRS</div>
+            <div id="stairMenu" class="stair-menu">
+                <!-- Injected via JS -->
+            </div>
+            <div style="margin-top:auto; padding:15px; font-size:0.7rem; color:#444;">
+                v1.0.2 Stable
+            </div>
+        </aside>
 
-            <div class="content-wrapper">
-                <!-- Sidebar (Stair Menu) - Visible on Desktop -->
-                <aside class="sidebar-menu">
-                    <div class="menu-title">MARKET PAIRS</div>
-                    <div id="stairsMenu" class="stair-menu">
-                        <!-- JS injected buttons -->
-                    </div>
-                </aside>
+        <!-- MAIN CONTENT AREA -->
+        <main class="main-content">
 
-                <!-- Main Content Area -->
-                <div class="main-content">
-                    <!-- Header Stats -->
-                    <div class="header">
-                        <div class="header-top"
-                            style="display:flex; justify-content:space-between; align-items:center;">
-                            <h1 style="font-size:1.5rem; margin:0;">Arbitrage <span style="color:#00d4ff">Funding</span>
-                            </h1>
-                            <button class="settings-btn" onclick="openSettings()" title="Fee Settings">⚙️</button>
-                        </div>
-                        <div class="status-bar" style="font-size:0.8rem; margin-top:1rem;">
-                            <div class="status-indicator">
-                                <div class="status-dot" id="wsStatusDot"></div>
-                                <span id="wsStatusText">Disconnected</span>
-                            </div>
-                            <div class="status-indicator">
-                                <span>Last Update: <span id="lastUpdate">-</span></span>
-                            </div>
-                            <div class="status-indicator">
-                                <span>Active: <b id="activeArbitrage">0</b></span>
-                            </div>
-                        </div>
+            <!-- MODULE: FUNDING -->
+            <div id="mod-funding" class="module-page active">
 
-                        <!-- Top Tabs (Funding Specific) -->
-                        <div class="top-sub-nav" style="margin-top: 1.5rem;">
-                            <button class="sub-tab active" onclick="switchView('exchanges')">Exchanges</button>
-                            <button class="sub-tab" onclick="switchView('all-opps')">All Opportunities</button>
-                            <button class="sub-tab" onclick="switchView('all-data')">All Data</button>
+                <header class="top-header">
+                    <div class="header-row">
+                        <div class="page-title">Funding <span style="color:var(--accent)">Arbitrage</span></div>
+                        <div class="status-pill">
+                            <div id="wsDot" class="dot"></div>
+                            <span id="wsText">Disconnected</span>
                         </div>
                     </div>
+                    <div class="tabs-row">
+                        <button class="tab-btn active" onclick="ui.view('exchanges')">Exchanges</button>
+                        <button class="tab-btn" onclick="ui.view('all-opps')">All Opportunities</button>
+                        <button class="tab-btn" onclick="ui.view('all-data')">All Data</button>
+                    </div>
+                </header>
 
-                    <!-- Loading -->
-                    <div class="loading" id="loading">
+                <!-- VIEW: EXCHANGES -->
+                <div id="view-exchanges" class="view-content active">
+                    <div id="loader" style="text-align:center; margin-top:50px;">
                         <div class="spinner"></div>
-                        <div>Loading arbitrage data...</div>
+                        <div style="color:#666; font-size:0.8rem;">Connecting to Quantum Stream...</div>
                     </div>
+                    <div id="gridContainer" class="cards-grid"></div>
+                </div>
 
-                    <!-- Dynamic Content Views -->
-                    <div id="view-exchanges" class="sub-view active">
-                        <div id="opportunitiesGrid" class="opportunities-grid"></div>
-                    </div>
-
-                    <div id="view-all-opps" class="sub-view" style="display:none;">
-                        <div class="opp-table-container">
-                            <table class="opp-table" id="opportunitiesTable">
-                                <thead>
-                                    <tr>
-                                        <th onclick="sortTable('symbol')">Symbol</th>
-                                        <th>Strategy</th>
-                                        <th>Long</th>
-                                        <th>Short</th>
-                                        <th>Net Profit</th>
-                                        <th>APR</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="opportunitiesBody"></tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <div id="view-all-data" class="sub-view" style="display:none;">
-                        <div class="opp-table-container">
-                            <table class="opp-table" id="allDataTable">
-                                <thead>
-                                    <tr>
-                                        <th rowspan="2">Coin</th>
-                                        <th colspan="2">Binance</th>
-                                        <th colspan="2">OKX</th>
-                                        <th colspan="2">Hyperliquid</th>
-                                        <th colspan="2">Bybit</th>
-                                        <th colspan="2">Asterdex</th>
-                                    </tr>
-                                    <tr>
-                                        <th>Price</th>
-                                        <th>Fund%</th>
-                                        <th>Price</th>
-                                        <th>Fund%</th>
-                                        <th>Price</th>
-                                        <th>Fund%</th>
-                                        <th>Price</th>
-                                        <th>Fund%</th>
-                                        <th>Price</th>
-                                        <th>Fund%</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="allDataBody"></tbody>
-                            </table>
-                        </div>
+                <!-- VIEW: ALL OPPS -->
+                <div id="view-all-opps" class="view-content">
+                    <div style="overflow-x:auto;">
+                        <table class="data-table" id="tableOpps">
+                            <thead>
+                                <tr>
+                                    <th>C</th>
+                                    <th>Symbol</th>
+                                    <th>Strategy</th>
+                                    <th>Cycle PnL</th>
+                                    <th>APR</th>
+                                </tr>
+                            </thead>
+                            <tbody id="bodyOpps"></tbody>
+                        </table>
                     </div>
                 </div>
+
+                <!-- VIEW: ALL DATA -->
+                <div id="view-all-data" class="view-content">
+                    <div style="overflow-x:auto;">
+                        <table class="data-table" id="tableData">
+                            <thead>
+                                <tr>
+                                    <th>Coin</th>
+                                    <th>Binance</th>
+                                    <th>OKX</th>
+                                    <th>Bybit</th>
+                                    <th>HL</th>
+                                    <th>Asterdex</th>
+                                </tr>
+                            </thead>
+                            <tbody id="bodyData"></tbody>
+                        </table>
+                    </div>
+                </div>
+
             </div>
-        </div>
 
-        <!-- OTHER MODULES (Placeholders) -->
-        <div id="module-try" class="module-view" style="display:none; text-align:center; padding-top:100px;">
-            <h2>TRY Arbitrage</h2>
-            <p style="color:#666">Coming Soon</p>
-        </div>
-        <div id="module-usdc" class="module-view" style="display:none; text-align:center; padding-top:100px;">
-            <h2>USDC Arbitrage</h2>
-            <p style="color:#666">Coming Soon</p>
-        </div>
-        <div id="module-settings" class="module-view" style="display:none; text-align:center; padding-top:100px;">
-            <h2>Settings</h2>
-            <p style="color:#666">System Configuration</p>
-        </div>
+            <!-- MODULE: TRY -->
+            <div id="mod-try" class="module-page" style="text-align:center; padding-top:100px;">
+                <h2 style="color:#333;">TRY Arbitrage Module</h2>
+                <p style="color:#555; margin-top:10px;">Coming Soon</p>
+            </div>
 
+            <!-- MODULE: USDC -->
+            <div id="mod-usdc" class="module-page" style="text-align:center; padding-top:100px;">
+                <h2 style="color:#333;">USDC Arbitrage Module</h2>
+                <p style="color:#555; margin-top:10px;">Coming Soon</p>
+            </div>
+
+            <!-- MODULE: SETTINGS -->
+            <div id="mod-settings" class="module-page" style="padding:40px; text-align:center;">
+                <h2>System Settings</h2>
+                <div style="margin-top:20px; text-align:left; max-width:400px; margin-left:auto; margin-right:auto;">
+                    <p style="color:#666; font-size:0.9rem;">Fee Configuration (Maker/Taker)</p>
+                    <!-- Settings Form Placeholder -->
+                    <div id="settingsPlaceholder"
+                        style="margin-top:10px; padding:20px; border:1px solid #333; border-radius:8px;">
+                        Loading Config...
+                    </div>
+                    <button onclick="saveDummySettings()"
+                        style="margin-top:20px; width:100%; padding:10px; background:var(--accent); border:none; border-radius:6px; font-weight:bold; cursor:pointer;">Save
+                        Configuration</button>
+                </div>
+            </div>
+
+        </main>
     </div>
 
-    <!-- Bottom Navigation (4 Items) -->
-    <div class="bottom-nav">
-        <button class="nav-item active" onclick="switchModule('funding')">
-            <span class="nav-icon">⚡</span>
+    <!-- BOTTOM NAV -->
+    <nav class="bottom-nav">
+        <button class="nav-btn active" onclick="ui.module('funding', this)">
+            <span class="icon">⚡</span>
             <span>Funding</span>
         </button>
-        <button class="nav-item" onclick="switchModule('try')">
-            <span class="nav-icon">₺</span>
+        <button class="nav-btn" onclick="ui.module('try', this)">
+            <span class="icon">₺</span>
             <span>TRY Arb</span>
         </button>
-        <button class="nav-item" onclick="switchModule('usdc')">
-            <span class="nav-icon">💲</span>
+        <button class="nav-btn" onclick="ui.module('usdc', this)">
+            <span class="icon">💲</span>
             <span>USDC Arb</span>
         </button>
-        <button class="nav-item" onclick="switchModule('settings')">
-            <span class="nav-icon">⚙️</span>
+        <button class="nav-btn" onclick="ui.module('settings', this)">
+            <span class="icon">⚙️</span>
             <span>Settings</span>
         </button>
-    </div>
+    </nav>
 
-    <!-- Settings Modal -->
-    <div id="settingsModal" class="modal-overlay" style="display: none;">
-        <div class="modal">
-            <div class="modal-header">
-                <h2 class="modal-title">Fee Settings</h2>
-                <button class="close-btn" onclick="closeSettings()">✖</button>
-            </div>
-            <form id="feeSettingsForm">
-                <!-- Fee settings will be injected here by JS -->
-            </form>
-            <button class="save-btn" onclick="saveSettings()">Save Settings</button>
-        </div>
-    </div>
-
+    <!-- LOGIC -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.4/socket.io.js"></script>
     <script>
-        let ws;
-        let reconnectInterval;
-        let currentTab = 'exchanges'; // Default to 'exchanges' view within Funding module
-        let currentPair = 'binance-okx'; // Added for tracking the currently selected pair in the pyramid
-        let allData = {};
-        let allCoinsData = [];
-        let sortConfig = { key: 'netCycleProfit', direction: 'desc' }; // Changed default sort key
-
-        // Real Fee Settings (Expanded)
-        const EXCHANGE_FEES = {
-            'Binance': [
-                { name: 'Regular (Maker 0.02% / Taker 0.05%)', maker: 0.02, taker: 0.05 },
-                { name: 'VIP 1 (Maker 0.016% / Taker 0.04%)', maker: 0.016, taker: 0.04 },
-                { name: 'VIP 2 (Maker 0.014% / Taker 0.035%)', maker: 0.014, taker: 0.035 },
-                { name: 'VIP 3 (Maker 0.012% / Taker 0.032%)', maker: 0.012, taker: 0.032 },
-                { name: 'VIP 4 (Maker 0.01% / Taker 0.03%)', maker: 0.01, taker: 0.03 },
-                { name: 'VIP 5 (Maker 0.008% / Taker 0.027%)', maker: 0.008, taker: 0.027 },
-                { name: 'VIP 6 (Maker 0.006% / Taker 0.025%)', maker: 0.006, taker: 0.025 },
-                { name: 'VIP 7 (Maker 0.004% / Taker 0.022%)', maker: 0.004, taker: 0.022 },
-                { name: 'VIP 8 (Maker 0.002% / Taker 0.02%)', maker: 0.002, taker: 0.02 },
-                { name: 'VIP 9 (Maker 0% / Taker 0.017%)', maker: 0, taker: 0.017 }
-            ],
-            'OKX': [
-                { name: 'Regular (Maker 0.02% / Taker 0.05%)', maker: 0.02, taker: 0.05 },
-                { name: 'VIP 1 (Maker 0.01% / Taker 0.03%)', maker: 0.01, taker: 0.03 },
-                { name: 'VIP 2 (Maker 0.008% / Taker 0.028%)', maker: 0.008, taker: 0.028 },
-                { name: 'VIP 3 (Maker 0.006% / Taker 0.026%)', maker: 0.006, taker: 0.026 },
-                { name: 'VIP 4 (Maker 0.004% / Taker 0.024%)', maker: 0.004, taker: 0.024 },
-                { name: 'VIP 5 (Maker 0.002% / Taker 0.022%)', maker: 0.002, taker: 0.022 }
-            ],
-            'Bybit': [
-                { name: 'Non-VIP (Maker 0.02% / Taker 0.055%)', maker: 0.02, taker: 0.055 },
-                { name: 'VIP 1 (Maker 0.018% / Taker 0.05%)', maker: 0.018, taker: 0.05 },
-                { name: 'VIP 2 (Maker 0.016% / Taker 0.045%)', maker: 0.016, taker: 0.045 },
-                { name: 'VIP 3 (Maker 0.014% / Taker 0.04%)', maker: 0.014, taker: 0.04 },
-                { name: 'VIP 4 (Maker 0.012% / Taker 0.035%)', maker: 0.012, taker: 0.035 },
-                { name: 'Pro 1 (Maker 0.01% / Taker 0.04%)', maker: 0.01, taker: 0.04 },
-                { name: 'Pro 2 (Maker 0.008% / Taker 0.035%)', maker: 0.008, taker: 0.035 }
-            ],
-            'Hyperliquid': [
-                { name: 'Regular (Maker 0.01% / Taker 0.035%)', maker: 0.01, taker: 0.035 }
-            ],
-            'Asterdex': [
-                { name: 'Regular (Maker 0.02% / Taker 0.05%)', maker: 0.02, taker: 0.05 }
-            ]
+        // STATE
+        const state = {
+            activePair: 'binance-okx',
+            data: {}, // { pair_key: [opps] }
+            allCoins: []
         };
 
-        let userFeeSettings = JSON.parse(localStorage.getItem('feeSettings')) || {
-            'Binance': 0, 'OKX': 0, 'Hyperliquid': 0, 'Bybit': 0, 'Asterdex': 0
+        // UI CONTROLLER
+        const ui = {
+            module: (modId, btn) => {
+                document.querySelectorAll('.module-page').forEach(el => el.classList.remove('active'));
+                document.getElementById(`mod-${modId}`).classList.add('active');
+
+                document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+                if (btn) btn.classList.add('active');
+
+                if (modId === 'funding' && !state.activePair) {
+                    ui.pair('binance-okx');
+                }
+            },
+            view: (viewId) => {
+                document.querySelectorAll('.view-content').forEach(el => el.classList.remove('active'));
+                document.getElementById(`view-${viewId}`).classList.add('active');
+
+                // Tabs styling
+                document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+                const btn = document.querySelector(`button[onclick="ui.view('${viewId}')"]`);
+                if (btn) btn.classList.add('active');
+
+                // Render logic
+                if (viewId === 'all-opps') renderAllOppsTable();
+                if (viewId === 'all-data') renderAllDataTable();
+                if (viewId === 'exchanges') renderGrid(state.data[state.activePair]);
+            },
+            pair: (pairId) => {
+                console.log('Switching pair:', pairId);
+                state.activePair = pairId;
+
+                // Update Stair Menu
+                document.querySelectorAll('.stair-btn').forEach(btn => btn.classList.remove('active'));
+                const activeBtn = document.querySelector(`.stair-btn[data-pair="${pairId}"]`);
+                if (activeBtn) activeBtn.classList.add('active');
+
+                // Force view
+                ui.view('exchanges');
+                renderGrid(state.data[pairId]);
+            }
         };
 
-        function getFeeRates(exchangeName) {
-            const tiers = EXCHANGE_FEES[exchangeName];
-            if (!tiers) return { maker: 0.02, taker: 0.05 };
-            const tierIndex = userFeeSettings[exchangeName] || 0;
-            return tiers[tierIndex] || tiers[0];
-        }
+        // INIT STAIR MENU
+        const pairs = [
+            { id: 'binance-okx', n: 'Binance - OKX', l: 1 },
+            { id: 'binance-bybit', n: 'Binance - Bybit', l: 1 },
+            { id: 'binance-hyperliquid', n: 'Binance - HL', l: 1 },
+            { id: 'binance-asterdex', n: 'Binance - Aster', l: 1 },
 
-        function calculateAdjustedProfit(opp) {
-            // This function is likely for the old structure or a simplified view.
-            // The new card renderer uses opp.analysis.netCycleProfit directly.
-            // Keeping it for compatibility with renderAllTable if it's still used.
-            const tradeSize = 100;
-            const longExName = getLongExchange(opp);
-            const shortExName = getShortExchange(opp);
+            { id: 'okx-bybit', n: 'OKX - Bybit', l: 2 },
+            { id: 'okx-hyperliquid', n: 'OKX - HL', l: 2 },
+            { id: 'okx-asterdex', n: 'OKX - Aster', l: 2 },
 
-            const longFees = getFeeRates(longExName);
-            const shortFees = getFeeRates(shortExName);
+            { id: 'bybit-asterdex', n: 'Bybit - Aster', l: 3 },
+            { id: 'hyperliquid-bybit', n: 'HL - Bybit', l: 3 },
 
-            // Assuming taker fees for entry for a quick calculation
-            const totalEntryFee = tradeSize * (longFees.taker + shortFees.taker) / 100;
+            { id: 'hyperliquid-asterdex', n: 'HL - Aster', l: 4 }
+        ];
 
-            const grossProfit = opp.analysis.netCycleProfit || 0; // Use netCycleProfit from new analysis
-            return grossProfit - totalEntryFee;
-        }
+        const stairContainer = document.getElementById('stairMenu');
+        pairs.forEach(p => {
+            const b = document.createElement('button');
+            b.className = `stair-btn level-${p.l}`;
+            b.dataset.pair = p.id;
+            b.textContent = p.n;
+            b.onclick = () => ui.pair(p.id);
+            stairContainer.appendChild(b);
+        });
 
-        function openSettings() {
-            const form = document.getElementById('feeSettingsForm');
-            form.innerHTML = '';
-            Object.keys(EXCHANGE_FEES).forEach(exchange => {
-                const tiers = EXCHANGE_FEES[exchange];
-                const currentTier = userFeeSettings[exchange] || 0;
-                const div = document.createElement('div');
-                div.className = 'form-group';
-                const label = document.createElement('label');
-                label.className = 'form-label';
-                label.textContent = `${exchange} Fee Tier`;
-                const select = document.createElement('select');
-                select.className = 'form-select';
-                select.id = `fee-${exchange}`;
-                tiers.forEach((tier, index) => {
-                    const option = document.createElement('option');
-                    option.value = index;
-                    option.textContent = tier.name;
-                    if (index === currentTier) option.selected = true;
-                    select.appendChild(option);
-                });
-                div.appendChild(label);
-                div.appendChild(select);
-                form.appendChild(div);
-            });
-            document.getElementById('settingsModal').style.display = 'flex';
-        }
+        // WEBSOCKET
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const ws = new WebSocket(`${protocol}//${window.location.host}`);
 
-        function closeSettings() { document.getElementById('settingsModal').style.display = 'none'; }
+        ws.onopen = () => {
+            document.getElementById('wsDot').classList.add('connected');
+            document.getElementById('wsText').textContent = 'Connected';
+            document.getElementById('loader').style.display = 'none';
+        };
 
-        function saveSettings() {
-            Object.keys(EXCHANGE_FEES).forEach(exchange => {
-                const select = document.getElementById(`fee-${exchange}`);
-                if (select) userFeeSettings[exchange] = parseInt(select.value);
-            });
-            localStorage.setItem('feeSettings', JSON.stringify(userFeeSettings));
-            closeSettings();
-            // Re-render current view with new fee settings
-            if (currentTab === 'all-opps') renderAllTable();
-            else if (currentTab === 'exchanges' && currentPair) updateDashboard(allData[currentPair]);
-        }
+        ws.onmessage = (e) => {
+            const msg = JSON.parse(e.data);
+            if (msg.type === 'ARBITRAGE_UPDATE') {
+                state.data = msg.data;
+                state.allCoins = msg.allData || [];
 
-        // --- NEW NAVIGATION LOGIC ---
+                // Debug Bybit
+                if (state.data['binance-bybit']) {
+                    // console.log('BYBIT DATA:', state.data['binance-bybit'].length);
+                }
 
-        function switchModule(moduleId) {
-            // Hide all modules
-            document.querySelectorAll('.module-view').forEach(el => el.style.display = 'none');
-            // Show active
-            document.getElementById(`module-${moduleId}`).style.display = 'block';
-
-            // Update Active Nav Item
-            document.querySelectorAll('.bottom-nav .nav-item').forEach(btn => btn.classList.remove('active'));
-            // Find button by onclick text simple match or pass 'this'
-            // For simplicity, re-query by onclick attr
-            const btn = document.querySelector(`.bottom-nav .nav-item[onclick="switchModule('${moduleId}')"]`);
-            if (btn) btn.classList.add('active');
-
-            // If switching to Funding module, ensure a default view is active
-            if (moduleId === 'funding') {
-                switchView(currentTab); // Re-activate the last active sub-view
-                if (!currentPair) { // If no pair selected yet, select default
-                    switchToPair('binance-okx');
+                // Auto Refresh Active View
+                const activeView = document.querySelector('.view-content.active').id;
+                if (activeView === 'view-exchanges' && state.activePair) {
+                    renderGrid(state.data[state.activePair]);
+                } else if (activeView === 'view-all-opps') {
+                    renderAllOppsTable();
+                } else if (activeView === 'view-all-data') {
+                    renderAllDataTable();
                 }
             }
-        }
+        };
 
-        function switchView(viewId) {
-            // Hide all sub-views in Funding Module
-            document.querySelectorAll('#module-funding .sub-view').forEach(el => el.style.display = 'none');
-            // Show active
-            document.getElementById(`view-${viewId}`).style.display = 'block';
-
-            // Update Tabs
-            document.querySelectorAll('.top-sub-nav .sub-tab').forEach(btn => btn.classList.remove('active'));
-            const btn = document.querySelector(`.top-sub-nav .sub-tab[onclick="switchView('${viewId}')"]`);
-            if (btn) btn.classList.add('active');
-
-            currentTab = viewId; // 'exchanges', 'all-opps', 'all-data'
-
-            if (viewId === 'all-opps') renderAllTable();
-            if (viewId === 'all-data') renderAllDataTable();
-            if (viewId === 'exchanges' && currentPair && allData[currentPair]) updateDashboard(allData[currentPair]);
-            else if (viewId === 'exchanges' && !currentPair) {
-                // If 'exchanges' is selected but no pair is active, show a message
-                document.getElementById('opportunitiesGrid').innerHTML = '<div class="no-data">Select a pair from the sidebar to view opportunities.</div>';
+        // RENDERERS
+        function renderGrid(list) {
+            const grid = document.getElementById('gridContainer');
+            if (!list || list.length === 0) {
+                grid.innerHTML = '<div class="no-data">No active opportunities for this pair.<br><small>Waiting for market movements...</small></div>';
+                return;
             }
-        }
 
-        function switchToPair(pairKey) {
-            currentPair = pairKey;
+            grid.innerHTML = list.map(opp => {
+                const a = opp.analysis;
+                if (!a.detailed) return '';
 
-            // Rebuild Stairs to update active class
-            buildStairsMenu();
+                const net = a.netCycleProfit;
+                const apr = a.annualAPR;
+                const netClass = net > 0 ? 'val-pos' : 'val-neg';
 
-            // Force switch to 'exchanges' view if not already
-            switchView('exchanges');
+                const exL = a.strategy === 'LONG_A_SHORT_B' ? opp.exchangeA.name : opp.exchangeB.name;
+                const exS = a.strategy === 'LONG_A_SHORT_B' ? opp.exchangeB.name : opp.exchangeA.name;
 
-            // Load Data
-            const data = allData[pairKey] || [];
-            updateDashboard(data);
-        }
-
-        function buildStairsMenu() {
-            const container = document.getElementById('stairsMenu');
-            if (!container) return;
-            container.innerHTML = '';
-
-            const pairs = [
-                { id: 'binance-okx', name: 'Binance ↔ OKX', level: '1' },
-                { id: 'binance-bybit', name: 'Binance ↔ Bybit', level: '1' },
-                { id: 'binance-hyperliquid', name: 'Binance ↔ HL', level: '1' },
-                { id: 'binance-asterdex', name: 'Binance ↔ Aster', level: '1' },
-
-                { id: 'okx-bybit', name: 'OKX ↔ Bybit', level: '2' },
-                { id: 'okx-hyperliquid', name: 'OKX ↔ HL', level: '2' },
-                { id: 'okx-asterdex', name: 'OKX ↔ Aster', level: '2' },
-
-                { id: 'bybit-asterdex', name: 'Bybit ↔ Aster', level: '3' },
-                { id: 'hyperliquid-bybit', name: 'HL ↔ Bybit', level: '3' },
-
-                { id: 'hyperliquid-asterdex', name: 'HL ↔ Aster', level: '4' }
-            ];
-
-            pairs.forEach(p => {
-                const btn = document.createElement('button');
-                btn.className = `stair-btn stair-level-${p.level} ${currentPair === p.id ? 'active' : ''}`;
-                btn.textContent = p.name;
-                btn.onclick = () => switchToPair(p.id);
-                container.appendChild(btn);
-            });
-        }
-
-        // --- NEW CARD RENDERER ---
-        function createOpportunityCard(opp) {
-            // Safety check for new data structure
-            if (!opp.analysis.detailed) return '';
-
-            const cycle = opp.analysis.cycleDuration;
-            const netProfit = opp.analysis.netCycleProfit || 0;
-            const apr = opp.analysis.annualAPR || 0;
-            const fundingIncome = opp.analysis.fundingIncomeCycle || 0;
-            const fees = (opp.analysis.fees?.open || 0) + (opp.analysis.fees?.close || 0);
-            const priceRisk = opp.analysis.priceDifferencePnL || 0;
-
-            // Format Exchange Names (Short)
-            const fmtName = (n) => n.replace('Hyperliquid', 'HL').replace('Asterdex', 'Aster');
-            const longName = opp.analysis.strategy === 'LONG_A_SHORT_B' ? opp.exchangeA.name : opp.exchangeB.name;
-            const shortName = opp.analysis.strategy === 'LONG_A_SHORT_B' ? opp.exchangeB.name : opp.exchangeA.name;
-
-            return `
+                return `
                 <div class="opp-card">
-                    <div class="card-header-row">
-                        <div style="font-weight:bold; font-size:1.1rem; color:#fff;">${opp.symbol}</div>
-                        <div style="font-size:0.75rem; background:rgba(0,212,255,0.1); color:#00d4ff; padding:2px 6px; border-radius:4px;">
-                            ${cycle}h Cycle
+                    <div class="card-head">
+                        <div class="coin-sym">${opp.symbol}</div>
+                        <div class="cycle-badge">${a.cycleDuration}h Cycle</div>
+                    </div>
+                    <div class="card-body">
+                        <div class="ex-row">
+                            <span class="long">LONG ${exL}</span>
+                            <span>|</span>
+                            <span class="short">SHORT ${exS}</span>
                         </div>
-                    </div>
-                    
-                    <div style="padding:10px 15px; font-size:0.8rem; color:#ccc; display:flex; justify-content:space-between; border-bottom:1px solid rgba(255,255,255,0.05);">
-                         <div>
-                            <span style="color:#10b981">LONG ${fmtName(longName)}</span>
-                            <span style="opacity:0.3; margin:0 5px;">|</span>
-                            <span style="color:#ef4444">SHORT ${fmtName(shortName)}</span>
-                         </div>
-                         <div>$${opp.tradeSize} Size</div>
-                    </div>
+                        
+                        <div class="stats-main">
+                            <div>
+                                <div class="stat-l">Net Cycle PnL</div>
+                                <div class="stat-v ${netClass}">$${net.toFixed(2)}</div>
+                            </div>
+                            <div>
+                                <div class="stat-l">Est. APR</div>
+                                <div class="stat-v val-pos">${apr.toFixed(1)}%</div>
+                            </div>
+                        </div>
 
-                    <div class="main-stats-row">
-                        <div class="stat-box">
-                            <div class="stat-label">NET CYCLE PROFIT</div>
-                            <div class="stat-val-big ${netProfit > 0 ? 'val-pos' : 'val-neg'}">$${netProfit.toFixed(4)}</div>
-                            <div class="stat-label" style="font-size:0.6rem; margin-top:4px;">(Realized + Unrealized)</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-label">PURE FUNDING APR</div>
-                            <div class="stat-val-big val-pos">${apr.toFixed(1)}%</div>
-                            <div class="stat-label" style="font-size:0.6rem; margin-top:4px; color:#10b981;">Projected Annual</div>
-                        </div>
+                        <table class="breakdown-table">
+                            <tr><td>Funding Income</td><td class="val-pos">+$${a.fundingIncomeCycle.toFixed(4)}</td></tr>
+                            <tr><td>Total Fees</td><td class="val-neg">-$${(a.fees.open + a.fees.close).toFixed(4)}</td></tr>
+                            <tr><td>Price Risk</td><td class="${a.priceDifferencePnL >= 0 ? 'val-pos' : 'val-neg'}">${a.priceDifferencePnL.toFixed(4)}</td></tr>
+                        </table>
                     </div>
-                    
-                    <div class="breakdown-grid">
-                        <div class="break-item">
-                            <div class="stat-label">Funding Income</div>
-                            <div class="break-val val-pos">+$${fundingIncome.toFixed(4)}</div>
-                        </div>
-                        <div class="break-item">
-                            <div class="stat-label">Total Fees</div>
-                            <div class="break-val val-neg">-$${fees.toFixed(4)}</div>
-                        </div>
-                        <div class="break-item">
-                            <div class="stat-label">Price Risk</div>
-                            <div class="break-val ${priceRisk >= 0 ? 'val-pos' : 'val-neg'}">${priceRisk >= 0 ? '+' : ''}$${priceRisk.toFixed(4)}</div>
-                        </div>
-                    </div>
-                    
-                    <div class="breakdown-grid" style="border-top:none; background:rgba(255,255,255,0.03);">
-                         <div class="break-item" style="grid-column: span 3; text-align:left; display:flex; justify-content:space-between; padding:8px 15px;">
-                            <span class="stat-label">MAKER FEE ESTIMATE</span>
-                            <span class="maker-color">$${(opp.analysis.fees.open / 2).toFixed(4)}</span>
-                         </div>
-                    </div>
-                </div>
-            `;
+                </div>`;
+            }).join('');
         }
 
-        function updateDashboard(opportunities) {
-            if (!opportunities) return;
-            document.getElementById('loading').style.display = 'none';
-            updateStats(opportunities);
+        function renderAllOppsTable() {
+            // Flatten all data
+            let all = [];
+            Object.values(state.data).forEach(arr => all.push(...arr));
+            all.sort((a, b) => b.analysis.netCycleProfit - a.analysis.netCycleProfit);
 
-            // Sort by APR (highest first)
-            opportunities.sort((a, b) => (b.analysis.annualAPR || 0) - (a.analysis.annualAPR || 0));
-
-            // Take only top 10
-            const topOpportunities = opportunities.slice(0, 10);
-
-            const grid = document.getElementById('opportunitiesGrid');
-
-            // Remember expanded cards
-            const expandedSymbols = new Set();
-            grid.querySelectorAll('.opportunity-card.expanded').forEach(card => {
-                const symbol = card.getAttribute('data-symbol');
-                if (symbol) expandedSymbols.add(symbol);
-            });
-
-            // Clear and rebuild
-            grid.innerHTML = '';
-
-            topOpportunities.forEach(opp => {
-                const cardHTML = createOpportunityCard(opp);
-                const tempDiv = document.createElement('div');
-                tempDiv.innerHTML = cardHTML;
-                const card = tempDiv.firstElementChild;
-
-                // Restore expanded state
-                if (expandedSymbols.has(opp.symbol)) {
-                    card.classList.add('expanded');
-                    const btn = card.querySelector('.expand-button');
-                    if (btn) btn.textContent = '▲ Hide Trading Steps';
-                }
-
-                grid.appendChild(card);
-
-                // Add event listener
-                const btn = card.querySelector('.expand-button');
-                if (btn) {
-                    btn.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        card.classList.toggle('expanded');
-                        btn.textContent = card.classList.contains('expanded') ? '▲ Hide Trading Steps' : '▼ Show Trading Steps';
-                    });
-                }
-            });
-        }
-
-        function updateCardValues(card, opp) {
-            const hasOpportunity = opp.analysis.isOpportunity;
-            const cardClass = hasOpportunity ? 'opportunity-card has-opportunity' : 'opportunity-card';
-            // Preserve expanded state
-            if (card.classList.contains('expanded')) {
-                card.className = cardClass + ' expanded';
-            } else {
-                card.className = cardClass;
-            }
-
-            const badge = card.querySelector('.opportunity-badge');
-            if (badge) {
-                badge.className = `opportunity-badge ${hasOpportunity ? 'active' : 'inactive'}`;
-                badge.textContent = hasOpportunity ? '🎯 LIVE' : 'NO SIGNAL';
-            }
-
-            let longExchange, shortExchange;
-            if (opp.analysis.strategy === 'LONG_A_SHORT_B') {
-                longExchange = opp.exchangeA; shortExchange = opp.exchangeB;
-            } else {
-                longExchange = opp.exchangeB; shortExchange = opp.exchangeA;
-            }
-
-            // Update Prices and Funding
-            const priceLong = card.querySelector('.val-price-long');
-            if (priceLong) priceLong.textContent = '$' + formatPrice(longExchange.markPrice);
-
-            const fundingLong = card.querySelector('.val-funding-long');
-            if (fundingLong) {
-                fundingLong.textContent = parseFloat(longExchange.fundingRate).toFixed(4) + '%';
-                fundingLong.className = `funding-value val-funding-long ${longExchange.fundingRate >= 0 ? 'positive' : 'negative'}`;
-            }
-
-            const priceShort = card.querySelector('.val-price-short');
-            if (priceShort) priceShort.textContent = '$' + formatPrice(shortExchange.markPrice);
-
-            const fundingShort = card.querySelector('.val-funding-short');
-            if (fundingShort) {
-                fundingShort.textContent = parseFloat(shortExchange.fundingRate).toFixed(4) + '%';
-                fundingShort.className = `funding-value val-funding-short ${shortExchange.fundingRate >= 0 ? 'positive' : 'negative'}`;
-            }
-
-            // PnL Values
-            const priceDiff = card.querySelector('.val-price-diff');
-            if (priceDiff) {
-                priceDiff.textContent = '$' + opp.analysis.priceDifferencePnL.toFixed(2);
-                priceDiff.className = `val-price-diff ${opp.analysis.priceDifferencePnL >= 0 ? 'positive' : 'negative'}`;
-            }
-
-            const funding8h = card.querySelector('.val-funding-8h');
-            if (funding8h) {
-                funding8h.textContent = '$' + opp.analysis.fundingPnL8h.toFixed(4);
-                funding8h.className = `val-funding-8h ${opp.analysis.fundingPnL8h >= 0 ? 'positive' : 'negative'}`;
-            }
-
-            const netProfit = calculateAdjustedProfit(opp);
-            const netProfitEl = card.querySelector('.val-net-profit');
-            if (netProfitEl) {
-                netProfitEl.textContent = '$' + netProfit.toFixed(4);
-                netProfitEl.className = `val-net-profit ${netProfit >= 0 ? 'positive' : 'negative'}`;
-            }
-
-            const apr = card.querySelector('.val-apr');
-            if (apr) {
-                apr.textContent = opp.analysis.annualAPR.toFixed(2) + '%';
-                apr.className = `val-apr ${opp.analysis.annualAPR > 0 ? 'positive' : 'negative'}`;
-            }
-
-            // Note: We are NOT updating the "Details" section dynamically to save performance and avoid complex DOM manipulation.
-            // The details section is mostly static based on initial calculation or requires full re-render.
-            // Since details are only visible when expanded, and we want to avoid jitter, we keep them as is until next full refresh or we can implement more granular updates if needed.
-            // However, for critical values like Break-Even, we could update them if we added classes to them.
-        }
-
-        function formatPrice(price) {
-            if (!price) return '-';
-            const p = parseFloat(price);
-            if (p < 0.001) return p.toFixed(8);
-            if (p < 1) return p.toFixed(6);
-            if (p < 10) return p.toFixed(4);
-            return p.toFixed(2);
+            document.getElementById('bodyOpps').innerHTML = all.map(o => `
+                <tr>
+                    <td><div class="cycle-badge">${o.analysis.cycleDuration}h</div></td>
+                    <td><b>${o.symbol}</b></td>
+                    <td style="font-size:0.75rem">${o.analysis.strategy === 'LONG_A_SHORT_B' ? 'L/S' : 'S/L'}</td>
+                    <td class="${o.analysis.netCycleProfit > 0 ? 'val-pos' : 'val-neg'}">$${o.analysis.netCycleProfit.toFixed(4)}</td>
+                    <td class="val-pos">${o.analysis.annualAPR.toFixed(1)}%</td>
+                </tr>
+            `).join('');
         }
 
         function renderAllDataTable() {
-            const tbody = document.getElementById('allDataBody');
-            document.getElementById('loading').style.display = 'none';
-            allCoinsData.sort((a, b) => a.symbol.localeCompare(b.symbol));
+            const fmt = (v) => v ? `<div class="${v.funding > 0 ? 'val-pos' : 'val-neg'}">${(v.funding * 100).toFixed(4)}%</div><div style="font-size:0.7rem;color:#666">$${parseFloat(v.price).toFixed(2)}</div>` : '-';
 
-            tbody.innerHTML = allCoinsData.map(coin => {
-                const formatCell = (data) => {
-                    if (!data) return '<td colspan="2" style="text-align:center; color:rgba(255,255,255,0.2)">-</td>';
-                    const fundingClass = data.funding > 0 ? 'positive' : (data.funding < 0 ? 'negative' : '');
-                    return `<td style="min-width:90px">$${formatPrice(data.price)}</td><td class="${fundingClass}" style="min-width:70px">${parseFloat(data.funding).toFixed(4)}%</td>`;
-                };
-
-                return `<tr>
-                    <td>
-                        <div class="coin-cell">
-                            <span class="coin-name">${coin.symbol}</span>
-                        </div>
-                    </td>
-                    ${formatCell(coin.binance)}
-                    ${formatCell(coin.okx)}
-                    ${formatCell(coin.hyperliquid)}
-                    ${formatCell(coin.bybit)}
-                    ${formatCell(coin.asterdex)}
-                </tr>`;
-            }).join('');
-
-            updateCoinCounts();
+            document.getElementById('bodyData').innerHTML = state.allCoins.map(c => `
+                <tr>
+                    <td><b>${c.symbol}</b></td>
+                    <td>${fmt(c.binance)}</td>
+                    <td>${fmt(c.okx)}</td>
+                    <td>${fmt(c.bybit)}</td>
+                    <td>${fmt(c.hyperliquid)}</td>
+                    <td>${fmt(c.asterdex)}</td>
+                </tr>
+            `).join('');
         }
 
-        function getLongExchange(opp) { return opp.analysis.strategy === 'LONG_A_SHORT_B' ? opp.exchangeA.name : opp.exchangeB.name; }
-        function getShortExchange(opp) { return opp.analysis.strategy === 'LONG_A_SHORT_B' ? opp.exchangeB.name : opp.exchangeA.name; }
-        function getLongExchangeLogo(opp) { return opp.analysis.strategy === 'LONG_A_SHORT_B' ? opp.exchangeA.logo : opp.exchangeB.logo; }
-        function getShortExchangeLogo(opp) { return opp.analysis.strategy === 'LONG_A_SHORT_B' ? opp.exchangeB.logo : opp.exchangeA.logo; }
+        // START
+        ui.pair('binance-okx'); // Set default visual state
 
-        function sortTable(key) {
-            if (sortConfig.key === key) {
-                sortConfig.direction = sortConfig.direction === 'asc' ? 'desc' : 'asc';
-            } else {
-                sortConfig.key = key;
-                sortConfig.direction = (key === 'symbol' || key === 'long' || key === 'short') ? 'asc' : 'desc';
-            }
-            renderAllTable();
-        }
-
-        function updateCoinCounts() {
-            if (!allCoinsData || allCoinsData.length === 0) return;
-            const counts = { Binance: 0, OKX: 0, Hyperliquid: 0, Bybit: 0, Asterdex: 0 };
-            allCoinsData.forEach(coin => {
-                if (coin.binance) counts.Binance++;
-                if (coin.okx) counts.OKX++;
-                if (coin.hyperliquid) counts.Hyperliquid++;
-                if (coin.bybit) counts.Bybit++;
-                if (coin.asterdex) counts.Asterdex++;
-            });
-            if (document.getElementById('count-Binance')) document.getElementById('count-Binance').textContent = counts.Binance;
-            if (document.getElementById('count-OKX')) document.getElementById('count-OKX').textContent = counts.OKX;
-            if (document.getElementById('count-Hyperliquid')) document.getElementById('count-Hyperliquid').textContent = counts.Hyperliquid;
-            if (document.getElementById('count-Bybit')) document.getElementById('count-Bybit').textContent = counts.Bybit;
-            if (document.getElementById('count-Asterdex')) document.getElementById('count-Asterdex').textContent = counts.Asterdex;
-        }
-
-        function updateStats(opportunities) {
-            // Get ALL opportunities from allData (not just the filtered parameter)
-            const allOpportunities = getAllOpportunities();
-            const activeOpps = allOpportunities.filter(o => o.analysis && o.analysis.isOpportunity);
-
-            // Total coins = all coins being tracked
-            const totalCoins = allCoinsData.length || 0;
-            const totalOppsEl = document.getElementById('totalOpportunities');
-            if (totalOppsEl) totalOppsEl.textContent = totalCoins;
-
-            // Active opportunities = coins with actual arbitrage opportunities
-            const activeArbEl = document.getElementById('activeArbitrage');
-            if (activeArbEl) activeArbEl.textContent = activeOpps.length;
-
-            if (activeOpps.length > 0) {
-                const best8h = activeOpps.reduce((max, o) => o.analysis.annualAPR > max.analysis.annualAPR ? o : max);
-                const bestOppEl = document.getElementById('bestOpportunity');
-                const bestAnnualEl = document.getElementById('bestAnnual');
-
-                if (bestOppEl && best8h.analysis && best8h.analysis.fundingPnL8h != null) {
-                    bestOppEl.textContent = best8h.analysis.fundingPnL8h.toFixed(4) + '$';
-                }
-                if (bestAnnualEl && best8h.analysis && best8h.analysis.annualAPR != null) {
-                    bestAnnualEl.textContent = best8h.analysis.annualAPR.toFixed(2) + '%';
-                }
-            } else {
-                const bestOppEl = document.getElementById('bestOpportunity');
-                const bestAnnualEl = document.getElementById('bestAnnual');
-                if (bestOppEl) bestOppEl.textContent = '0.0000$';
-                if (bestAnnualEl) bestAnnualEl.textContent = '0.00%';
-            }
-            updateCoinCounts();
-        }
-
-        function connectWebSocket() {
-            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const wsUrl = `${protocol}//${window.location.host}`;
-            ws = new WebSocket(wsUrl);
-            ws.onopen = () => {
-                document.getElementById('wsStatus').classList.add('connected');
-                document.getElementById('wsStatusText').textContent = 'Connected';
-                if (reconnectInterval) { clearInterval(reconnectInterval); reconnectInterval = null; }
-            };
-            ws.onmessage = (event) => {
-                const message = JSON.parse(event.data);
-
-                if (message.type === 'ARBITRAGE_UPDATE') {
-                    allData = message.data; // { 'binance-okx': [...], ... }
-                    allCoinsData = message.allData || [];
-
-                    // Debug specific pair count
-                    if (Math.random() < 0.05) { // Log occasionally to avoid spamming console
-                        console.log(`[WS] Update received. BN-OKX: ${allData['binance-okx']?.length}, BN-BYB: ${allData['binance-bybit']?.length}`);
-                    }
-
-                    // Update All Data Table if active
-                    if (currentTab === 'all-data') {
-                        renderAllDataTable();
-                    }
-
-                    // Update All Opportunities if active
-                    if (currentTab === 'all') {
-                        renderAllTable(); // Pass no arguments, as renderAllTable fetches from getAllOpportunities()
-                    }
-
-                    // Update Exchange View if active
-                    if (currentTab === 'exchange' && currentPair) {
-                        if (allData[currentPair]) {
-                            updateDashboard(allData[currentPair]);
-                        } else {
-                            updateDashboard([]); // Clear dashboard if no data for the current pair
-                        }
-                    }
-
-                    // Update stats bar
-                    updateStats(getAllOpportunities());
-                }
-            };
-            ws.onclose = () => {
-                document.getElementById('wsStatus').classList.remove('connected');
-                document.getElementById('wsStatusText').textContent = 'Disconnected';
-                if (!reconnectInterval) reconnectInterval = setInterval(connectWebSocket, 5000);
-            };
-        }
-
-        // Initialize
-        currentTab = 'binance-okx'; // Default pair
-        connectWebSocket();
-
-        // Show default view
-        document.getElementById('opportunitiesGrid').style.display = 'grid';
-
-        // Build the static pair pyramid menu
-        buildPairPyramid();
-
-        function buildPairPyramid() {
-            const container = document.getElementById('pairTabs');
-
-            // Pyramid Stucture:
-            // Row 1: Binance pairs (4)
-            // Row 2: OKX pairs (3)
-            // Row 3: Bybit pairs (2)
-            // Row 4: HL pairs (1)
-
-            const rows = [
-                ['binance-okx', 'binance-bybit', 'binance-hyperliquid', 'binance-asterdex'],
-                ['okx-bybit', 'okx-hyperliquid', 'okx-asterdex'],
-                ['bybit-hyperliquid', 'bybit-asterdex'],
-                ['hyperliquid-asterdex']
-            ];
-
-            let html = '';
-
-            rows.forEach(row => {
-                html += '<div class="pair-row" style="display:flex; justify-content:center; gap:8px; margin-bottom:8px;">';
-                row.forEach(pairKey => {
-                    const shortName = pairKey
-                        .replace('binance', 'BN')
-                        .replace('okx', 'OKX')
-                        .replace('bybit', 'BYB')
-                        .replace('hyperliquid', 'HL')
-                        .replace('asterdex', 'AST')
-                        .toUpperCase()
-                        .replace('-', ' <> ');
-
-                    const isActive = currentTab === pairKey;
-
-                    html += `
-                        <button class="pair-btn ${isActive ? 'active' : ''}" 
-                                onclick="switchToPair('${pairKey}')"
-                                style="flex:1; max-width:120px;">
-                            ${shortName}
-                        </button>
-                    `;
-                });
-                html += '</div>';
-            });
-
-            container.innerHTML = html;
-            container.style.flexDirection = 'column'; // Stack rows vertically
-            container.style.overflowX = 'visible'; // No scroll
-            container.style.marginBottom = '20px';
-        }
-
-        function switchToPair(pairKey) {
-            currentTab = pairKey;
-
-            // Re-render buttons to update active state
-            buildPairPyramid();
-
-            // Update Bottom Nav Active State
-            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
-            document.querySelector('.nav-item[onclick*="opportunitiesGrid"]')?.classList.add('active'); // Safe check
-
-            // Show Grid View
-            document.getElementById('opportunitiesGrid').style.display = 'grid';
-            document.getElementById('pairTabs').style.display = 'flex';
-            document.getElementById('opportunitiesTable').style.display = 'none';
-            document.getElementById('allDataTable').style.display = 'none';
-
-            if (allData[pairKey]) {
-                updateDashboard(allData[pairKey]);
-            }
+        // Dummy Settings
+        function saveDummySettings() {
+            alert('Settings saved locally.');
+            ui.module('funding');
         }
     </script>
-
-    <!-- Bottom Navigation -->
-    <div class="bottom-nav">
-        <button class="nav-item active" onclick="switchToPair(currentTab || 'binance-okx')">
-            <div class="nav-icon">⚡</div>
-            <div>Exchange</div>
-        </button>
-        <button class="nav-item" onclick="switchTab('all')">
-            <div class="nav-icon">📊</div>
-            <div>All Opps</div>
-        </button>
-        <button class="nav-item" onclick="switchTab('all-data')">
-            <div class="nav-icon">📈</div>
-            <div>All Data</div>
-        </button>
-    </div>
 </body>
 
 </html>
