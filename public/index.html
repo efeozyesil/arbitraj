@@ -196,57 +196,99 @@
             padding: 5px;
         }
 
-        /* SIDEBAR MOBILE OVERRIDES */
+        /* MOBILE: HORIZONTAL MENU (v2.0) */
         @media (max-width: 900px) {
-            .menu-btn {
-                display: block;
-            }
-
             .content-wrapper {
                 flex-direction: column;
             }
 
-            .sidebar {
-                position: fixed;
-                top: 0;
-                left: -100%;
-                /* Hidden by default */
-                width: 85%;
-                max-width: 320px;
-                height: 100vh;
-                background: #050505;
-                border-right: 1px solid var(--accent);
-                z-index: 9999;
-                transition: left 0.3s ease-in-out;
-                display: flex !important;
-                flex-direction: column;
-                padding-top: 0;
-                box-shadow: 20px 0 100px rgba(0, 0, 0, 0.9);
+            /* Hide Hamburger - We maintain visible menu */
+            .menu-btn {
+                display: none !important;
             }
 
-            .sidebar.open {
-                left: 0 !important;
-                /* Slide in */
-            }
-
-            /* Backdrop */
-            .backdrop {
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(0, 0, 0, 0.8);
-                z-index: 9000;
-                display: none;
-                opacity: 0;
-                transition: opacity 0.3s;
-                backdrop-filter: blur(4px);
-            }
-
-            .backdrop.visible {
+            .reload-btn {
                 display: block;
-                opacity: 1;
+            }
+
+            /* Transform Sidebar to Horizontal Scroll Bar */
+            .sidebar {
+                position: sticky;
+                top: 60px;
+                left: 0;
+                z-index: 400;
+                width: 100%;
+                height: 55px;
+                max-width: 100%;
+                background: #080808;
+                border-right: none;
+                border-bottom: 2px solid var(--border);
+                display: flex !important;
+                flex-direction: row;
+                align-items: center;
+                overflow-x: auto;
+                /* Enable Horizontal Scroll */
+                overflow-y: hidden;
+                padding: 0 10px;
+                white-space: nowrap;
+                /* Prevent wrap */
+                -webkit-overflow-scrolling: touch;
+                /* Smooth scroll iOS */
+                box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+            }
+
+            /* Hide Scrollbar but allow scroll */
+            .sidebar::-webkit-scrollbar {
+                display: none;
+            }
+
+            /* Adjust Sidebar Items for Horizontal Layout */
+            .sb-btn {
+                flex: 0 0 auto;
+                /* Don't shrink */
+                margin-bottom: 0;
+                margin-right: 10px;
+                font-size: 0.8rem;
+                padding: 6px 12px;
+                height: 34px;
+                border-radius: 100px;
+                /* Pill shape */
+                background: #151515;
+                border: 1px solid #333;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .sb-btn:last-child {
+                margin-right: 20px;
+            }
+
+            /* Spacer at end */
+
+            .sb-btn.active {
+                background: var(--accent);
+                color: #000;
+                font-weight: 700;
+                border-color: var(--accent);
+                box-shadow: 0 0 10px var(--accent-dim);
+            }
+
+            /* Hide Headers/Dividers in Horizontal Mode to save space */
+            .sb-header,
+            .neon-divider,
+            .sidebar>div:first-child {
+                display: none !important;
+            }
+
+            /* Ensure content padding */
+            .view-frame {
+                padding: 15px 10px;
+            }
+
+            /* Backdrop Remove */
+            .backdrop {
+                display: none !important;
             }
         }
 
@@ -853,23 +895,14 @@
                 };
             },
 
-            // MOBILE MENU (CSS Controlled)
+            // MOBILE MENU (v2.0 - Horizontal Scroll, Always Visible)
             toggleSidebar: (show) => {
-                const sb = document.getElementById('mainSidebar');
-                const bd = document.getElementById('backdrop');
-                // Don't mess with inline styles, trust CSS classes
-                if (show) {
-                    sb.style.left = ''; // Clear any inline interference
-                    sb.classList.add('open');
-                    bd.classList.add('visible');
-                } else {
-                    sb.classList.remove('open');
-                    bd.classList.remove('visible');
-                }
+                // No-op: Sidebar is sticky horizontal scroll on mobile
+                // We keep this function to prevent errors if button is somehow clicked
             },
 
             checkMobileClose: () => {
-                if (window.innerWidth <= 900) app.toggleSidebar(false);
+                // No-op: No need to close sidebar as it is horizontal menu
             },
 
             // NAVIGATION
@@ -881,12 +914,10 @@
                 if (btn) btn.classList.add('active');
 
                 const sb = document.getElementById('mainSidebar');
-                // Desktop logic: Toggle display flex/none based on module
-                // Mobile logic: CSS handles display (always flex, positioned off-screen)
+                // Desktop: Flex/None logic
+                // Mobile: Always visible (Horizontal Scroll via CSS)
                 if (window.innerWidth > 900) {
                     sb.style.display = (modId === 'funding') ? 'flex' : 'none';
-                } else {
-                    sb.style.display = ''; // Clear inline for mobile to use CSS
                 }
 
                 if (modId === 'settings') app.renderSettings();
