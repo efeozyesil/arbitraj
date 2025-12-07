@@ -196,13 +196,13 @@
             padding: 5px;
         }
 
-        /* MOBILE: SPLIT SCREEN (v3.0 - Desktop Style on Mobile) */
+        /* MOBILE: SPLIT SCREEN (v3.1 - Polished) */
         @media (max-width: 900px) {
-
-            /* Force Row Layout (Sidebar Left | Content Right) */
             .content-wrapper {
                 flex-direction: row !important;
                 height: calc(100vh - 60px);
+                width: 100vw;
+                /* Force full viewport width */
                 overflow: hidden;
             }
 
@@ -214,129 +214,102 @@
                 display: block;
             }
 
-            /* Mini Sidebar on Left */
+            /* Hide full text logo, show minimal */
+            .brand-logo .neon-text {
+                display: none;
+            }
+
+            .brand-logo::after {
+                content: 'RBIT';
+                color: #fff;
+                font-weight: 800;
+                font-size: 1.2rem;
+                text-shadow: 0 0 10px var(--accent);
+            }
+
+            /* Sidebar Fixed Width */
             .sidebar {
                 position: relative;
-                /* Normal flow */
-                top: 0;
-                left: 0;
-                width: 105px !important;
-                /* Fixed narrow width */
-                min-width: 105px;
+                width: 110px !important;
+                min-width: 110px;
                 height: 100%;
                 background: #0a0a0a;
                 border-right: 1px solid var(--border);
                 display: flex !important;
                 flex-direction: column;
-                padding: 10px 5px;
+                padding: 10px 0;
                 overflow-y: auto;
                 z-index: 10;
+                flex-shrink: 0;
             }
 
-            /* Hide headers to save space */
-            .sb-header,
+            /* Restore Dividers & Headers */
+            .sb-header {
+                display: block !important;
+                font-size: 0.6rem;
+                text-align: center;
+                margin-top: 10px;
+                opacity: 0.7;
+            }
+
             .neon-divider {
-                display: none !important;
+                display: block !important;
+                margin: 10px auto;
+                width: 60%;
             }
 
             #sbContent {
                 display: flex;
                 flex-direction: column;
                 gap: 5px;
+                padding: 0 5px;
             }
 
             .sb-btn {
                 margin: 0 !important;
                 width: 100%;
                 font-size: 0.7rem;
-                padding: 8px 4px;
+                padding: 8px 2px;
                 text-align: center;
                 justify-content: center;
                 white-space: normal;
-                /* Allow text wrap */
                 line-height: 1.1;
                 border: 1px solid transparent;
+                background: transparent;
             }
 
             .sb-btn.active {
-                background: var(--accent);
-                color: #000;
+                background: var(--accent-dim);
+                color: var(--accent);
                 font-weight: 700;
+                border: 1px solid var(--accent);
             }
 
-            /* Content Area (Right Side) */
+            /* Content Area Fix - Fill Remaining Space */
             .view-frame {
-                padding: 10px 5px;
+                padding: 10px;
                 overflow-y: auto;
-                flex: 1;
-                /* Take remaining space */
+                flex-grow: 1;
+                /* Take all space */
+                width: auto;
+                /* Reset fixed width issues */
                 height: 100%;
-                width: calc(100% - 105px);
             }
 
-            .page-title {
-                font-size: 1rem;
-                margin-bottom: 10px;
+            /* Ensure Tables use full width */
+            table {
+                width: 100% !important;
+                display: table !important;
             }
 
-            /* Card Adjustments for Narrow Space */
             .cards-grid {
                 grid-template-columns: 1fr;
                 /* Single column */
-                gap: 10px;
+                gap: 15px;
                 padding-bottom: 80px;
-            }
-
-            .new-card {
-                padding: 10px;
-            }
-
-            .nc-head {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 5px;
-            }
-
-            .nc-stats-right {
-                align-items: flex-start;
-                margin-top: 5px;
-            }
-
-            .nc-price-row {
-                flex-direction: column;
-                gap: 8px;
-                /* Stack prices vertically */
-            }
-
-            .nc-p-box {
-                width: 100%;
-                margin-bottom: 5px;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-            }
-
-            .breakdown-grid {
-                grid-template-columns: 1fr;
-                /* Stack Maker/Taker vertical */
-            }
-
-            .bd-col {
-                border-left: none !important;
-                padding-left: 0 !important;
-                border-top: 1px solid #333;
-                padding-top: 10px;
-                margin-top: 10px;
-            }
-
-            .bd-item,
-            .bd-final {
-                display: flex;
-                justify-content: space-between;
                 width: 100%;
             }
 
-            /* Ensure Backdrop is gone */
             .backdrop {
                 display: none !important;
             }
@@ -1203,25 +1176,56 @@
             <button class="sb-btn" data-pair="hyperliquid-asterdex" onclick="app.setPair('hyperliquid-asterdex')">HL - Aster</button>
         `;
 
-        // --- WEBSOCKET ---
+        // --- WEBSOCKET WITH AUTO-RECONNECT ---
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const ws = new WebSocket(`${protocol}//${window.location.host}`);
+        let ws;
+        let retryCount = 0;
+        const maxRetries = 10;
 
-        ws.onopen = () => {
-            document.getElementById('wsStatus').innerText = 'Connected';
-            document.getElementById('wsDot').classList.add('connected');
-        };
+        function connect() {
+            const wsUrl = `${protocol}//${window.location.host}`;
+            console.log('Connecting to:', wsUrl);
+            ws = new WebSocket(wsUrl);
 
-        ws.onmessage = (e) => {
-            try {
-                const msg = JSON.parse(e.data);
-                if (msg.type === 'ARBITRAGE_UPDATE') {
-                    app.state.data = msg.data;
-                    app.state.allCoins = msg.allData || [];
-                    app.render(); // Will respect throttle
-                }
-            } catch (err) { console.error('WS Error:', err); }
-        };
+            ws.onopen = () => {
+                console.log('WS Connected');
+                document.getElementById('wsStatus').innerText = 'Connected';
+                document.getElementById('wsDot').classList.add('connected');
+                document.getElementById('wsDot').style.background = 'var(--positive)';
+                retryCount = 0;
+            };
+
+            ws.onmessage = (e) => {
+                try {
+                    const msg = JSON.parse(e.data);
+                    if (msg.type === 'ARBITRAGE_UPDATE') {
+                        app.state.data = msg.data;
+                        app.state.allCoins = msg.allData || [];
+                        app.render();
+                    }
+                } catch (err) { console.error('WS Data Error:', err); }
+            };
+
+            ws.onclose = (e) => {
+                console.log('WS Closed. Reconnecting...', e.reason);
+                document.getElementById('wsStatus').innerText = 'Connecting...';
+                document.getElementById('wsDot').classList.remove('connected');
+                document.getElementById('wsDot').style.background = 'var(--negative)';
+
+                const timeout = Math.min(1000 * (retryCount + 1), 5000); // Backoff
+                setTimeout(() => {
+                    retryCount++;
+                    connect();
+                }, timeout);
+            };
+
+            ws.onerror = (err) => {
+                console.error('WS Error:', err);
+                ws.close(); // Force close to trigger reconnect
+            };
+        }
+
+        connect(); // Initial Connect
 
         // --- STARTUP ---
         app.nav('funding');
