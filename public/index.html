@@ -147,8 +147,85 @@
             position: relative;
         }
 
-        /* HEADER */
-        .top-header {
+        /* HEADER IMPROVEMENTS */
+        .app-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 15px;
+            height: 50px;
+            border-bottom: 1px solid var(--border);
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .menu-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: #fff;
+            cursor: pointer;
+            display: none;
+            /* Hidden on desktop */
+            padding: 5px;
+            margin-right: 10px;
+        }
+
+        /* SIDEBAR MOBILE OVERRIDES */
+        @media (max-width: 768px) {
+            .menu-btn {
+                display: block;
+            }
+
+            .content-wrapper {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: -280px;
+                width: 260px;
+                height: 100%;
+                z-index: 1001;
+                background: #0a0a0a;
+                border-right: 1px solid var(--accent);
+                transition: left 0.3s ease-in-out;
+                box-shadow: 10px 0 30px rgba(0, 0, 0, 0.5);
+                display: flex !important;
+                /* Always flex layout, hidden by position */
+                padding-top: 20px;
+            }
+
+            .sidebar.open {
+                left: 0;
+            }
+
+            /* Backdrop */
+            .backdrop {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.7);
+                z-index: 1000;
+                display: none;
+                opacity: 0;
+                transition: opacity 0.3s;
+            }
+
+            .backdrop.visible {
+                display: block;
+                opacity: 1;
+            }
+        }
+
+        /* Old HEADER styles - removed as replaced by .app-header */
+        /* .top-header {
             padding: 15px 20px;
             border-bottom: 1px solid var(--border);
             display: flex;
@@ -156,7 +233,7 @@
             align-items: center;
             background: rgba(20, 20, 20, 0.5);
             backdrop-filter: blur(10px);
-        }
+        } */
 
         .page-title {
             font-size: 1.1rem;
@@ -750,6 +827,25 @@
                 };
             },
 
+            // MOBILE MENU
+            toggleSidebar: (show) => {
+                const sb = document.getElementById('mainSidebar');
+                const bd = document.getElementById('backdrop');
+                if (show) {
+                    sb.style.left = '0'; // Only affects mobile due to CSS
+                    sb.classList.add('open');
+                    bd.classList.add('visible');
+                } else {
+                    sb.style.left = '';
+                    sb.classList.remove('open');
+                    bd.classList.remove('visible');
+                }
+            },
+
+            checkMobileClose: () => {
+                if (window.innerWidth <= 768) app.toggleSidebar(false);
+            },
+
             // NAVIGATION
             nav: (modId, btn) => {
                 app.state.module = modId;
@@ -765,6 +861,7 @@
 
             setView: (viewId) => {
                 app.state.view = viewId;
+                app.checkMobileClose(); // Auto close on click
                 document.querySelectorAll('.view-frame').forEach(el => el.classList.remove('active'));
                 if (viewId === 'all-opps') {
                     document.getElementById('view-list').classList.add('active');
@@ -779,7 +876,13 @@
                 app.render();
             },
 
-            setPair: (pk) => { app.state.pair = pk; app.setView('exchanges'); const p = pk.toUpperCase().split('-'); document.getElementById('pageTitle').innerText = `${p[0]} <> ${p[1]}`; },
+            setPair: (pk) => {
+                app.state.pair = pk;
+                app.checkMobileClose(); // Auto close on click
+                app.setView('exchanges');
+                const p = pk.toUpperCase().split('-');
+                document.getElementById('pageTitle').innerText = `${p[0]} <> ${p[1]}`;
+            },
             updateSidebarActive: () => {
                 document.querySelectorAll('.sb-btn').forEach(b => b.classList.remove('active'));
                 if (app.state.view === 'all-opps') document.querySelector(`button[onclick="app.setView('all-opps')"]`)?.classList.add('active');
