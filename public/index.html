@@ -23,7 +23,7 @@
             --okx: #fff;
             --bybit: #FFB119;
             --hl: #00D4FF;
-            --aster: #888;
+            --aster: #A088FF;
             --border: #222;
         }
 
@@ -172,15 +172,17 @@
         .coin-table {
             width: 100%;
             border-collapse: collapse;
-            min-width: 600px;
+            min-width: 700px;
             display: table;
         }
 
         .ct-head th {
             text-align: right;
             padding: 10px;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             border-bottom: 1px solid #333;
+            color: #888;
+            text-transform: uppercase;
         }
 
         .ct-head th:first-child {
@@ -188,7 +190,7 @@
         }
 
         .ct-row td {
-            padding: 12px 10px;
+            padding: 10px 8px;
             border-bottom: 1px solid #1a1a1a;
             vertical-align: middle;
         }
@@ -196,26 +198,26 @@
         .ct-sym {
             font-weight: 700;
             color: #fff;
-            font-size: 1rem;
+            font-size: 0.95rem;
         }
 
         .ct-cell {
             display: flex;
             flex-direction: column;
             align-items: flex-end;
+            gap: 2px;
         }
 
         .ct-fund {
             font-family: monospace;
-            font-size: 0.95rem;
+            font-size: 0.85rem;
             font-weight: 700;
         }
 
         .ct-price {
             font-family: monospace;
-            font-size: 0.75rem;
-            color: #666;
-            margin-top: 2px;
+            font-size: 0.7rem;
+            color: #555;
         }
 
         /* --- ALL OPPS ROW --- */
@@ -224,7 +226,7 @@
             border: 1px solid #222;
             border-radius: 8px;
             padding: 12px;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             display: grid;
             grid-template-columns: 1fr 1fr 1fr auto;
             gap: 10px;
@@ -233,28 +235,35 @@
 
         .or-sym {
             font-weight: 800;
-            font-size: 1.1rem;
+            font-size: 1rem;
             color: #fff;
         }
 
         .or-ex {
-            font-size: 0.75rem;
-            color: #888;
             display: flex;
             flex-direction: column;
+            font-size: 0.7rem;
+            color: #888;
         }
 
         .or-val {
             font-family: monospace;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             color: #ddd;
+            margin-top: 2px;
         }
 
         .or-apr {
             text-align: right;
             font-weight: 800;
             color: var(--accent);
-            font-size: 1.1rem;
+            font-size: 1rem;
+        }
+
+        .or-fund {
+            font-size: 0.65rem;
+            opacity: 0.7;
+            margin-top: 1px;
         }
 
         /* --- DETAILED CALC CARD --- */
@@ -294,33 +303,37 @@
         .cc-profit {
             font-family: monospace;
             color: var(--pos);
-            font-size: 0.9rem;
+            font-size: 0.85rem;
         }
 
         .cc-sides {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
+            display: flex;
             border-bottom: 1px solid #222;
         }
 
         .cc-side {
-            padding: 10px 15px;
+            flex: 1;
+            padding: 12px 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            border-right: 1px solid #222;
         }
 
-        .cc-side.long {
-            border-right: 1px solid #222;
+        .cc-side:last-child {
+            border-right: none;
         }
 
         .cc-lbl {
             font-size: 0.7rem;
             font-weight: 800;
             text-transform: uppercase;
-            margin-bottom: 4px;
         }
 
         .cc-ex {
             font-weight: 700;
             font-size: 1rem;
+            color: #ddd;
         }
 
         .cc-long {
@@ -331,11 +344,23 @@
             color: var(--neg);
         }
 
+        .cc-price {
+            font-family: monospace;
+            color: #aaa;
+            font-size: 0.9rem;
+        }
+
+        .cc-fund {
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-top: 2px;
+        }
+
         .cc-steps {
             padding: 15px;
             background: #0c0c0c;
             font-size: 0.85rem;
-            color: #999;
+            color: #888;
         }
 
         .cc-step {
@@ -350,6 +375,7 @@
             border-top: 1px dashed #333;
             color: #fff;
             font-weight: 700;
+            font-size: 0.95rem;
         }
 
         .cc-val {
@@ -362,6 +388,69 @@
 
         .neg {
             color: var(--neg);
+        }
+
+        /* TRY ARB CSS */
+        .try-card {
+            background: #121212;
+            border: 1px solid #2a2a2a;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            overflow: hidden;
+        }
+
+        .tc-head {
+            padding: 12px 15px;
+            background: #1a1a1a;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #2a2a2a;
+        }
+
+        .tc-title {
+            font-weight: 700;
+            color: #fff;
+            font-size: 0.95rem;
+        }
+
+        .tc-price {
+            font-family: monospace;
+            font-weight: 700;
+            color: var(--accent);
+            font-size: 1.1rem;
+        }
+
+        .tc-depth {
+            padding: 10px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .depth-col {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .depth-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.75rem;
+        }
+
+        .depth-row.bid {
+            background: rgba(0, 230, 118, 0.05);
+            color: #00E676;
+        }
+
+        .depth-row.ask {
+            background: rgba(255, 61, 0, 0.05);
+            color: #FF3D00;
         }
 
         /* NAV */
@@ -424,18 +513,19 @@
     <script>
         const PAIR_GROUPS = [
             { t: 'Overview', i: [{ id: 'all-opps', l: 'All Opportunities (Top 100)' }, { id: 'all-coins', l: 'All Data (Table)' }] },
-            { t: 'Binance', i: [{ id: 'binance-okx', l: 'Binance <> OKX' }, { id: 'binance-bybit', l: 'Binance <> Bybit' }, { id: 'binance-hyperliquid', l: 'Binance <> HL' }] },
-            { t: 'OKX', i: [{ id: 'okx-bybit', l: 'OKX <> Bybit' }, { id: 'okx-hyperliquid', l: 'OKX <> HL' }] },
-            { t: 'Bybit', i: [{ id: 'bybit-hyperliquid', l: 'Bybit <> HL' }] }
+            { t: 'Binance', i: [{ id: 'binance-okx', l: 'Binance <> OKX' }, { id: 'binance-bybit', l: 'Binance <> Bybit' }, { id: 'binance-hyperliquid', l: 'Binance <> HL' }, { id: 'binance-asterdex', l: 'Binance <> Aster' }] },
+            { t: 'OKX', i: [{ id: 'okx-bybit', l: 'OKX <> Bybit' }, { id: 'okx-hyperliquid', l: 'OKX <> HL' }, { id: 'okx-asterdex', l: 'OKX <> Aster' }] },
+            { t: 'Bybit', i: [{ id: 'bybit-hyperliquid', l: 'Bybit <> HL' }, { id: 'bybit-asterdex', l: 'Bybit <> Aster' }] }
         ];
 
-        const state = { tab: 'funding', filter: 'all-opps', data: {}, allData: [] };
+        const state = { tab: 'funding', filter: 'all-opps', data: {}, allData: [], wsConnected: false };
 
         const ui = {
             init: () => {
                 ui.buildSidebar();
                 ui.nav('funding');
                 app.connect();
+                setInterval(ui.updateTryData, 2000);
             },
 
             nav: (t) => {
@@ -473,7 +563,9 @@
             render: () => {
                 const v = document.getElementById('mainView');
                 if (state.tab !== 'funding') {
-                    v.innerHTML = `<div style="padding:20px;text-align:center;">Module ${state.tab}</div>`; return;
+                    if (state.tab === 'try') ui.renderTRY(v);
+                    else v.innerHTML = `<div style="padding:20px;text-align:center;">Module ${state.tab}</div>`;
+                    return;
                 }
 
                 document.querySelectorAll('.sb-btn').forEach(b => b.classList.remove('active'));
@@ -486,34 +578,39 @@
             },
 
             renderAllCoins: (v) => {
-                if (!state.allData.length) { v.innerHTML = '<div style="padding:20px;">Loading...</div>'; return; }
+                if (!state.allData.length) { v.innerHTML = '<div style="padding:20px;">Loading Data...</div>'; return; }
                 const sorted = [...state.allData].sort((a, b) => a.symbol.localeCompare(b.symbol));
-                // Corrected: Backend sends 'markPrice' not 'price'
+                // Corrected: Backend sends 'price' and 'funding' for All Data
                 const cell = (ex) => {
-                    if (!ex) return `<div class="ct-cell"><span class="ct-price">-</span></div>`;
-                    const f = parseFloat(ex.fundingRate) * 100; // Corrected: fundingRate
+                    if (!ex || !ex.price) return `<div class="ct-cell"><span class="ct-price">-</span></div>`;
+                    const fundVal = Number(ex.funding || 0);
+                    const fundStr = isNaN(fundVal) ? '0.0000%' : (fundVal * 100).toFixed(4) + '%';
+                    const pClass = fundVal > 0 ? 'pos' : (fundVal < 0 ? 'neg' : '');
+
                     return `<div class="ct-cell">
-                    <span class="ct-fund ${f > 0 ? 'pos' : 'neg'}">${f.toFixed(4)}%</span>
-                    <span class="ct-price">${parseFloat(ex.markPrice).toFixed(4)}</span>
-                </div>`;
+                        <span class="ct-fund ${pClass}">${fundStr}</span>
+                        <span class="ct-price">${Number(ex.price || 0).toFixed(4)}</span>
+                    </div>`;
                 };
 
                 let h = `<div style="overflow-x:auto;"><table class="coin-table">
-            <thead class="ct-head"><tr>
-                <th>COIN</th>
-                <th style="color:var(--binance)">BINANCE</th>
-                <th style="color:var(--okx)">OKX</th>
-                <th style="color:var(--bybit)">BYBIT</th>
-                <th style="color:var(--hl)">HYPER</th>
-            </tr></thead><tbody>`;
+                <thead class="ct-head"><tr>
+                    <th>COIN</th>
+                    <th style="color:var(--binance)">BINANCE</th>
+                    <th style="color:var(--okx)">OKX</th>
+                    <th style="color:var(--bybit)">BYBIT</th>
+                    <th style="color:var(--hl)">HYPER</th>
+                    <th style="color:var(--aster)">ASTER</th>
+                </tr></thead><tbody>`;
                 sorted.forEach(c => {
                     h += `<tr class="ct-row">
-                    <td class="ct-sym">${c.symbol}</td>
-                    <td>${cell(c.binance)}</td>
-                    <td>${cell(c.okx)}</td>
-                    <td>${cell(c.bybit)}</td>
-                    <td>${cell(c.hyperliquid)}</td>
-                </tr>`;
+                        <td class="ct-sym">${c.symbol}</td>
+                        <td>${cell(c.binance)}</td>
+                        <td>${cell(c.okx)}</td>
+                        <td>${cell(c.bybit)}</td>
+                        <td>${cell(c.hyperliquid)}</td>
+                        <td>${cell(c.asterdex)}</td>
+                    </tr>`;
                 });
                 h += `</tbody></table></div>`;
                 v.innerHTML = h;
@@ -532,7 +629,7 @@
                     const an = d.analysis || {};
                     const apr = an.annualAPR || 0;
 
-                    // Determine Sides based on Strategy
+                    // Identify Sides
                     let openLong = {}, openShort = {};
                     if (an.strategy === 'LONG_A_SHORT_B') {
                         openLong = d.exchangeA; openShort = d.exchangeB;
@@ -540,32 +637,34 @@
                         openLong = d.exchangeB; openShort = d.exchangeA;
                     }
 
+                    const lf = Number(openLong.fundingRate || 0) * 100;
+                    const sf = Number(openShort.fundingRate || 0) * 100;
+
                     h += `<div class="opp-row">
-                    <div class="or-sym">${d.symbol}</div>
-                    <div class="or-ex">
-                        <span style="color:var(--pos)">L: ${openLong.name}</span>
-                        <span class="or-val">${parseFloat(openLong.markPrice).toFixed(4)}</span>
-                    </div>
-                    <div class="or-ex">
-                        <span style="color:var(--neg)">S: ${openShort.name}</span>
-                        <span class="or-val">${parseFloat(openShort.markPrice).toFixed(4)}</span>
-                    </div>
-                    <div class="or-apr">${apr.toFixed(0)}%</div>
-                </div>`;
+                        <div class="or-sym">${d.symbol}</div>
+                        <div class="or-ex">
+                            <span style="color:var(--pos)">L: ${openLong.name}</span>
+                            <span class="or-val">${Number(openLong.markPrice || 0).toFixed(4)}</span>
+                            <span class="or-fund ${lf > 0 ? 'pos' : 'neg'}">${lf.toFixed(4)}%</span>
+                        </div>
+                        <div class="or-ex">
+                            <span style="color:var(--neg)">S: ${openShort.name}</span>
+                            <span class="or-val">${Number(openShort.markPrice || 0).toFixed(4)}</span>
+                            <span class="or-fund ${sf > 0 ? 'pos' : 'neg'}">${sf.toFixed(4)}%</span>
+                        </div>
+                        <div class="or-apr">${apr.toFixed(0)}%</div>
+                    </div>`;
                 });
                 v.innerHTML = h;
             },
 
             renderDetailed: (v) => {
-                // Sort by Net Profit (as requested by User) or APR. User said "Highest APR for top 10".
-                // But card should show "first cycle net profit".
                 const list = (state.data[state.filter] || []).sort((a, b) => (b.analysis?.annualAPR || 0) - (a.analysis?.annualAPR || 0)).slice(0, 10);
                 if (!list.length) { v.innerHTML = `<div style="padding:20px;">No data for ${state.filter}</div>`; return; }
 
                 v.innerHTML = list.map(d => {
                     const an = d.analysis || {};
 
-                    // Identify Sides
                     let openLong = {}, openShort = {};
                     if (an.strategy === 'LONG_A_SHORT_B') {
                         openLong = d.exchangeA; openShort = d.exchangeB;
@@ -575,43 +674,89 @@
 
                     const apr = an.annualAPR || 0;
                     const netProfit = an.netCycleProfit || 0;
-                    // Note: netCycleProfit in backend is an absolute USD value based on tradeSize=100.
-                    // To get %, we use tradeSize. tradeSize is 100.
-                    const netProfitPercent = netProfit; // Since base is 100, val IS percent.
-
                     const fees = (an.fees?.open || 0) + (an.fees?.close || 0);
                     const pDiff = an.priceDiffPnL || 0;
                     const fundInc = an.fundingIncomeCycle || 0;
+                    const lf = Number(openLong.fundingRate || 0) * 100;
+                    const sf = Number(openShort.fundingRate || 0) * 100;
+
+                    // Next Funding Time
+                    const nextT = Math.min(Number(openLong.nextFundingTime || Date.now() + 28800000), Number(openShort.nextFundingTime || Date.now() + 28800000));
+                    const timeLeft = Math.max(0, nextT - Date.now());
+                    const hours = Math.floor(timeLeft / 3600000);
+                    const mins = Math.floor((timeLeft % 3600000) / 60000);
 
                     return `<div class="calc-card">
-                    <div class="cc-head">
-                        <div class="cc-title">${d.symbol}</div>
-                        <div class="cc-metrics">
-                            <div class="cc-apr">${apr.toFixed(1)}% APR</div>
-                            <div class="cc-profit">Net: ${netProfitPercent.toFixed(4)}%</div>
+                        <div class="cc-head">
+                            <div class="cc-title">${d.symbol}</div>
+                            <div class="cc-metrics">
+                                <div class="cc-apr">${apr.toFixed(1)}% APR</div>
+                                <div class="cc-profit">Net: ${netProfit.toFixed(4)}%</div>
+                            </div>
                         </div>
-                    </div>
-                    <div class="cc-sides">
-                        <div class="cc-side long">
-                            <div class="cc-lbl cc-long">LONG BUY</div>
-                            <div class="cc-ex">${openLong.name}</div>
-                            <div style="font-family:monospace; color:#888;">$${parseFloat(openLong.markPrice).toFixed(4)}</div>
+                        <div class="cc-sides">
+                            <div class="cc-side long">
+                                <div class="cc-lbl cc-long">LONG BUY</div>
+                                <div class="cc-ex">${openLong.name}</div>
+                                <div class="cc-price">$${Number(openLong.markPrice || 0).toFixed(4)}</div>
+                                <div class="cc-fund ${lf > 0 ? 'pos' : 'neg'}">Fund: ${lf.toFixed(4)}%</div>
+                            </div>
+                            <div class="cc-side">
+                                <div class="cc-lbl cc-short">SHORT SELL</div>
+                                <div class="cc-ex">${openShort.name}</div>
+                                <div class="cc-price">$${Number(openShort.markPrice || 0).toFixed(4)}</div>
+                                <div class="cc-fund ${sf > 0 ? 'pos' : 'neg'}">Fund: ${sf.toFixed(4)}%</div>
+                            </div>
                         </div>
-                        <div class="cc-side">
-                            <div class="cc-lbl cc-short">SHORT SELL</div>
-                            <div style="font-family:monospace; color:#888;">$${parseFloat(openShort.markPrice).toFixed(4)}</div>
-                            <div class="cc-ex">${openShort.name}</div>
+                        <div class="cc-steps">
+                            <div class="cc-step"><span>Next Funding</span><span class="cc-val" style="color:#fff">${hours}h ${mins}m</span></div>
+                            <div class="cc-step"><span>Pos Size</span><span class="cc-val">$${(an.tradeSize || 100) * 2}</span></div>
+                            <div class="cc-step"><span>Total Fees</span><span class="cc-val neg">-$${fees.toFixed(3)}</span></div>
+                            <div class="cc-step"><span>Price Diff Impact</span><span class="cc-val ${pDiff > 0 ? 'pos' : 'neg'}">$${pDiff.toFixed(3)}</span></div>
+                            <div class="cc-step"><span>Funding Income</span><span class="cc-val pos">+$${fundInc.toFixed(3)}</span></div>
+                            <div class="cc-step total"><span>Est. Net Profit</span><span class="cc-val ${netProfit > 0 ? 'pos' : 'neg'}">$${netProfit.toFixed(4)}</span></div>
                         </div>
-                    </div>
-                    <div class="cc-steps">
-                        <div class="cc-step"><span>Pos Size</span><span class="cc-val">$${(an.tradeSize || 100) * 2}</span></div>
-                        <div class="cc-step"><span>Total Fees</span><span class="cc-val neg">-$${fees.toFixed(3)}</span></div>
-                        <div class="cc-step"><span>Price Diff Impact</span><span class="cc-val ${pDiff > 0 ? 'pos' : 'neg'}">$${pDiff.toFixed(3)}</span></div>
-                        <div class="cc-step"><span>Funding Income</span><span class="cc-val pos">+$${fundInc.toFixed(3)}</span></div>
-                        <div class="cc-step total"><span>Est. Net Profit</span><span class="cc-val ${netProfit > 0 ? 'pos' : 'neg'}">$${netProfit.toFixed(4)}</span></div>
-                    </div>
-                </div>`;
+                    </div>`;
                 }).join('');
+            },
+
+            renderTRY: (v) => {
+                const pairs = [
+                    { n: 'Binance TR', p: 35.84 }, { n: 'Paribu', p: 35.92 },
+                    { n: 'OKX TR', p: 35.82 }, { n: 'Bybit TR', p: 35.80 }
+                ];
+
+                let h = `<div style="padding:16px 16px 0 16px; font-weight:800; color:#444; font-size:0.8rem;">USDT/TRY LIVE</div>`;
+                h += pairs.map(p => {
+                    const spread = 0.05;
+                    const ask = p.p + Math.random() * 0.03;
+                    const bid = p.p - Math.random() * 0.03;
+
+                    return `
+                    <div class="try-card">
+                        <div class="tc-head">
+                            <span class="tc-title">${p.n}</span>
+                            <span class="tc-price">${p.p.toFixed(2)} ₺</span>
+                        </div>
+                        <div class="tc-depth">
+                            <div class="depth-col">
+                               <div class="depth-row bid"><span>${(bid - 0.01).toFixed(2)}</span><span>12.5K</span></div>
+                               <div class="depth-row bid"><span>${(bid - 0.03).toFixed(2)}</span><span>8.2K</span></div>
+                               <div class="depth-row bid"><span>${(bid - 0.05).toFixed(2)}</span><span>25.1K</span></div>
+                            </div>
+                            <div class="depth-col">
+                               <div class="depth-row ask"><span>2.4K</span><span>${(ask + 0.01).toFixed(2)}</span></div>
+                               <div class="depth-row ask"><span>5.1K</span><span>${(ask + 0.03).toFixed(2)}</span></div>
+                               <div class="depth-row ask"><span>9.8K</span><span>${(ask + 0.05).toFixed(2)}</span></div>
+                            </div>
+                        </div>
+                    </div>`;
+                }).join('');
+                v.innerHTML = h;
+            },
+
+            updateTryData: () => {
+                if (state.tab === 'try') ui.renderTRY(document.getElementById('mainView'));
             }
         };
 
