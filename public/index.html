@@ -305,15 +305,17 @@
         .data-list th {
             text-align: left;
             padding: 12px;
-            color: #888;
-            font-weight: 600;
+            font-weight: 700;
             border-bottom: 2px solid var(--border);
             position: sticky;
             top: -20px;
-            /* Offset for padding */
-            background: #080808;
-            /* Solid background to hide scroll */
+            /* Offset to cover gap */
+            background: #0f172a;
+            /* Dark Blue-ish Tone */
+            color: #38bdf8;
+            /* Light Blue Text */
             z-index: 10;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
         }
 
         .data-list td {
@@ -327,46 +329,8 @@
         }
 
         /* DETAILED CARD DESIGN */
-        .new-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            overflow: hidden;
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            margin-bottom: 20px;
-        }
-
-        /* Profit/Loss Border Indicator */
-        .new-card.profit {
-            border-left: 4px solid var(--positive);
-        }
-
-        .new-card:not(.profit) {
-            border-left: 4px solid var(--negative);
-        }
-
-        .nc-head {
-            padding: 12px 15px;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: rgba(255, 255, 255, 0.02);
-        }
-
-        .nc-main-info {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .nc-sym {
-            font-weight: 800;
-            font-size: 1.1rem;
-            color: #fff;
-        }
+        /* The previous .new-card and related styles were replaced by the new ones above */
+        /* The .nc-head was also replaced by the new one above */
 
         .nc-badges {
             display: flex;
@@ -386,10 +350,7 @@
             color: var(--accent);
         }
 
-        .nc-body {
-            padding: 15px;
-            font-size: 0.8rem;
-        }
+        /* The .nc-body was replaced by the new one above */
 
         .nc-section {
             margin-bottom: 12px;
@@ -424,10 +385,10 @@
             grid-template-columns: 1fr 1fr;
             gap: 10px;
             text-align: center;
-            background: rgba(0, 0, 0, 0.3);
-            padding: 8px;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 10px;
             border-radius: 6px;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
         }
 
         .nc-p-box {
@@ -437,19 +398,20 @@
         }
 
         .nc-p-role {
-            font-size: 0.7rem;
+            font-size: 0.75rem;
             font-weight: 800;
-            color: var(--accent);
+            /* Assigned color inline */
         }
 
         .nc-p-price {
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             color: #fff;
+            font-family: monospace;
         }
 
         .nc-p-time {
             font-size: 0.65rem;
-            color: #555;
+            color: #666;
         }
 
         .breakdown-list {
@@ -472,6 +434,48 @@
             font-weight: 800;
             color: #fff;
             font-size: 0.9rem;
+        }
+
+        .breakdown-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 15px;
+            border-top: 1px solid var(--border);
+            padding-top: 10px;
+        }
+
+        .bd-col {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .bd-title {
+            font-size: 0.7rem;
+            color: #666;
+            font-weight: 700;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .bd-item {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: #999;
+        }
+
+        .bd-final {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            font-weight: 800;
+            color: #fff;
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px dashed #333;
         }
 
         .fee-tags {
@@ -799,7 +803,7 @@
             lastRender: 0,
             render: () => {
                 const now = Date.now();
-                if (now - app.lastRender < 500) return;
+                if (now - app.lastRender < 2000) return; // Limit to 0.5fps (Every 2s) to reduce jitter
                 app.lastRender = now;
 
                 if (app.state.view === 'exchanges') {
@@ -819,20 +823,19 @@
                         const isProfit = c.netDefault > 0;
                         const profitClass = isProfit ? 'profit' : '';
 
-                        // Strategy Names
                         const exA = opp.exchangeA.name;
                         const exB = opp.exchangeB.name;
                         const isLongA = a.strategy === 'LONG_A_SHORT_B';
+
                         const longEx = isLongA ? exA : exB;
                         const shortEx = isLongA ? exB : exA;
-                        const longPrice = isLongA ? opp.exchangeA.markPrice : opp.exchangeB.markPrice;
-                        const shortPrice = isLongA ? opp.exchangeB.markPrice : opp.exchangeA.markPrice;
+                        const longPrice = parseFloat(isLongA ? opp.exchangeA.markPrice : opp.exchangeB.markPrice);
+                        const shortPrice = parseFloat(isLongA ? opp.exchangeB.markPrice : opp.exchangeA.markPrice);
 
-                        // Time Info
                         const timeMsg = (ts) => {
-                            if (!ts) return 'Unknown';
+                            if (!ts) return '-';
                             const diff = (new Date(ts) - now) / 3600000;
-                            return `Next: ${new Date(ts).getHours()}:00 (${diff.toFixed(1)}h)`;
+                            return `in ${diff.toFixed(1)}h`;
                         };
 
                         return `
@@ -840,54 +843,59 @@
                             <div class="nc-head">
                                 <div class="nc-main-info">
                                     <div class="nc-sym">${opp.symbol}</div>
-                                    <div class="nc-badge accent">${a.cycleDuration}h Cycle</div>
+                                    <div class="nc-cycle-badge">${a.cycleDuration}h Cycle</div>
                                 </div>
-                                <div class="nc-val ${c.netDefault > 0 ? 'pos' : 'neg'}" style="font-size:1.1rem">
-                                    $${c.netDefault.toFixed(2)}
+                                <div class="nc-stats-right">
+                                    <div class="nc-apr">${(a.annualAPR || 0).toFixed(1)}% APR</div>
+                                    <div class="nc-next-pay">Next: $${(a.fundingIncomeCycle || 0).toFixed(2)}</div>
                                 </div>
                             </div>
                             
                             <div class="nc-body">
-                                <!-- Price & Strategy Block -->
+                                <!-- Price Block -->
                                 <div class="nc-price-row">
                                     <div class="nc-p-box">
-                                        <span class="nc-p-role">LONG ${longEx}</span>
-                                        <span class="nc-p-price">$${parseFloat(longPrice).toFixed(2)}</span>
-                                        <span class="nc-p-time">${timeMsg(isLongA ? opp.exchangeA.nextFundingTime : opp.exchangeB.nextFundingTime)}</span>
+                                        <span class="nc-p-role pos">${longEx}</span>
+                                        <span class="nc-p-price">$${longPrice.toFixed(4)}</span>
+                                        <span class="nc-p-time">Next: ${timeMsg(isLongA ? opp.exchangeA.nextFundingTime : opp.exchangeB.nextFundingTime)}</span>
                                     </div>
                                     <div class="nc-p-box">
-                                        <span class="nc-p-role">SHORT ${shortEx}</span>
-                                        <span class="nc-p-price">$${parseFloat(shortPrice).toFixed(2)}</span>
-                                        <span class="nc-p-time">${timeMsg(isLongA ? opp.exchangeB.nextFundingTime : opp.exchangeA.nextFundingTime)}</span>
+                                        <span class="nc-p-role neg">${shortEx}</span>
+                                        <span class="nc-p-price">$${shortPrice.toFixed(4)}</span>
+                                        <span class="nc-p-time">Next: ${timeMsg(isLongA ? opp.exchangeB.nextFundingTime : opp.exchangeA.nextFundingTime)}</span>
                                     </div>
                                 </div>
 
-                                <!-- Breakdown List -->
-                                <div class="breakdown-list">
+                                <!-- Common Info -->
+                                <div class="breakdown-list" style="margin-bottom:0;">
                                     <div class="bd-row">
-                                        <span>Initial Price Impact (${(a.priceDiffPercent || 0).toFixed(2)}%)</span>
-                                        <span class="${c.pricePnL >= 0 ? 'pos' : 'neg'}">${c.pricePnL.toFixed(2)}</span>
+                                        <span>Initial Price PnL (${(a.priceDiffPercent || 0).toFixed(2)}%)</span>
+                                        <span class="${c.pricePnL >= 0 ? 'pos' : 'neg'}">${c.pricePnL.toFixed(4)}</span>
                                     </div>
                                     <div class="bd-row">
-                                        <span>Funding Income</span>
-                                        <span class="pos">+$${c.income.toFixed(2)}</span>
-                                    </div>
-                                    <div class="bd-row">
-                                        <span>Open Fees (Taker)</span>
-                                        <span class="neg">-$${(c.costTakerTaker / 2).toFixed(2)}</span>
-                                    </div>
-                                    <div class="bd-row">
-                                        <span>Close Fees (Taker)</span>
-                                        <span class="neg">-$${(c.costTakerTaker / 2).toFixed(2)}</span>
-                                    </div>
-                                    <div class="bd-row total">
-                                        <span>NET PROFIT (Est.)</span>
-                                        <span class="${c.netDefault > 0 ? 'pos' : 'neg'}">$${c.netDefault.toFixed(2)}</span>
+                                        <span>Funding Income (Cycle)</span>
+                                        <span class="pos">+$${c.income.toFixed(4)}</span>
                                     </div>
                                 </div>
-                                
-                                <div class="fee-tags">
-                                    <div class="fee-tag">Maker/Maker Net: <span style="font-weight:bold">$${(c.income + c.pricePnL - c.costMakerMaker).toFixed(2)}</span></div>
+
+                                <!-- Split Breakdown -->
+                                <div class="breakdown-grid">
+                                    <div class="bd-col">
+                                        <div class="bd-title">TAKER STRATEGY</div>
+                                        <div class="bd-item"><span>Fees</span> <span class="neg">-${(c.costTakerTaker).toFixed(4)}</span></div>
+                                        <div class="bd-final">
+                                            <span>NET</span>
+                                            <span class="${c.netDefault > 0 ? 'pos' : 'neg'}">$${c.netDefault.toFixed(2)}</span>
+                                        </div>
+                                    </div>
+                                    <div class="bd-col" style="border-left:1px solid #333; padding-left:20px;">
+                                        <div class="bd-title">MAKER STRATEGY</div>
+                                        <div class="bd-item"><span>Fees</span> <span class="neg">-${(c.costMakerMaker).toFixed(4)}</span></div>
+                                        <div class="bd-final">
+                                            <span>NET</span>
+                                            <span class="${(c.income + c.pricePnL - c.costMakerMaker) > 0 ? 'pos' : 'neg'}">$${(c.income + c.pricePnL - c.costMakerMaker).toFixed(2)}</span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>`;
@@ -898,6 +906,7 @@
                     Object.values(app.state.data).forEach(arr => {
                         arr.forEach(o => { if (o.analysis) { o.calc = app.calc(o); all.push(o); } });
                     });
+                    // Sort by Profit
                     all.sort((a, b) => b.calc.netDefault - a.calc.netDefault);
 
                     const tbody = document.getElementById('listTarget');
@@ -905,23 +914,24 @@
 
                     tbody.innerHTML = all.map(o => {
                         const s = o.analysis.strategy === 'LONG_A_SHORT_B'
-                            ? `<span class="pos">Long ${o.exchangeA.name}</span> | <span class="neg">Short ${o.exchangeB.name}</span>`
-                            : `<span class="pos">Long ${o.exchangeB.name}</span> | <span class="neg">Short ${o.exchangeA.name}</span>`;
+                            ? `<span class="pos">${o.exchangeA.name}</span> | <span class="neg">${o.exchangeB.name}</span>`
+                            : `<span class="pos">${o.exchangeB.name}</span> | <span class="neg">${o.exchangeA.name}</span>`;
 
                         return `
                         <tr>
                             <td><b>${o.symbol}</b></td>
                             <td style="font-size:0.75rem">${s}</td>
-                            <td class="${o.calc.netDefault > 0 ? 'pos' : 'neg'}" style="font-weight:bold">$${o.calc.netDefault.toFixed(2)}</td>
+                            <td class="${o.calc.netDefault > 0 ? 'pos' : 'neg'}" style="font-weight:bold">$${o.calc.netDefault.toFixed(4)}</td>
                             <td class="pos">${(o.analysis.annualAPR || 0).toFixed(1)}%</td>
                         </tr>`;
                     }).join('');
                 } else if (app.state.view === 'all-data') {
                     const tbody = document.getElementById('dataTarget');
                     if (app.state.allCoins.length === 0) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Loading...</td></tr>'; return; }
+
                     const fmt = (ex) => {
                         if (!ex) return '<td style="text-align:center;">-</td>';
-                        return `<td><div>$${parseFloat(ex.price).toFixed(2)}</div><div class="${ex.funding >= 0 ? 'pos' : 'neg'}" style="font-size:0.7rem">${(parseFloat(ex.funding) * 100).toFixed(4)}%</div></td>`;
+                        return `<td><div>$${parseFloat(ex.price).toFixed(4)}</div><div class="${ex.funding >= 0 ? 'pos' : 'neg'}" style="font-size:0.7rem">${(parseFloat(ex.funding) * 100).toFixed(4)}%</div></td>`;
                     };
                     tbody.innerHTML = app.state.allCoins.map(c => `<tr><td><b>${c.symbol}</b></td>${fmt(c.binance)}${fmt(c.okx)}${fmt(c.bybit)}${fmt(c.hyperliquid)}${fmt(c.asterdex)}</tr>`).join('');
                 }
