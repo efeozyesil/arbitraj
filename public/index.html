@@ -8,16 +8,17 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #0a0a0a;
+            --bg-color: #050505;
             --card-bg: #111;
-            --text-main: #fff;
-            --text-sub: #888;
+            --sidebar-bg: #0a0a0a;
+            --text-main: #e0e0e0;
+            --text-sub: #777;
             --accent: #00d4ff;
+            --accent-dim: rgba(0, 212, 255, 0.1);
             --positive: #10b981;
             --negative: #ef4444;
-            --maker: #3b82f6;
-            --taker: #f97316;
-            --border: rgba(255, 255, 255, 0.08);
+            --border: rgba(255, 255, 255, 0.06);
+            --neon-line: 1px solid var(--accent);
         }
 
         * {
@@ -38,98 +39,106 @@
 
         /* SCROLLBAR */
         ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
+            width: 5px;
+            height: 5px;
         }
 
         ::-webkit-scrollbar-track {
-            background: transparent;
+            background: var(--bg-color);
         }
 
         ::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 3px;
+            background: #333;
+            border-radius: 2px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent);
         }
 
         /* LAYOUT */
         .app-container {
             display: flex;
             height: 100vh;
-            padding-bottom: 60px;
-            /* Nav space */
+            position: relative;
         }
 
-        /* SIDEBAR (Stairs Menu) */
+        /* SIDEBAR */
         .sidebar {
-            width: 220px;
-            background: rgba(0, 0, 0, 0.3);
+            width: 240px;
+            background: var(--sidebar-bg);
             border-right: 1px solid var(--border);
             display: flex;
             flex-direction: column;
-            overflow-y: auto;
-            display: none;
-            /* Mobile hidden */
+            padding-bottom: 70px;
+            /* Space for bottom nav if needed, though hidden on mobile */
+            transition: transform 0.3s ease;
+            z-index: 100;
         }
 
-        @media(min-width: 768px) {
+        /* Mobile handling for sidebar - hidden by default on small screens if we wanted, 
+           but user wants left menu. We'll keep it simple: visible on desktop, hidden on mobile logic handled by JS?
+           For now, let's make it responsive. */
+        @media(max-width: 768px) {
             .sidebar {
-                display: flex;
+                display: none;
             }
         }
 
-        .sidebar-header {
-            padding: 20px 15px;
-            font-size: 0.75rem;
-            font-weight: 800;
-            color: var(--text-sub);
-            letter-spacing: 1px;
-            border-bottom: 1px solid var(--border);
+        /* Hidden on mobile initially */
+
+        .sidebar-content {
+            overflow-y: auto;
+            flex: 1;
+            padding: 10px 0;
         }
 
-        .stair-menu {
+        .sb-btn {
             display: flex;
-            flex-direction: column;
-            padding-top: 10px;
-        }
-
-        .stair-btn {
-            background: transparent;
+            align-items: center;
+            width: 100%;
+            padding: 10px 20px;
+            background: none;
             border: none;
             color: var(--text-sub);
-            padding: 10px 15px;
-            text-align: left;
-            cursor: pointer;
             font-size: 0.9rem;
             font-weight: 500;
-            border-left: 3px solid transparent;
+            cursor: pointer;
+            text-align: left;
             transition: all 0.2s;
         }
 
-        .stair-btn:hover {
+        .sb-btn:hover {
             color: #fff;
-            background: rgba(255, 255, 255, 0.03);
+            background: rgba(255, 255, 255, 0.02);
         }
 
-        .stair-btn.active {
+        .sb-btn.active {
             color: var(--accent);
-            background: linear-gradient(90deg, rgba(0, 212, 255, 0.08), transparent);
-            border-left-color: var(--accent);
+            background: linear-gradient(90deg, var(--accent-dim), transparent);
+            border-left: 3px solid var(--accent);
+            padding-left: 17px;
             font-weight: 700;
         }
 
-        .level-1 {
-            padding-left: 15px;
+        .neon-divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+            margin: 15px 0;
+            opacity: 0.5;
         }
 
-        .level-2 {
-            padding-left: 30px;
+        .sb-header {
+            padding: 5px 20px;
+            font-size: 0.7rem;
+            font-weight: 800;
+            color: #444;
+            letter-spacing: 1px;
+            margin-top: 10px;
+            margin-bottom: 5px;
         }
 
-        .level-3 {
-            padding-left: 45px;
-        }
-
-        /* MAIN CONTENT */
+        /* MAIN */
         .main-content {
             flex: 1;
             display: flex;
@@ -142,228 +151,176 @@
         .top-header {
             padding: 15px 20px;
             border-bottom: 1px solid var(--border);
-            background: rgba(255, 255, 255, 0.02);
-            flex-shrink: 0;
-        }
-
-        .header-row {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 15px;
+            background: rgba(20, 20, 20, 0.5);
+            backdrop-filter: blur(10px);
         }
 
         .page-title {
-            font-size: 1.25rem;
-            font-weight: 800;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #fff;
         }
 
         .status-pill {
-            font-size: 0.7rem;
-            padding: 4px 8px;
-            border-radius: 12px;
-            background: rgba(255, 255, 255, 0.1);
-            color: #aaa;
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
+            font-size: 0.75rem;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 5px 10px;
+            border-radius: 20px;
         }
 
         .dot {
             width: 6px;
             height: 6px;
             border-radius: 50%;
-            background: #666;
+            background: #444;
+            transition: 0.3s;
         }
 
         .dot.connected {
             background: var(--positive);
-            box-shadow: 0 0 8px var(--positive);
-        }
-
-        /* TABS */
-        .tabs-row {
-            display: flex;
-            gap: 8px;
-        }
-
-        .tab-btn {
-            padding: 6px 14px;
-            border-radius: 6px;
-            border: none;
-            background: transparent;
-            color: var(--text-sub);
-            font-size: 0.85rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .tab-btn:hover {
-            background: rgba(255, 255, 255, 0.05);
-            color: #fff;
-        }
-
-        .tab-btn.active {
-            background: var(--accent);
-            color: #000;
+            box-shadow: 0 0 5px var(--positive);
         }
 
         /* VIEWS */
-        .view-content {
+        .view-frame {
             flex: 1;
             overflow-y: auto;
             padding: 20px;
             display: none;
         }
 
-        .view-content.active {
+        .view-frame.active {
             display: block;
         }
 
-        /* MODULES (Pages) */
-        .module-page {
+        /* MODULES */
+        .module-container {
             display: none;
             height: 100%;
-            width: 100%;
+            flex-direction: column;
         }
 
-        .module-page.active {
-            display: block;
+        .module-container.active {
+            display: flex;
         }
 
-        /* CARDS GRID */
-        .cards-grid {
+        /* GRID */
+        .opp-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
             gap: 15px;
+            padding-bottom: 80px;
         }
 
-        /* NEW CARD DESIGN */
-        .opp-card {
+        /* CARD */
+        .new-card {
             background: var(--card-bg);
             border: 1px solid var(--border);
-            border-radius: 12px;
+            border-radius: 8px;
             overflow: hidden;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            position: relative;
         }
 
-        .card-head {
-            padding: 12px 15px;
+        .new-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 3px;
+            height: 100%;
+            background: var(--border);
+            opacity: 0.5;
+        }
+
+        .new-card.profit::before {
+            background: var(--positive);
+            opacity: 1;
+        }
+
+        .nc-head {
+            padding: 10px 15px;
             border-bottom: 1px solid var(--border);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: rgba(255, 255, 255, 0.02);
+            background: rgba(255, 255, 255, 0.01);
         }
 
-        .coin-sym {
-            font-weight: 800;
-            font-size: 1.1rem;
-            color: #fff;
-        }
-
-        .cycle-badge {
-            font-size: 0.7rem;
-            font-weight: 600;
-            background: rgba(0, 212, 255, 0.1);
-            color: var(--accent);
-            padding: 3px 6px;
-            border-radius: 4px;
-        }
-
-        .card-body {
-            padding: 15px;
-        }
-
-        .ex-row {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.8rem;
-            color: #aaa;
-            margin-bottom: 15px;
-        }
-
-        .long {
-            color: var(--positive);
-            font-weight: 600;
-        }
-
-        .short {
-            color: var(--negative);
-            font-weight: 600;
-        }
-
-        .stats-main {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 15px;
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 8px;
-            padding: 10px;
-        }
-
-        .stat-l {
-            font-size: 0.65rem;
-            color: #666;
-            text-transform: uppercase;
-            margin-bottom: 4px;
-        }
-
-        .stat-v {
-            font-size: 1.3rem;
+        .nc-sym {
             font-weight: 700;
             color: #fff;
         }
 
-        .val-pos {
+        .nc-cycle {
+            font-size: 0.7rem;
+            color: var(--accent);
+            background: var(--accent-dim);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .nc-body {
+            padding: 12px 15px;
+        }
+
+        .nc-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            margin-bottom: 8px;
+        }
+
+        .nc-val-big {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .pos {
             color: var(--positive);
         }
 
-        .val-neg {
+        .neg {
             color: var(--negative);
         }
 
-        .breakdown-table {
-            width: 100%;
-            font-size: 0.75rem;
-            border-collapse: collapse;
-        }
-
-        .breakdown-table td {
-            padding: 4px 0;
-            color: #888;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
-        }
-
-        .breakdown-table td:last-child {
-            text-align: right;
-            font-weight: 500;
-        }
-
-        /* DATA TABLE */
-        .data-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.85rem;
-        }
-
-        .data-table th {
-            text-align: left;
-            padding: 10px;
+        .mute {
             color: #666;
-            border-bottom: 1px solid var(--border);
-            cursor: pointer;
+            font-size: 0.7rem;
         }
 
-        .data-table td {
-            padding: 10px;
+        /* TABLES */
+        .data-list {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8rem;
+        }
+
+        .data-list th {
+            text-align: left;
+            padding: 12px;
+            color: #666;
+            font-weight: 600;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            background: var(--bg-color);
+            z-index: 10;
+        }
+
+        .data-list td {
+            padding: 12px;
             border-bottom: 1px solid var(--border);
             color: #ccc;
         }
 
-        .data-table tr:hover {
+        .data-list tr:hover {
             background: rgba(255, 255, 255, 0.03);
         }
 
@@ -373,16 +330,16 @@
             bottom: 0;
             left: 0;
             right: 0;
-            height: 60px;
-            background: #000;
+            height: 65px;
+            background: #080808;
             border-top: 1px solid var(--border);
             display: flex;
             justify-content: space-around;
             align-items: center;
-            z-index: 999;
+            z-index: 200;
         }
 
-        .nav-btn {
+        .bn-item {
             background: none;
             border: none;
             color: #555;
@@ -391,412 +348,402 @@
             align-items: center;
             gap: 4px;
             font-size: 0.7rem;
-            font-weight: 600;
             cursor: pointer;
             width: 100%;
         }
 
-        .nav-btn .icon {
-            font-size: 1.2rem;
+        .bn-item.active {
+            color: #fff;
         }
 
-        .nav-btn.active {
+        .bn-item.active span {
             color: var(--accent);
         }
 
-        /* MODAL */
-        .modal {
-            display: none;
-            position: fixed;
+        .bn-icon {
+            font-size: 1.3rem;
+            margin-bottom: 2px;
+        }
+
+        /* NO DATA */
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 300px;
+            color: #444;
+            text-align: center;
+        }
+
+        .empty-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            opacity: 0.3;
+        }
+
+        /* LOADING */
+        .loader-bar {
+            height: 2px;
+            width: 100%;
+            background: #222;
+            position: absolute;
             top: 0;
             left: 0;
-            width: 100%;
+            z-index: 300;
+        }
+
+        .loader-progress {
             height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            z-index: 2000;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .modal-box {
-            background: #1a1a1a;
-            width: 90%;
-            max-width: 400px;
-            padding: 20px;
-            border-radius: 12px;
-            border: 1px solid var(--border);
-        }
-
-        .no-data {
-            text-align: center;
-            margin-top: 50px;
-            color: #444;
-            font-style: italic;
-        }
-
-        .spinner {
-            border: 3px solid rgba(255, 255, 255, 0.1);
-            border-top: 3px solid var(--accent);
-            border-radius: 50%;
-            width: 24px;
-            height: 24px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 10px;
-        }
-
-        @keyframes spin {
-            0% {
-                transform: rotate(0deg);
-            }
-
-            100% {
-                transform: rotate(360deg);
-            }
+            background: var(--accent);
+            width: 0%;
+            transition: width 0.2s;
+            box-shadow: 0 0 10px var(--accent);
         }
     </style>
 </head>
 
 <body>
 
-    <!-- APP CONTAINER -->
     <div class="app-container">
 
-        <!-- SIDEBAR (MENU) -->
-        <aside class="sidebar">
-            <div class="sidebar-header">TOKEN PAIRS</div>
-            <div id="stairMenu" class="stair-menu">
-                <!-- Injected via JS -->
+        <!-- SIDEBAR (Dynamic Content) -->
+        <aside id="mainSidebar" class="sidebar">
+            <div style="padding: 20px; font-weight:800; font-size:1.2rem; color:#fff;">
+                ARBITRAGE <span style="color:var(--accent)">.IO</span>
             </div>
-            <div style="margin-top:auto; padding:15px; font-size:0.7rem; color:#444;">
-                v1.0.2 Stable
+
+            <div id="sbContent" class="sidebar-content">
+                <!-- Injected via JS -->
             </div>
         </aside>
 
-        <!-- MAIN CONTENT AREA -->
+        <!-- MAIN AREA -->
         <main class="main-content">
+            <div class="loader-bar">
+                <div id="loadProgress" class="loader-progress"></div>
+            </div>
 
             <!-- MODULE: FUNDING -->
-            <div id="mod-funding" class="module-page active">
-
+            <div id="mod-funding" class="module-container active">
                 <header class="top-header">
-                    <div class="header-row">
-                        <div class="page-title">Funding <span style="color:var(--accent)">Arbitrage</span></div>
-                        <div class="status-pill">
-                            <div id="wsDot" class="dot"></div>
-                            <span id="wsText">Disconnected</span>
-                        </div>
-                    </div>
-                    <div class="tabs-row">
-                        <button class="tab-btn active" onclick="ui.view('exchanges')">Exchanges</button>
-                        <button class="tab-btn" onclick="ui.view('all-opps')">All Opportunities</button>
-                        <button class="tab-btn" onclick="ui.view('all-data')">All Data</button>
+                    <div class="page-title" id="pageTitle">Exchange Overview</div>
+                    <div class="status-pill">
+                        <div id="wsDot" class="dot"></div>
+                        <span id="wsStatus">Connecting...</span>
                     </div>
                 </header>
 
-                <!-- VIEW: EXCHANGES -->
-                <div id="view-exchanges" class="view-content active">
-                    <div id="loader" style="text-align:center; margin-top:50px;">
-                        <div class="spinner"></div>
-                        <div style="color:#666; font-size:0.8rem;">Connecting to Quantum Stream...</div>
-                    </div>
-                    <div id="gridContainer" class="cards-grid"></div>
+                <!-- VIEWS -->
+                <div id="view-exchanges" class="view-frame active">
+                    <div id="gridTarget" class="opp-grid"></div>
                 </div>
 
-                <!-- VIEW: ALL OPPS -->
-                <div id="view-all-opps" class="view-content">
-                    <div style="overflow-x:auto;">
-                        <table class="data-table" id="tableOpps">
-                            <thead>
-                                <tr>
-                                    <th>C</th>
-                                    <th>Symbol</th>
-                                    <th>Strategy</th>
-                                    <th>Cycle PnL</th>
-                                    <th>APR</th>
-                                </tr>
-                            </thead>
-                            <tbody id="bodyOpps"></tbody>
-                        </table>
-                    </div>
+                <div id="view-list" class="view-frame">
+                    <table class="data-list">
+                        <thead>
+                            <tr>
+                                <th>Coin</th>
+                                <th>Strategy</th>
+                                <th>Net Cycle PnL</th>
+                                <th>APR</th>
+                            </tr>
+                        </thead>
+                        <tbody id="listTarget"></tbody>
+                    </table>
                 </div>
 
-                <!-- VIEW: ALL DATA -->
-                <div id="view-all-data" class="view-content">
-                    <div style="overflow-x:auto;">
-                        <table class="data-table" id="tableData">
-                            <thead>
-                                <tr>
-                                    <th>Coin</th>
-                                    <th>Binance</th>
-                                    <th>OKX</th>
-                                    <th>Bybit</th>
-                                    <th>HL</th>
-                                    <th>Asterdex</th>
-                                </tr>
-                            </thead>
-                            <tbody id="bodyData"></tbody>
-                        </table>
-                    </div>
+                <div id="view-data" class="view-frame">
+                    <table class="data-list">
+                        <thead>
+                            <tr>
+                                <th>Coin</th>
+                                <th>BN</th>
+                                <th>OKX</th>
+                                <th>BYB</th>
+                                <th>HL</th>
+                                <th>AST</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dataTarget"></tbody>
+                    </table>
                 </div>
-
             </div>
 
             <!-- MODULE: TRY -->
-            <div id="mod-try" class="module-page" style="text-align:center; padding-top:100px;">
-                <h2 style="color:#333;">TRY Arbitrage Module</h2>
-                <p style="color:#555; margin-top:10px;">Coming Soon</p>
+            <div id="mod-try" class="module-container" style="justify-content:center; align-items:center;">
+                <h2>TRY Arbitrage</h2>
+                <p style="color:#666; margin-top:10px;">Module Inactive</p>
             </div>
 
             <!-- MODULE: USDC -->
-            <div id="mod-usdc" class="module-page" style="text-align:center; padding-top:100px;">
-                <h2 style="color:#333;">USDC Arbitrage Module</h2>
-                <p style="color:#555; margin-top:10px;">Coming Soon</p>
+            <div id="mod-usdc" class="module-container" style="justify-content:center; align-items:center;">
+                <h2>USDC Arbitrage</h2>
+                <p style="color:#666; margin-top:10px;">Module Inactive</p>
             </div>
 
             <!-- MODULE: SETTINGS -->
-            <div id="mod-settings" class="module-page" style="padding:40px; text-align:center;">
-                <h2>System Settings</h2>
-                <div style="margin-top:20px; text-align:left; max-width:400px; margin-left:auto; margin-right:auto;">
-                    <p style="color:#666; font-size:0.9rem;">Fee Configuration (Maker/Taker)</p>
-                    <!-- Settings Form Placeholder -->
-                    <div id="settingsPlaceholder"
-                        style="margin-top:10px; padding:20px; border:1px solid #333; border-radius:8px;">
-                        Loading Config...
-                    </div>
-                    <button onclick="saveDummySettings()"
-                        style="margin-top:20px; width:100%; padding:10px; background:var(--accent); border:none; border-radius:6px; font-weight:bold; cursor:pointer;">Save
-                        Configuration</button>
-                </div>
+            <div id="mod-settings" class="module-container" style="justify-content:center; align-items:center;">
+                <h2>Settings</h2>
+                <p style="color:#666; margin-top:10px;">Version 1.1.0</p>
             </div>
-
         </main>
+
     </div>
 
-    <!-- BOTTOM NAV -->
+    <!-- BOTTOM NAVIGATION -->
     <nav class="bottom-nav">
-        <button class="nav-btn active" onclick="ui.module('funding', this)">
-            <span class="icon">⚡</span>
+        <button class="bn-item active" onclick="app.nav('funding', this)">
+            <span class="bn-icon">⚡</span>
             <span>Funding</span>
         </button>
-        <button class="nav-btn" onclick="ui.module('try', this)">
-            <span class="icon">₺</span>
+        <button class="bn-item" onclick="app.nav('try', this)">
+            <span class="bn-icon">₺</span>
             <span>TRY Arb</span>
         </button>
-        <button class="nav-btn" onclick="ui.module('usdc', this)">
-            <span class="icon">💲</span>
+        <button class="bn-item" onclick="app.nav('usdc', this)">
+            <span class="bn-icon">💲</span>
             <span>USDC Arb</span>
         </button>
-        <button class="nav-btn" onclick="ui.module('settings', this)">
-            <span class="icon">⚙️</span>
+        <button class="bn-item" onclick="app.nav('settings', this)">
+            <span class="bn-icon">⚙️</span>
             <span>Settings</span>
         </button>
     </nav>
 
-    <!-- LOGIC -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.4/socket.io.js"></script>
     <script>
-        // STATE
-        const state = {
-            activePair: 'binance-okx',
-            data: {}, // { pair_key: [opps] }
-            allCoins: []
-        };
+        // --- APP ENGINE ---
+        const app = {
+            state: {
+                module: 'funding',
+                view: 'exchanges', // exchanges, list, data
+                pair: 'binance-okx',
+                data: {},
+                allCoins: []
+            },
 
-        // UI CONTROLLER
-        const ui = {
-            module: (modId, btn) => {
-                document.querySelectorAll('.module-page').forEach(el => el.classList.remove('active'));
+            // NAVIGATION
+            nav: (modId, btn) => {
+                app.state.module = modId;
+
+                // Toggle Module Visibility
+                document.querySelectorAll('.module-container').forEach(el => el.classList.remove('active'));
                 document.getElementById(`mod-${modId}`).classList.add('active');
 
-                document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+                // Toggle Nav Btn
+                document.querySelectorAll('.bn-item').forEach(el => el.classList.remove('active'));
                 if (btn) btn.classList.add('active');
 
-                if (modId === 'funding' && !state.activePair) {
-                    ui.pair('binance-okx');
+                // Toggle Sidebar (Only Visible in Funding)
+                const sb = document.getElementById('mainSidebar');
+                sb.style.display = (modId === 'funding' && window.innerWidth > 768) ? 'flex' : 'none';
+
+                // Trigger Render if needed
+                if (modId === 'funding') app.render();
+            },
+
+            // SIDEBAR ACTIONS
+            setView: (viewId) => {
+                app.state.view = viewId;
+                document.querySelectorAll('.view-frame').forEach(el => el.classList.remove('active'));
+
+                if (viewId === 'all-opps') {
+                    document.getElementById('view-list').classList.add('active');
+                    document.getElementById('pageTitle').innerText = 'All Opportunities';
+                } else if (viewId === 'all-data') {
+                    document.getElementById('view-data').classList.add('active');
+                    document.getElementById('pageTitle').innerText = 'All Market Data';
+                } else {
+                    document.getElementById('view-exchanges').classList.add('active');
+                    // Page Title set by Pair
+                }
+
+                // Active State for Sidebar Buttons
+                app.updateSidebarActive();
+                app.render();
+            },
+
+            setPair: (pairKey) => {
+                app.state.pair = pairKey;
+                app.setView('exchanges'); // Auto switch to grid
+
+                // Update Title
+                const parts = pairKey.toUpperCase().split('-');
+                document.getElementById('pageTitle').innerText = `${parts[0]} <> ${parts[1]}`;
+            },
+
+            updateSidebarActive: () => {
+                document.querySelectorAll('.sb-btn').forEach(b => b.classList.remove('active'));
+
+                if (app.state.view === 'all-opps') {
+                    document.querySelector(`button[onclick="app.setView('all-opps')"]`)?.classList.add('active');
+                } else if (app.state.view === 'all-data') {
+                    document.querySelector(`button[onclick="app.setView('all-data')"]`)?.classList.add('active');
+                } else {
+                    // Start matching pairs
+                    document.querySelector(`button[data-pair="${app.state.pair}"]`)?.classList.add('active');
                 }
             },
-            view: (viewId) => {
-                document.querySelectorAll('.view-content').forEach(el => el.classList.remove('active'));
-                document.getElementById(`view-${viewId}`).classList.add('active');
 
-                // Tabs styling
-                document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-                const btn = document.querySelector(`button[onclick="ui.view('${viewId}')"]`);
-                if (btn) btn.classList.add('active');
+            // RENDER LOGIC (Throttled)
+            lastRender: 0,
+            render: () => {
+                const now = Date.now();
+                if (now - app.lastRender < 500) return; // Limit 2fps
+                app.lastRender = now;
 
-                // Render logic
-                if (viewId === 'all-opps') renderAllOppsTable();
-                if (viewId === 'all-data') renderAllDataTable();
-                if (viewId === 'exchanges') renderGrid(state.data[state.activePair]);
-            },
-            pair: (pairId) => {
-                console.log('Switching pair:', pairId);
-                state.activePair = pairId;
+                document.getElementById('loadProgress').style.width = '100%';
+                setTimeout(() => document.getElementById('loadProgress').style.width = '0%', 200);
 
-                // Update Stair Menu
-                document.querySelectorAll('.stair-btn').forEach(btn => btn.classList.remove('active'));
-                const activeBtn = document.querySelector(`.stair-btn[data-pair="${pairId}"]`);
-                if (activeBtn) activeBtn.classList.add('active');
+                if (app.state.view === 'exchanges') {
+                    const data = app.state.data[app.state.pair] || [];
+                    const grid = document.getElementById('gridTarget');
 
-                // Force view
-                ui.view('exchanges');
-                renderGrid(state.data[pairId]);
+                    if (data.length === 0) {
+                        grid.innerHTML = '<div class="empty-state"><div class="empty-icon">📊</div><div>No active opportunities for this pair.<br>Wait for market update...</div></div>';
+                        return;
+                    }
+
+                    grid.innerHTML = data.map(opp => {
+                        // Relaxed Filter: Show all, but dim negatives
+                        const a = opp.analysis;
+                        if (!a || !a.detailed) return '';
+
+                        const net = a.netCycleProfit || 0;
+                        const isProfit = net > 0;
+                        const profitClass = isProfit ? 'profit' : '';
+                        const valClass = isProfit ? 'pos' : 'neg';
+
+                        const exA = opp.exchangeA.name;
+                        const exB = opp.exchangeB.name;
+                        const st = a.strategy === 'LONG_A_SHORT_B' ? `L: ${exA} | S: ${exB}` : `L: ${exB} | S: ${exA}`;
+
+                        return `
+                        <div class="new-card ${profitClass}">
+                            <div class="nc-head">
+                                <div class="nc-sym">${opp.symbol}</div>
+                                <div class="nc-cycle">${a.cycleDuration}h</div>
+                            </div>
+                            <div class="nc-body">
+                                <div class="nc-row mute"><div>${st}</div></div>
+                                <div class="nc-row">
+                                    <span class="mute">Net Cycle PnL</span>
+                                    <span class="nc-val-big ${valClass}">$${net.toFixed(2)}</span>
+                                </div>
+                                <div class="nc-row">
+                                    <span class="mute">Funding Income</span>
+                                    <span class="pos">+$${(a.fundingIncomeCycle || 0).toFixed(2)}</span>
+                                </div>
+                                <div class="nc-row">
+                                    <span class="mute">Annual APR</span>
+                                    <span class="pos">${(a.annualAPR || 0).toFixed(1)}%</span>
+                                </div>
+                            </div>
+                        </div>`;
+                    }).join('');
+
+                } else if (app.state.view === 'all-opps') {
+                    // Flatten
+                    let all = [];
+                    Object.values(app.state.data).forEach(arr => all.push(...arr));
+                    all.sort((a, b) => (b.analysis?.netCycleProfit || 0) - (a.analysis?.netCycleProfit || 0));
+
+                    const tbody = document.getElementById('listTarget');
+                    if (all.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:30px;">No opportunities detected yet.</td></tr>';
+                        return;
+                    }
+
+                    tbody.innerHTML = all.map(o => {
+                        const net = o.analysis?.netCycleProfit || 0;
+                        return `
+                        <tr>
+                            <td><b>${o.symbol}</b></td>
+                            <td class="mute">${o.analysis.strategy === 'LONG_A_SHORT_B' ? 'Long A' : 'Long B'}</td>
+                            <td class="${net > 0 ? 'pos' : 'neg'}" style="font-weight:bold">$${net.toFixed(4)}</td>
+                            <td class="pos">${(o.analysis.annualAPR || 0).toFixed(1)}%</td>
+                        </tr>`;
+                    }).join('');
+
+                } else if (app.state.view === 'all-data') {
+                    const tbody = document.getElementById('dataTarget');
+                    // FIX: Ensure scroll works by rendering all, but valid HTML
+                    if (app.state.allCoins.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:30px;">Loading market data...</td></tr>';
+                        return;
+                    }
+
+                    const fmt = (ex) => {
+                        if (!ex) return '<td style="text-align:center; color:#333">-</td>';
+                        return `<td><div style="font-weight:bold">$${parseFloat(ex.price).toFixed(2)}</div><div class="${ex.funding >= 0 ? 'pos' : 'neg'}" style="font-size:0.75rem">${(parseFloat(ex.funding) * 100).toFixed(4)}%</div></td>`;
+                    };
+
+                    tbody.innerHTML = app.state.allCoins.map(c => `
+                        <tr>
+                            <td><b style="color:#fff">${c.symbol}</b></td>
+                            ${fmt(c.binance)}
+                            ${fmt(c.okx)}
+                            ${fmt(c.bybit)}
+                            ${fmt(c.hyperliquid)}
+                            ${fmt(c.asterdex)}
+                        </tr>
+                    `).join('');
+                }
             }
         };
 
-        // INIT STAIR MENU
-        const pairs = [
-            { id: 'binance-okx', n: 'Binance - OKX', l: 1 },
-            { id: 'binance-bybit', n: 'Binance - Bybit', l: 1 },
-            { id: 'binance-hyperliquid', n: 'Binance - HL', l: 1 },
-            { id: 'binance-asterdex', n: 'Binance - Aster', l: 1 },
+        // --- INIT SIDEBAR ---
+        const sb = document.getElementById('sbContent');
+        sb.innerHTML = `
+            <button class="sb-btn" onclick="app.setView('all-opps')">⚡ All Opportunities</button>
+            <button class="sb-btn" onclick="app.setView('all-data')">📊 All Market Data</button>
+            
+            <div class="neon-divider"></div>
+            
+            <div class="sb-header">BINANCE PAIRS</div>
+            <button class="sb-btn" data-pair="binance-okx" onclick="app.setPair('binance-okx')">Binance - OKX</button>
+            <button class="sb-btn" data-pair="binance-bybit" onclick="app.setPair('binance-bybit')">Binance - Bybit</button>
+            <button class="sb-btn" data-pair="binance-hyperliquid" onclick="app.setPair('binance-hyperliquid')">Binance - HL</button>
+            <button class="sb-btn" data-pair="binance-asterdex" onclick="app.setPair('binance-asterdex')">Binance - Aster</button>
+            
+            <div class="neon-divider"></div>
+            
+            <div class="sb-header">OKX PAIRS</div>
+            <button class="sb-btn" data-pair="okx-bybit" onclick="app.setPair('okx-bybit')">OKX - Bybit</button>
+            <button class="sb-btn" data-pair="okx-hyperliquid" onclick="app.setPair('okx-hyperliquid')">OKX - HL</button>
+            <button class="sb-btn" data-pair="okx-asterdex" onclick="app.setPair('okx-asterdex')">OKX - Aster</button>
+            
+            <div class="neon-divider"></div>
+            
+            <div class="sb-header">OTHER PAIRS</div>
+            <button class="sb-btn" data-pair="bybit-asterdex" onclick="app.setPair('bybit-asterdex')">Bybit - Aster</button>
+            <button class="sb-btn" data-pair="hyperliquid-bybit" onclick="app.setPair('hyperliquid-bybit')">HL - Bybit</button>
+            <button class="sb-btn" data-pair="hyperliquid-asterdex" onclick="app.setPair('hyperliquid-asterdex')">HL - Aster</button>
+        `;
 
-            { id: 'okx-bybit', n: 'OKX - Bybit', l: 2 },
-            { id: 'okx-hyperliquid', n: 'OKX - HL', l: 2 },
-            { id: 'okx-asterdex', n: 'OKX - Aster', l: 2 },
-
-            { id: 'bybit-asterdex', n: 'Bybit - Aster', l: 3 },
-            { id: 'hyperliquid-bybit', n: 'HL - Bybit', l: 3 },
-
-            { id: 'hyperliquid-asterdex', n: 'HL - Aster', l: 4 }
-        ];
-
-        const stairContainer = document.getElementById('stairMenu');
-        pairs.forEach(p => {
-            const b = document.createElement('button');
-            b.className = `stair-btn level-${p.l}`;
-            b.dataset.pair = p.id;
-            b.textContent = p.n;
-            b.onclick = () => ui.pair(p.id);
-            stairContainer.appendChild(b);
-        });
-
-        // WEBSOCKET
+        // --- WEBSOCKET ---
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
         const ws = new WebSocket(`${protocol}//${window.location.host}`);
 
         ws.onopen = () => {
+            document.getElementById('wsStatus').innerText = 'Connected';
             document.getElementById('wsDot').classList.add('connected');
-            document.getElementById('wsText').textContent = 'Connected';
-            document.getElementById('loader').style.display = 'none';
         };
 
         ws.onmessage = (e) => {
-            const msg = JSON.parse(e.data);
-            if (msg.type === 'ARBITRAGE_UPDATE') {
-                state.data = msg.data;
-                state.allCoins = msg.allData || [];
-
-                // Debug Bybit
-                if (state.data['binance-bybit']) {
-                    // console.log('BYBIT DATA:', state.data['binance-bybit'].length);
+            try {
+                const msg = JSON.parse(e.data);
+                if (msg.type === 'ARBITRAGE_UPDATE') {
+                    app.state.data = msg.data;
+                    app.state.allCoins = msg.allData || [];
+                    app.render(); // Will respect throttle
                 }
-
-                // Auto Refresh Active View
-                const activeView = document.querySelector('.view-content.active').id;
-                if (activeView === 'view-exchanges' && state.activePair) {
-                    renderGrid(state.data[state.activePair]);
-                } else if (activeView === 'view-all-opps') {
-                    renderAllOppsTable();
-                } else if (activeView === 'view-all-data') {
-                    renderAllDataTable();
-                }
-            }
+            } catch (err) { console.error('WS Error:', err); }
         };
 
-        // RENDERERS
-        function renderGrid(list) {
-            const grid = document.getElementById('gridContainer');
-            if (!list || list.length === 0) {
-                grid.innerHTML = '<div class="no-data">No active opportunities for this pair.<br><small>Waiting for market movements...</small></div>';
-                return;
-            }
-
-            grid.innerHTML = list.map(opp => {
-                const a = opp.analysis;
-                if (!a.detailed) return '';
-
-                const net = a.netCycleProfit;
-                const apr = a.annualAPR;
-                const netClass = net > 0 ? 'val-pos' : 'val-neg';
-
-                const exL = a.strategy === 'LONG_A_SHORT_B' ? opp.exchangeA.name : opp.exchangeB.name;
-                const exS = a.strategy === 'LONG_A_SHORT_B' ? opp.exchangeB.name : opp.exchangeA.name;
-
-                return `
-                <div class="opp-card">
-                    <div class="card-head">
-                        <div class="coin-sym">${opp.symbol}</div>
-                        <div class="cycle-badge">${a.cycleDuration}h Cycle</div>
-                    </div>
-                    <div class="card-body">
-                        <div class="ex-row">
-                            <span class="long">LONG ${exL}</span>
-                            <span>|</span>
-                            <span class="short">SHORT ${exS}</span>
-                        </div>
-                        
-                        <div class="stats-main">
-                            <div>
-                                <div class="stat-l">Net Cycle PnL</div>
-                                <div class="stat-v ${netClass}">$${net.toFixed(2)}</div>
-                            </div>
-                            <div>
-                                <div class="stat-l">Est. APR</div>
-                                <div class="stat-v val-pos">${apr.toFixed(1)}%</div>
-                            </div>
-                        </div>
-
-                        <table class="breakdown-table">
-                            <tr><td>Funding Income</td><td class="val-pos">+$${a.fundingIncomeCycle.toFixed(4)}</td></tr>
-                            <tr><td>Total Fees</td><td class="val-neg">-$${(a.fees.open + a.fees.close).toFixed(4)}</td></tr>
-                            <tr><td>Price Risk</td><td class="${a.priceDifferencePnL >= 0 ? 'val-pos' : 'val-neg'}">${a.priceDifferencePnL.toFixed(4)}</td></tr>
-                        </table>
-                    </div>
-                </div>`;
-            }).join('');
-        }
-
-        function renderAllOppsTable() {
-            // Flatten all data
-            let all = [];
-            Object.values(state.data).forEach(arr => all.push(...arr));
-            all.sort((a, b) => b.analysis.netCycleProfit - a.analysis.netCycleProfit);
-
-            document.getElementById('bodyOpps').innerHTML = all.map(o => `
-                <tr>
-                    <td><div class="cycle-badge">${o.analysis.cycleDuration}h</div></td>
-                    <td><b>${o.symbol}</b></td>
-                    <td style="font-size:0.75rem">${o.analysis.strategy === 'LONG_A_SHORT_B' ? 'L/S' : 'S/L'}</td>
-                    <td class="${o.analysis.netCycleProfit > 0 ? 'val-pos' : 'val-neg'}">$${o.analysis.netCycleProfit.toFixed(4)}</td>
-                    <td class="val-pos">${o.analysis.annualAPR.toFixed(1)}%</td>
-                </tr>
-            `).join('');
-        }
-
-        function renderAllDataTable() {
-            const fmt = (v) => v ? `<div class="${v.funding > 0 ? 'val-pos' : 'val-neg'}">${(v.funding * 100).toFixed(4)}%</div><div style="font-size:0.7rem;color:#666">$${parseFloat(v.price).toFixed(2)}</div>` : '-';
-
-            document.getElementById('bodyData').innerHTML = state.allCoins.map(c => `
-                <tr>
-                    <td><b>${c.symbol}</b></td>
-                    <td>${fmt(c.binance)}</td>
-                    <td>${fmt(c.okx)}</td>
-                    <td>${fmt(c.bybit)}</td>
-                    <td>${fmt(c.hyperliquid)}</td>
-                    <td>${fmt(c.asterdex)}</td>
-                </tr>
-            `).join('');
-        }
-
-        // START
-        ui.pair('binance-okx'); // Set default visual state
-
-        // Dummy Settings
-        function saveDummySettings() {
-            alert('Settings saved locally.');
-            ui.module('funding');
-        }
+        // --- STARTUP ---
+        app.nav('funding');
+        app.setPair('binance-okx'); // Default
     </script>
 </body>
 

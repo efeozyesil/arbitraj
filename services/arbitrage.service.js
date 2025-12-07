@@ -163,10 +163,8 @@ class ArbitrageService {
         let bestScenario = scenario1.annual.apr > scenario2.annual.apr ? scenario1 : scenario2;
         let strategy = scenario1.annual.apr > scenario2.annual.apr ? 'LONG_A_SHORT_B' : 'SHORT_A_LONG_B';
 
-        // Eğer en iyi senaryo bile negatif funding üretiyorsa hiç uğraşma
-        if (bestScenario.annual.apr <= 0) {
-            return { isOpportunity: false, reason: 'Negative APR' };
-        }
+        // REMOVED STRICT FILTERS to verify data flow
+        // The user wants to see "All Opps" even if not profitable.
 
         const tradeSize = 100;
 
@@ -211,10 +209,8 @@ class ArbitrageService {
         // Kullanıcı "Price Difference"ı hesaba katmamızı istedi.
         const totalNetProfit = bestScenario.funding.netCycleIncomeUsd + priceDiffPnL - openCost - closeCost;
 
-        // EĞER ZARAR YAZIYORSA GÖSTERME (Filtre)
-        if (totalNetProfit <= -1) { // -1$ tolerans (çok küçük zararları da ele, sadece net karları göster)
-            return { isOpportunity: false, reason: 'Net Loss' };
-        }
+        // Determine validity based on profit, but don't hide data
+        const isOpportunity = totalNetProfit > 0;
 
         // Data Hazırla
         return {
@@ -239,7 +235,7 @@ class ArbitrageService {
             annualAPR: bestScenario.annual.apr,
             annualFunding: bestScenario.annual.usd,
 
-            isOpportunity: true,
+            isOpportunity: isOpportunity,
             detailed: bestScenario
         };
     }
