@@ -3,21 +3,24 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Crypto Arbitrage Terminal</title>
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Arbitrage Mobile Terminal</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #050505;
-            --card-bg: #111;
+            --bg-color: #000000;
+            --card-bg: #111111;
             --sidebar-bg: #0a0a0a;
-            --text-main: #e0e0e0;
-            --text-sub: #777;
+            --text-main: #ffffff;
+            --text-sub: #888888;
             --accent: #00d4ff;
-            --accent-dim: rgba(0, 212, 255, 0.1);
-            --positive: #10b981;
-            --negative: #ef4444;
-            --border: rgba(255, 255, 255, 0.08);
+            --accent-dim: rgba(0, 212, 255, 0.15);
+            --positive: #00ff9d;
+            --negative: #ff4d4d;
+            --border: #222;
+            --safe-top: env(safe-area-inset-top);
+            --safe-bottom: env(safe-area-inset-bottom);
         }
 
         * {
@@ -29,688 +32,786 @@
         }
 
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             background: var(--bg-color);
             color: var(--text-main);
             height: 100vh;
             overflow: hidden;
+            padding-top: var(--safe-top);
+            padding-bottom: var(--safe-bottom);
         }
 
-        /* SCROLLBAR */
-        ::-webkit-scrollbar {
-            width: 5px;
-            height: 5px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: var(--bg-color);
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: #333;
-            border-radius: 2px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: var(--accent);
-        }
-
-        /* APP LAYOUT */
-        .app-container {
+        /* LAYOUT */
+        .app-layout {
             display: flex;
-            height: 100vh;
-            width: 100vw;
-            overflow: hidden;
-        }
-
-        /* SIDEBAR (Desktop) */
-        .sidebar {
-            width: 240px;
-            background: var(--sidebar-bg);
-            border-right: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
-            z-index: 100;
-            flex-shrink: 0;
-        }
-
-        .sidebar-content {
-            overflow-y: auto;
-            flex: 1;
-            padding: 10px 0;
-        }
-
-        .sb-btn {
-            display: flex;
-            align-items: center;
-            width: 100%;
-            padding: 12px 20px;
-            background: none;
-            border: none;
-            color: var(--text-sub);
-            font-size: 0.9rem;
-            font-weight: 500;
-            cursor: pointer;
-            text-align: left;
-            transition: all 0.2s;
-        }
-
-        .sb-btn:hover {
-            color: #fff;
-            background: rgba(255, 255, 255, 0.02);
-        }
-
-        .sb-btn.active {
-            color: var(--accent);
-            background: linear-gradient(90deg, var(--accent-dim), transparent);
-            border-left: 3px solid var(--accent);
-            padding-left: 17px;
-            font-weight: 700;
-        }
-
-        .sb-header {
-            padding: 5px 20px;
-            font-size: 0.7rem;
-            font-weight: 800;
-            color: #444;
-            letter-spacing: 1px;
-            margin-top: 15px;
-            margin-bottom: 5px;
-        }
-
-        .neon-divider {
-            height: 1px;
-            background: linear-gradient(90deg, transparent, calc(var(--accent)*0.5), transparent);
-            margin: 10px 0;
-            opacity: 0.3;
-        }
-
-        /* MAIN AREA */
-        .main-content {
-            flex: 1;
-            display: flex;
+            height: 100%;
             flex-direction: column;
             position: relative;
-            overflow: hidden;
         }
 
-        /* HEADER */
-        .app-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 20px;
-            height: 60px;
-            border-bottom: 1px solid var(--border);
-            background: rgba(5, 5, 5, 0.95);
-            z-index: 50;
-        }
-
-        .page-title {
-            font-size: 1.1rem;
-            font-weight: 700;
-            letter-spacing: -0.5px;
-        }
-
-        .status-bar {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.75rem;
-            color: #666;
-            background: rgba(255, 255, 255, 0.03);
-            padding: 6px 12px;
-            border-radius: 20px;
-            border: 1px solid var(--border);
-        }
-
-        .status-dot {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background: #444;
-            transition: 0.3s;
-        }
-
-        .status-dot.connected {
-            background: var(--positive);
-            box-shadow: 0 0 5px var(--positive);
-        }
-
-        .reload-btn {
-            background: none;
-            border: none;
-            font-size: 1.2rem;
-            color: var(--text-sub);
-            cursor: pointer;
-            margin-right: 10px;
-        }
-
-        /* MOBILE PAIR BAR (Horizontal Scroll) */
-        .mobile-pair-bar {
-            display: none;
-            /* Hidden on desktop */
-            overflow-x: auto;
-            white-space: nowrap;
-            background: #000;
-            border-bottom: 1px solid var(--border);
-            padding: 10px 15px;
-            gap: 10px;
-            -webkit-overflow-scrolling: touch;
-        }
-
-        .mp-chip {
-            display: inline-block;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            color: #888;
-            background: #111;
-            border: 1px solid #333;
-            margin-right: 8px;
-        }
-
-        .mp-chip.active {
-            background: var(--accent-dim);
-            color: var(--accent);
-            border-color: var(--accent);
-        }
-
-        /* VIEW & MODULES */
-        .view-frame {
+        .main-content {
             flex: 1;
             overflow-y: auto;
-            padding: 20px;
-            display: none;
-        }
-
-        .view-frame.active {
-            display: block;
-        }
-
-        .opp-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 15px;
+            overflow-x: hidden;
+            position: relative;
             padding-bottom: 80px;
         }
 
-        /* CARDS */
-        .new-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            overflow: hidden;
-            position: relative;
+        /* HEADER */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 50px;
+            padding: 0 15px;
+            border-bottom: 1px solid var(--border);
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 50;
         }
 
-        .new-card.profit::before {
+        .header-title {
+            font-weight: 800;
+            font-size: 1rem;
+            letter-spacing: 0.5px;
+        }
+
+        .menu-toggle {
+            font-size: 1.5rem;
+            background: none;
+            border: none;
+            color: #fff;
+            cursor: pointer;
+            padding: 5px;
+        }
+
+        /* SIDEBAR (Drawer) */
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 199;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+            opacity: 1;
+        }
+
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 80%;
+            max-width: 300px;
+            height: 100%;
+            background: var(--sidebar-bg);
+            z-index: 200;
+            transform: translateX(-100%);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            padding-top: calc(20px + var(--safe-top));
+            padding-bottom: calc(20px + var(--safe-bottom));
+        }
+
+        .sidebar.active {
+            transform: translateX(0);
+        }
+
+        .sb-scroll {
+            overflow-y: auto;
+            flex: 1;
+            padding: 0 15px;
+        }
+
+        .sb-section-title {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #555;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .sb-item {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            padding: 12px 15px;
+            margin-bottom: 4px;
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: 8px;
+            color: #aaa;
+            font-size: 0.9rem;
+            font-weight: 500;
+            text-align: left;
+            transition: 0.2s;
+        }
+
+        .sb-item:active {
+            background: #1a1a1a;
+            transform: scale(0.98);
+        }
+
+        .sb-item.active {
+            background: var(--accent-dim);
+            color: var(--accent);
+            border-color: rgba(0, 212, 255, 0.2);
+        }
+
+        .neon-sep {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #333, transparent);
+            margin: 15px 0;
+        }
+
+        /* CARDS */
+        .opp-card {
+            background: var(--card-bg);
+            margin: 15px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .opp-card::before {
             content: '';
             position: absolute;
             left: 0;
             top: 0;
+            width: 4px;
             height: 100%;
-            width: 3px;
+            background: #444;
+        }
+
+        .opp-card.profit::before {
             background: var(--positive);
         }
 
-        .nc-head {
+        .oc-header {
             padding: 12px 15px;
-            border-bottom: 1px solid var(--border);
+            background: rgba(255, 255, 255, 0.03);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: rgba(255, 255, 255, 0.02);
+            border-bottom: 1px solid var(--border);
         }
 
-        .nc-sym {
+        .oc-symbol {
             font-weight: 800;
+            font-size: 1.1rem;
             color: #fff;
-            font-size: 1rem;
         }
 
-        .nc-body {
+        .oc-badge {
+            font-size: 0.7rem;
+            padding: 3px 8px;
+            border-radius: 4px;
+            background: #222;
+            color: #888;
+            border: 1px solid #333;
+        }
+
+        .oc-badge.highlight {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: var(--accent-dim);
+        }
+
+        .oc-body {
             padding: 15px;
         }
 
-        .nc-row {
+        .oc-main-row {
             display: flex;
             justify-content: space-between;
-            font-size: 0.85rem;
-            margin-bottom: 8px;
+            align-items: baseline;
+            margin-bottom: 12px;
         }
 
-        .nc-val-big {
-            font-size: 1.3rem;
+        .oc-label {
+            font-size: 0.8rem;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .oc-value {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: #fff;
+            letter-spacing: -1px;
+        }
+
+        .oc-value.pos {
+            color: var(--positive);
+            text-shadow: 0 0 20px rgba(0, 255, 157, 0.2);
+        }
+
+        .oc-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .oc-box {
+            background: #080808;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #1a1a1a;
+            text-align: center;
+        }
+
+        .oc-role {
+            font-size: 0.7rem;
+            font-weight: 900;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .oc-price {
+            font-family: 'Monaco', monospace;
+            font-size: 0.9rem;
+            color: #ddd;
+        }
+
+        /* TRY ARB ORDERBOOK STYLE */
+        .try-card {
+            background: #111;
+            margin: 15px;
+            border-radius: 12px;
+            border: 1px solid #333;
+            overflow: hidden;
+        }
+
+        .tc-header {
+            padding: 10px 15px;
+            background: #161616;
+            border-bottom: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .tc-title {
             font-weight: 700;
             color: #fff;
         }
 
-        .pos {
-            color: var(--positive);
-        }
-
-        .neg {
-            color: var(--negative);
-        }
-
-        .nc-price-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            background: #080808;
-            padding: 10px;
-            border-radius: 6px;
-            margin: 10px 0;
-            text-align: center;
-            border: 1px solid #222;
-        }
-
-        .nc-p-role {
-            font-size: 0.7rem;
-            font-weight: 800;
-            display: block;
-            margin-bottom: 2px;
-        }
-
-        .nc-p-price {
+        .tc-price {
+            font-weight: 700;
             font-family: monospace;
-            color: #ddd;
-            font-size: 0.9rem;
+            color: var(--accent);
         }
 
-        /* EMPTY STATE */
-        .empty-state {
+        .ob-container {
+            padding: 10px;
+            display: flex;
+            gap: 5px;
+        }
+
+        .ob-side {
+            flex: 1;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 300px;
-            color: #444;
+            gap: 2px;
         }
 
-        /* MOBILE BOTTOM NAV - ENABLED FOR ALL */
-        .bottom-nav {
+        .ob-row {
             display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            padding: 4px 6px;
+            border-radius: 3px;
+        }
+
+        .ob-row.ask {
+            background: rgba(255, 77, 77, 0.1);
+            color: #ff4d4d;
+        }
+
+        .ob-row.bid {
+            background: rgba(0, 255, 157, 0.1);
+            color: #00ff9d;
+        }
+
+        .ob-price {
+            font-family: monospace;
+            font-weight: 600;
+        }
+
+        .ob-amt {
+            opacity: 0.7;
+        }
+
+        /* SETTINGS */
+        .settings-form {
+            padding: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            color: #888;
+            font-size: 0.8rem;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .form-input {
+            width: 100%;
+            background: #111;
+            border: 1px solid #333;
+            color: #fff;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-family: inherit;
+        }
+
+        .form-input:focus {
+            border-color: var(--accent);
+        }
+
+        .save-btn {
+            width: 100%;
+            background: var(--accent);
+            color: #000;
+            font-weight: 800;
+            padding: 15px;
+            border-radius: 8px;
+            border: none;
+            font-size: 1rem;
+            margin-top: 20px;
+        }
+
+        /* BOTTOM NAV */
+        .bottom-nav {
             position: fixed;
             bottom: 0;
             left: 0;
             width: 100%;
-            height: 65px;
-            background: #080808;
-            border-top: 1px solid var(--border);
+            height: calc(60px + var(--safe-bottom));
+            padding-bottom: var(--safe-bottom);
+            background: #050505;
+            border-top: 1px solid #222;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
             z-index: 1000;
-            justify-content: center;
-            align-items: center;
-            gap: 40px;
-            /* Centered with gaps */
         }
 
-        /* Sidebar Adjustment for Bottom Nav Space */
-        .sidebar {
-            width: 240px;
-            background: var(--sidebar-bg);
-            border-right: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
-            padding-bottom: 70px;
-            /* Space for bottom nav */
-            z-index: 100;
-            flex-shrink: 0;
-        }
-
-        /* Adjust Main Content to not hide behind bottom nav */
-        .main-content {
-            padding-bottom: 70px;
-        }
-
-        .bn-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
-            font-size: 0.75rem;
-            color: #555;
+        .nav-item {
             background: none;
             border: none;
-            min-width: 60px;
-            cursor: pointer;
-            transition: 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            color: #555;
         }
 
-        .bn-item:hover {
-            color: #aaa;
-        }
-
-        .bn-item.active {
+        .nav-item.active {
             color: var(--accent);
-            transform: translateY(-2px);
         }
 
-        .bn-item.active .bn-icon {
-            text-shadow: 0 0 10px var(--accent-dim);
-        }
-
-        .bn-icon {
+        .nav-icon {
             font-size: 1.4rem;
-            margin-bottom: 2px;
         }
 
-        /* RESPONSIVE */
-        @media (max-width: 900px) {
-            .sidebar {
-                display: none;
-            }
+        .nav-label {
+            font-size: 0.65rem;
+            font-weight: 600;
+        }
 
-            /* Hide Sidebar on Mobile */
-            .mobile-pair-bar {
-                display: block;
-            }
+        /* UTILS */
+        .color-binance {
+            color: #FCD535;
+        }
 
-            /* Show Top Pair Scroll */
-            .bottom-nav {
-                justify-content: space-around;
-                /* Spread out on mobile */
-                gap: 0;
-            }
+        .color-okx {
+            color: #46e8b2;
+        }
 
-            .view-frame {
-                padding: 10px;
-                padding-bottom: 80px;
-            }
+        .color-bybit {
+            color: #FFB119;
+        }
+
+        .color-hl {
+            color: #00D4FF;
+        }
+
+        .color-aster {
+            color: #999;
+        }
+
+        .color-paribu {
+            color: #6bf;
+        }
+
+        .empty-st {
+            text-align: center;
+            padding: 50px 20px;
+            color: #444;
         }
     </style>
 </head>
 
 <body>
 
-    <div class="app-container">
-        <!-- SIDEBAR (Desktop Only - PAIRS ONLY) -->
-        <aside class="sidebar">
-            <div style="padding: 25px 20px; font-weight: 900; font-size: 1.2rem; color: #fff; letter-spacing: 1px;">
-                ARBITRAGE <span style="color:var(--accent)">.IO</span>
-            </div>
+    <div class="app-layout">
 
-            <div id="sbContent" class="sidebar-content">
-                <!-- Injected via JS -->
+        <!-- SIDEBAR DRAWER (Only accessible from Funding Tab) -->
+        <div class="sidebar-overlay" onclick="app.toggleSidebar(false)"></div>
+        <aside class="sidebar" id="appSidebar">
+            <div style="padding: 0 15px 20px 15px;">
+                <h2 style="color:#fff; font-size:1.5rem;">Filters</h2>
+                <div style="font-size:0.8rem; color:#666;">Select market scope</div>
             </div>
-
-            <div style="padding: 20px; font-size: 0.7rem; color: #444; text-align: center;">
-                v3.5.0
+            <div class="sb-scroll" id="sbDynamic">
+                <!-- JS Will Populate This -->
             </div>
         </aside>
 
-        <main class="main-content">
-            <!-- HEADER -->
-            <header class="app-header">
-                <div class="header-left">
-                    <div class="page-title" id="pageTitle">Overview</div>
-                </div>
-                <div class="header-right">
-                    <button class="reload-btn" onclick="window.location.reload()">↻</button>
-                    <div class="status-bar">
-                        <span id="wsDot" class="status-dot"></span>
-                        <span id="wsStatus">Connecting...</span>
-                    </div>
-                </div>
-            </header>
-
-            <!-- HORIZONTAL PAIR BAR (Mobile Only) -->
-            <div id="mobilePairBar" class="mobile-pair-bar">
-                <!-- Injected via JS -->
+        <!-- HEADER -->
+        <header class="header">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <!-- Hamburger only shows if on Funding tab -->
+                <button class="menu-toggle" id="menuBtn" onclick="app.toggleSidebar(true)">☰</button>
+                <div class="header-title" id="pageTitle">Funding Rates</div>
             </div>
-
-            <!-- MODULE: ARBITRAGE (CARDS) -->
-            <div id="mod-funding" class="view-frame active">
-                <div id="gridTarget" class="opp-grid">
-                    <div class="empty-state">
-                        <div style="font-size: 2rem; margin-bottom: 10px;">⚡</div>
-                        <div>Waiting for real-time market data...</div>
-                    </div>
-                </div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <div id="wsState" style="width: 8px; height: 8px; border-radius: 50%; background: #333;"></div>
             </div>
+        </header>
 
-            <!-- MODULE: TRY ARBITRAGE -->
-            <div id="mod-try" class="view-frame">
-                <div class="empty-state">
-                    <div style="font-size: 2rem; color: var(--accent);">₺</div>
-                    <div style="margin-top:10px; font-weight:bold;">TRY Arbitrage Module</div>
-                    <div style="font-size:0.8rem; margin-top:5px; color:#666;">Scanning Turkish Lira pairs...</div>
-                </div>
-            </div>
+        <!-- MAIN CONTENT AREA -->
+        <div class="main-content" id="mainContent">
+            <!-- CONTENT INJECTED HERE -->
+        </div>
 
-            <!-- MODULE: USDC ARBITRAGE -->
-            <div id="mod-usdc" class="view-frame">
-                <div class="empty-state">
-                    <div style="font-size: 2rem; color: var(--positive);">💲</div>
-                    <div style="margin-top:10px; font-weight:bold;">USDC Arbitrage Module</div>
-                    <div style="font-size:0.8rem; margin-top:5px; color:#666;">Stablecoin peg analysis running...</div>
-                </div>
-            </div>
+        <!-- DO NOT REMOVE: BOTTOM NAV -->
+        <nav class="bottom-nav">
+            <button class="nav-item active" onclick="app.nav('funding')">
+                <span class="nav-icon">⚡</span>
+                <span class="nav-label">Funding</span>
+            </button>
+            <button class="nav-item" onclick="app.nav('try')">
+                <span class="nav-icon">₺</span>
+                <span class="nav-label">TRY Arb</span>
+            </button>
+            <button class="nav-item" onclick="app.nav('usdc')">
+                <span class="nav-icon">💲</span>
+                <span class="nav-label">USDC Arb</span>
+            </button>
+            <button class="nav-item" onclick="app.nav('settings')">
+                <span class="nav-icon">⚙️</span>
+                <span class="nav-label">Settings</span>
+            </button>
+        </nav>
 
-            <!-- MODULE: SETTINGS -->
-            <div id="mod-settings" class="view-frame">
-                <div
-                    style="max-width: 500px; margin: 0 auto; background: #111; padding: 25px; border-radius: 10px; border: 1px solid var(--border);">
-                    <h2 style="color: #fff; margin-bottom: 20px;">Trading Fees</h2>
-                    <div id="settingsForm"></div>
-                    <div style="margin-top:20px; font-size:0.8rem; color:#666;">
-                        * Fees are stored locally in your browser.
-                    </div>
-                    <button onclick="app.saveSettings()"
-                        style="width:100%; padding:15px; margin-top:20px; background:var(--accent); color:#000; font-weight:700; border:none; border-radius:6px;">Save
-                        Configuration</button>
-                </div>
-            </div>
-
-        </main>
     </div>
 
-    <!-- BOTTOM NAV (VISIBLE ON ALL SCREENS) -->
-    <nav class="bottom-nav">
-        <button class="bn-item active" onclick="app.nav('funding', this)">
-            <span class="bn-icon">⚡</span>
-            <span>Funding</span>
-        </button>
-        <button class="bn-item" onclick="app.nav('try', this)">
-            <span class="bn-icon">₺</span>
-            <span>TRY Arb</span>
-        </button>
-        <button class="bn-item" onclick="app.nav('usdc', this)">
-            <span class="bn-icon">💲</span>
-            <span>USDC Arb</span>
-        </button>
-        <button class="bn-item" onclick="app.nav('settings', this)">
-            <span class="bn-icon">⚙️</span>
-            <span>Settings</span>
-        </button>
-    </nav>
-
     <script>
-        const PAIRS = [
-            { id: 'binance-okx', label: 'Binance <> OKX' },
-            { id: 'binance-bybit', label: 'Binance <> Bybit' },
-            { id: 'binance-hyperliquid', label: 'Binance <> HL' },
-            { id: 'binance-asterdex', label: 'Binance <> Aster' },
-            { id: 'okx-bybit', label: 'OKX <> Bybit' },
-            { id: 'okx-hyperliquid', label: 'OKX <> HL' },
-            { id: 'okx-asterdex', label: 'OKX <> Aster' },
-            { id: 'hyperliquid-asterdex', label: 'HL <> Aster' }
-        ];
+        // --- CONFIG & STATE ---
+        const COLORS = {
+            'BINANCE': '#FCD535', 'OKX': '#46e8b2', 'BYBIT': '#FFB119',
+            'HYPERLIQUID': '#00D4FF', 'ASTERDEX': '#888', 'PARIBU': '#6bf'
+        };
 
-        const EX_COLORS = { 'BINANCE': '#FCD535', 'OKX': '#46e8b2', 'BYBIT': '#FFB119', 'HYPERLIQUID': '#00D4FF', 'ASTERDEX': '#888' };
+        // New Hierarchy Logic
+        const PAIR_GROUPS = [
+            {
+                title: 'Overview', items: [
+                    { id: 'all-opps', label: 'All Opportunities' },
+                    { id: 'all-coins', label: 'All Coins List' }
+                ]
+            },
+            {
+                title: 'Binance Combinations', items: [
+                    { id: 'binance-okx', label: 'Binance <> OKX' },
+                    { id: 'binance-bybit', label: 'Binance <> Bybit' },
+                    { id: 'binance-hyperliquid', label: 'Binance <> Hyperliquid' },
+                    { id: 'binance-asterdex', label: 'Binance <> Asterdex' }
+                ]
+            },
+            {
+                title: 'OKX Combinations', items: [
+                    { id: 'okx-bybit', label: 'OKX <> Bybit' },
+                    { id: 'okx-hyperliquid', label: 'OKX <> Hyperliquid' },
+                    { id: 'okx-asterdex', label: 'OKX <> Asterdex' }
+                ]
+            },
+            {
+                title: 'Bybit Combinations', items: [
+                    // Assuming we have these pairs or simulating structure
+                    { id: 'bybit-hyperliquid', label: 'Bybit <> Hyperliquid' },
+                    { id: 'bybit-asterdex', label: 'Bybit <> Asterdex' }
+                ]
+            },
+            {
+                title: 'DeFi Only', items: [
+                    { id: 'hyperliquid-asterdex', label: 'Hyperliquid <> Asterdex' }
+                ]
+            }
+        ];
 
         const app = {
             state: {
-                pair: 'binance-okx',
-                module: 'funding',
+                tab: 'funding', // funding, try, usdc, settings
+                fundingView: 'all-opps', // Current filter in funding tab
                 data: {},
                 lastRender: 0,
-                fees: JSON.parse(localStorage.getItem('userFees')) || { 'Binance': { maker: 0.02, taker: 0.05 } }
+                wsConnected: false
             },
 
             init: () => {
-                // 1. SETUP SIDEBAR (DESKTOP - PAIRS ONLY)
-                const sb = document.getElementById('sbContent');
-                if (sb) {
-                    // Only showing PAIRS in sidebar now, navigation is in bottom bar
-                    let html = `<div class="sb-header">MARKET PAIRS</div>`;
-                    html += PAIRS.map(p => `
-                    <button class="sb-btn ${p.id === 'binance-okx' ? 'active' : ''}" data-pair="${p.id}" onclick="app.setPair('${p.id}')">
-                        ${p.label}
-                    </button>`).join('');
-                    sb.innerHTML = html;
-                }
-
-                // 2. SETUP TOP SCROLL (MOBILE)
-                const mb = document.getElementById('mobilePairBar');
-                if (mb) {
-                    mb.innerHTML = PAIRS.map(p => `
-                    <div class="mp-chip ${p.id === 'binance-okx' ? 'active' : ''}" data-pair="${p.id}" onclick="app.setPair('${p.id}')">
-                        ${p.label}
-                    </div>`).join('');
-                }
-
-                app.setPair('binance-okx');
+                app.renderSidebar();
+                app.nav('funding'); // Start at funding
+                app.connectWS();
             },
 
-            nav: (modId, btn) => {
-                app.state.module = modId;
+            // --- NAVIGATION ---
+            nav: (tab) => {
+                app.state.tab = tab;
 
-                // Hide all views
-                document.querySelectorAll('.view-frame').forEach(el => el.classList.remove('active'));
-                // Show target
-                document.getElementById(`mod-${modId}`).classList.add('active');
+                // UI Updates
+                document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+                // Find button based on onclick text matching is messy, ideally use IDs. 
+                // Simple index based:
+                const idx = ['funding', 'try', 'usdc', 'settings'].indexOf(tab);
+                if (idx > -1) document.querySelectorAll('.nav-item')[idx].classList.add('active');
 
-                // Update Bottom Nav Active State
-                if (btn) {
-                    document.querySelectorAll('.bn-item').forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
+                // Header & Sidebar Visibility
+                const menuBtn = document.getElementById('menuBtn');
+                const pageTitle = document.getElementById('pageTitle');
+
+                if (tab === 'funding') {
+                    menuBtn.style.visibility = 'visible';
+                    pageTitle.innerText = app.getPairLabel(app.state.fundingView);
+                } else if (tab === 'try') {
+                    menuBtn.style.visibility = 'hidden';
+                    pageTitle.innerText = 'TRY Arbitrage';
+                } else if (tab === 'usdc') {
+                    menuBtn.style.visibility = 'hidden';
+                    pageTitle.innerText = 'USDC Arbitrage';
+                } else if (tab === 'settings') {
+                    menuBtn.style.visibility = 'hidden';
+                    pageTitle.innerText = 'Settings';
                 }
 
-                // Update Title
-                if (modId === 'settings') document.getElementById('pageTitle').innerText = 'Settings';
-                else if (modId === 'try') document.getElementById('pageTitle').innerText = 'TRY Arbitrage';
-                else if (modId === 'usdc') document.getElementById('pageTitle').innerText = 'USDC Arbitrage';
-                else if (modId === 'funding') app.setPair(app.state.pair); // Restore pair title
-
-                // If settings, render form
-                if (modId === 'settings') app.renderSettings();
+                app.renderContent();
             },
 
-            setPair: (pk) => {
-                app.state.pair = pk;
-                app.state.module = 'funding'; // Switch back to main view
+            // --- SIDEBAR ---
+            toggleSidebar: (show) => {
+                const el = document.getElementById('appSidebar');
+                const ov = document.querySelector('.sidebar-overlay');
+                if (show) { el.classList.add('active'); ov.classList.add('active'); }
+                else { el.classList.remove('active'); ov.classList.remove('active'); }
+            },
 
-                // Show funding module
-                document.querySelectorAll('.view-frame').forEach(el => el.classList.remove('active'));
-                document.getElementById('mod-funding').classList.add('active');
+            renderSidebar: () => {
+                const c = document.getElementById('sbDynamic');
+                let html = '';
 
-                // Update Desktop Sidebar Active
-                document.querySelectorAll('.sb-btn').forEach(b => b.classList.remove('active'));
-                const dBtn = document.querySelector(`.sb-btn[data-pair="${pk}"]`);
-                if (dBtn) dBtn.classList.add('active');
+                PAIR_GROUPS.forEach(g => {
+                    html += `<div class="sb-section-title">${g.title}</div>`;
+                    g.items.forEach(i => {
+                        const active = app.state.fundingView === i.id ? 'active' : '';
+                        html += `<button class="sb-item ${active}" onclick="app.setFundingFilter('${i.id}')">${i.label}</button>`;
+                    });
+                    if (g.title !== 'DeFi Only') html += `<div class="neon-sep"></div>`;
+                });
 
-                // Update Mobile Chip Active
-                document.querySelectorAll('.mp-chip').forEach(b => b.classList.remove('active'));
-                const mBtn = document.querySelector(`.mp-chip[data-pair="${pk}"]`);
-                if (mBtn) mBtn.classList.add('active');
+                c.innerHTML = html;
+            },
 
-                // Colorize Title
-                const parts = pk.toUpperCase().split('-');
-                const titleEl = document.getElementById('pageTitle');
-                if (parts.length > 1) {
-                    const c1 = EX_COLORS[parts[0]] || '#fff';
-                    const c2 = EX_COLORS[parts[1]] || '#fff';
-                    titleEl.innerHTML = `<span style="color:${c1}">${parts[0]}</span> <span style="color:#444">/</span> <span style="color:${c2}">${parts[1]}</span>`;
+            setFundingFilter: (id) => {
+                app.state.fundingView = id;
+                app.toggleSidebar(false);
+                document.getElementById('pageTitle').innerText = app.getPairLabel(id);
+                app.renderSidebar(); // Re-render to update active state
+                app.renderContent(true);
+            },
+
+            getPairLabel: (id) => {
+                for (let g of PAIR_GROUPS) {
+                    for (let i of g.items) {
+                        if (i.id === id) return i.label;
+                    }
+                }
+                return id;
+            },
+
+            // --- CONTENT RENDERING ---
+            renderContent: (force = false) => {
+                const container = document.getElementById('mainContent');
+
+                // Clean logic based on Tab
+                if (app.state.tab === 'funding') {
+                    app.renderFunding(container);
+                } else if (app.state.tab === 'try') {
+                    app.renderTRY(container);
+                } else if (app.state.tab === 'usdc') {
+                    container.innerHTML = `<div class="empty-st">
+                    <div style="font-size:3rem; margin-bottom:10px;">💲</div>
+                    <div>USDC Peg Monitor<br><small style="color:#666">Module inactive</small></div>
+                </div>`;
+                } else if (app.state.tab === 'settings') {
+                    app.renderSettings(container);
+                }
+            },
+
+            renderFunding: (container) => {
+                const filter = app.state.fundingView;
+                let list = [];
+
+                if (filter === 'all-opps') {
+                    // Flatten all
+                    Object.values(app.state.data).forEach(arr => list.push(...arr));
+                    list.sort((a, b) => (b.profit || 0) - (a.profit || 0));
+                } else if (filter === 'all-coins') {
+                    container.innerHTML = '<div class="empty-st">All Coins List View (Todo)</div>';
+                    return;
                 } else {
-                    titleEl.innerText = pk;
+                    list = app.state.data[filter] || [];
                 }
 
-                // Render data if available
-                if (app.state.data[pk]) app.render(true);
-            },
+                if (list.length === 0) {
+                    container.innerHTML = `<div class="empty-st">
+                    <div style="margin-bottom:10px;">Waiting for market data...</div>
+                    <div style="font-size:0.7rem; color:#555;">Filter: ${app.getPairLabel(filter)}</div>
+                </div>`;
+                    return;
+                }
 
-            render: (force = false) => {
-                const now = Date.now();
-                if (!force && now - app.state.lastRender < 2000) return;
-                app.state.lastRender = now;
-
-                const grid = document.getElementById('gridTarget');
-                if (!grid || app.state.module !== 'funding') return;
-
-                const list = app.state.data[app.state.pair] || [];
-                if (list.length === 0) return;
-
-                grid.innerHTML = list.map(item => {
-                    const profitClass = (item.profit > 0) ? 'profit' : '';
-                    const pColor = item.profit > 0 ? 'pos' : (item.profit < 0 ? 'neg' : 'mute'); // Fixed ternary
-                    const a = item.analysis || {};
+                container.innerHTML = list.map(item => {
+                    const profit = item.profit || 0;
+                    const isProfitable = profit > 0;
+                    const pClass = isProfitable ? 'profit' : '';
+                    const valClass = profit > 0 ? 'pos' : (profit < 0 ? 'neg' : '');
 
                     return `
-                 <div class="new-card ${profitClass}">
-                    <div class="nc-head">
-                        <div class="nc-sym">${item.symbol}</div>
-                        <div style="font-size:0.7rem; background:rgba(255,255,255,0.1); padding:2px 6px; border-radius:4px;">APR: ${(a.annualAPR || 0).toFixed(1)}%</div>
+                <div class="opp-card ${pClass}">
+                    <div class="oc-header">
+                        <div class="oc-symbol">${item.symbol}</div>
+                        <div class="oc-badge highlight">APR ${(item.analysis?.annualAPR || 0).toFixed(1)}%</div>
                     </div>
-                    <div class="nc-body">
-                        <div class="nc-row">
-                            <span style="color:#888;">Net Profit</span>
-                            <span class="nc-val-big ${pColor}">${(item.profit || 0).toFixed(4)}%</span>
+                    <div class="oc-body">
+                        <div class="oc-main-row">
+                            <span class="oc-label">Est. Profit</span>
+                            <span class="oc-value ${valClass}">${profit.toFixed(4)}%</span>
                         </div>
-                        <div class="nc-price-row">
-                             <div>
-                                <span class="nc-p-role" style="color:${EX_COLORS[item.longEx.toUpperCase()] || '#aaa'}">LONG ${item.longEx}</span>
-                                <span class="nc-p-price">${item.longPrice}</span>
-                             </div>
-                             <div>
-                                <span class="nc-p-role" style="color:${EX_COLORS[item.shortEx.toUpperCase()] || '#aaa'}">SHORT ${item.shortEx}</span>
-                                <span class="nc-p-price">${item.shortPrice}</span>
-                             </div>
-                        </div>
-                        <div class="nc-row">
-                            <span>Next Funding</span>
-                            <span style="color:#fff; font-weight:600;">${item.nextFundingTime || '--:--'}</span>
+                        <div class="oc-grid">
+                            <div class="oc-box">
+                                <span class="oc-role" style="color:${COLORS[item.longEx.toUpperCase()] || '#aaa'}">LONG ${item.longEx}</span>
+                                <span class="oc-price">${item.longPrice}</span>
+                            </div>
+                            <div class="oc-box">
+                                <span class="oc-role" style="color:${COLORS[item.shortEx.toUpperCase()] || '#aaa'}">SHORT ${item.shortEx}</span>
+                                <span class="oc-price">${item.shortPrice}</span>
+                            </div>
                         </div>
                     </div>
-                 </div>`;
+                </div>`;
                 }).join('');
             },
 
-            renderSettings: () => {
-                const f = document.getElementById('settingsForm'); f.innerHTML = '';
-                // Simple form generation
-                f.innerHTML = '<div style="color:#666; font-size:0.8rem; text-align:center;">Simple Fees Config</div>';
+            renderTRY: (container) => {
+                // MOCK DATA for Try view
+                const pairs = [
+                    { ex: 'Binance TR', price: 34.12, bid: [34.11, 34.10, 34.09], ask: [34.13, 34.14, 34.15] },
+                    { ex: 'Paribu', price: 34.18, bid: [34.15, 34.12, 34.10], ask: [34.20, 34.22, 34.25] },
+                    { ex: 'OKX TR', price: 34.11, bid: [34.09, 34.08, 34.05], ask: [34.12, 34.15, 34.18] },
+                    { ex: 'Bybit TR', price: 34.13, bid: [34.12, 34.11, 34.10], ask: [34.14, 34.16, 34.17] }
+                ];
+
+                let html = `<div style="padding:15px; font-weight:700; color:#888; font-size:0.8rem;">USDT/TRY LIVE RATES (MOCK)</div>`;
+                html += pairs.map(p => `
+                <div class="try-card">
+                    <div class="tc-header">
+                        <span class="tc-title" style="color:${COLORS[p.ex.toUpperCase().replace(' TR', '')] || '#fff'}">${p.ex}</span>
+                        <span class="tc-price">${p.price.toFixed(2)} ₺</span>
+                    </div>
+                    <div class="ob-container">
+                        <div class="ob-side">
+                            ${p.bid.map(b => `<div class="ob-row bid"><span class="ob-price">${b.toFixed(2)}</span><span class="ob-amt">BID</span></div>`).join('')}
+                        </div>
+                        <div class="ob-side">
+                            ${p.ask.map(a => `<div class="ob-row ask"><span class="ob-amt">ASK</span><span class="ob-price">${a.toFixed(2)}</span></div>`).join('')}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+                container.innerHTML = html;
             },
-            saveSettings: () => { alert('Saved!'); }
+
+            renderSettings: (container) => {
+                container.innerHTML = `
+            <div class="settings-form">
+                <div class="form-group">
+                    <label class="form-label">Maker Fee (%)</label>
+                    <input type="number" class="form-input" value="0.02">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Taker Fee (%)</label>
+                    <input type="number" class="form-input" value="0.05">
+                </div>
+                <button class="save-btn" onclick="alert('Settings Saved Locally')">Save Configuration</button>
+            </div>`;
+            },
+
+            // --- WEBSOCKET ---
+            connectWS: () => {
+                const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                const url = `${proto}//${window.location.host}`;
+                const ws = new WebSocket(url);
+
+                ws.onopen = () => {
+                    app.state.wsConnected = true;
+                    document.getElementById('wsState').style.background = '#00ff9d';
+                    document.getElementById('wsState').style.boxShadow = '0 0 10px #00ff9d';
+                };
+
+                ws.onclose = () => {
+                    app.state.wsConnected = false;
+                    document.getElementById('wsState').style.background = '#ff4d4d';
+                    document.getElementById('wsState').style.boxShadow = 'none';
+                    setTimeout(app.connectWS, 3000);
+                };
+
+                ws.onmessage = (e) => {
+                    try {
+                        const msg = JSON.parse(e.data);
+                        if (msg.type === 'ARBITRAGE_UPDATE') {
+                            app.state.data = msg.data;
+                            // Only re-render if we are on funding tab
+                            if (app.state.tab === 'funding') app.renderFunding(document.getElementById('mainContent'));
+                        }
+                    } catch (err) { console.error(err); }
+                };
+            }
         };
 
-        // WEBSOCKET
-        function connect() {
-            const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const ws = new WebSocket(`${proto}//${window.location.host}`);
-            ws.onopen = () => {
-                document.getElementById('wsStatus').innerText = 'Connected';
-                document.getElementById('wsDot').classList.add('connected');
-            };
-            ws.onclose = () => {
-                document.getElementById('wsStatus').innerText = 'Reconnecting...';
-                document.getElementById('wsDot').classList.remove('connected');
-                setTimeout(connect, 3000);
-            };
-            ws.onmessage = (e) => {
-                try {
-                    const msg = JSON.parse(e.data);
-                    if (msg.type === 'ARBITRAGE_UPDATE') {
-                        app.state.data = msg.data;
-                        app.render();
-                    }
-                } catch (e) { }
-            };
-        }
-
-        window.onload = () => { app.init(); connect(); };
+        window.onload = app.init;
     </script>
 </body>
 
