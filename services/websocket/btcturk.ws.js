@@ -1,9 +1,9 @@
 const WebSocket = require('ws');
+const axios = require('axios');
 
 /**
- * BTCTurk WebSocket Service
- * API Docs: https://docs.btcturk.com
- * WebSocket: wss://ws-feed-pro.btcturk.com
+ * BTCTurk WebSocket + REST API Service
+ * WebSocket for ticker, REST for orderbook
  */
 class BTCTurkWebSocket {
     constructor() {
@@ -12,12 +12,13 @@ class BTCTurkWebSocket {
             bid: 0,
             ask: 0,
             last: 0,
-            bids: [], // Top 3 bids
-            asks: [], // Top 3 asks
+            bids: [],
+            asks: [],
             timestamp: 0
         };
         this.reconnectInterval = null;
         this.reconnectAttempts = 0;
+        this.orderbookInterval = null;
     }
 
     connect() {
@@ -29,6 +30,8 @@ class BTCTurkWebSocket {
                 console.log('[BTCTurk] Connected');
                 this.reconnectAttempts = 0;
                 this.subscribe();
+                // Start orderbook polling via REST API
+                this.startOrderbookPolling();
             });
 
             this.ws.on('message', (data) => {
@@ -46,6 +49,7 @@ class BTCTurkWebSocket {
 
             this.ws.on('close', () => {
                 console.log('[BTCTurk] Disconnected');
+                this.stopOrderbookPolling();
                 this.reconnect();
             });
 
@@ -60,12 +64,7 @@ class BTCTurkWebSocket {
             // Subscribe to USDTTRY ticker
             const tickerMsg = [151, { type: 151, channel: 'ticker', event: 'USDTTRY', join: true }];
             this.ws.send(JSON.stringify(tickerMsg));
-
-            // Subscribe to USDTTRY orderbook
-            const orderbookMsg = [151, { type: 151, channel: 'orderbook', event: 'USDTTRY', join: true }];
-            this.ws.send(JSON.stringify(orderbookMsg));
-
-            console.log('[BTCTurk] Subscribed to USDTTRY ticker and orderbook');
+            console.log('[BTCTurk] Subscribed to USDTTRY ticker');
         }
     }
 
@@ -82,33 +81,59 @@ class BTCTurkWebSocket {
                 this.data.last = parseFloat(data.LA) || this.data.last;
                 this.data.timestamp = Date.now();
             }
+        }
+    }
 
-            // Channel 431 = OrderBookFull
-            if (channel === 431 && data.PS === 'USDTTRY') {
-                // Bids: sorted high to low
-                if (data.B && Array.isArray(data.B)) {
-                    this.data.bids = data.B.slice(0, 3).map(b => ({
-                        price: parseFloat(b.P),
-                        amount: parseFloat(b.A)
+    startOrderbookPolling() {
+        // Initial fetch
+        this.fetchOrderbook();
+        // Poll every 2 seconds
+        this.orderbookInterval = setInterval(() => this.fetchOrderbook(), 2000);
+    }
+
+    stopOrderbookPolling() {
+        if (this.orderbookInterval) {
+            clearInterval(this.orderbookInterval);
+            this.orderbookInterval = null;
+        }
+    }
+
+    async fetchOrderbook() {
+        try {
+            const response = await axios.get('https://api.btcturk.com/api/v2/orderbook', {
+                params: { pairSymbol: 'USDTTRY' },
+                timeout: 5000
+            });
+
+            if (response.data && response.data.data) {
+                const ob = response.data.data;
+
+                // Bids: [[price, amount], ...] - high to low
+                if (ob.bids && Array.isArray(ob.bids)) {
+                    this.data.bids = ob.bids.slice(0, 3).map(b => ({
+                        price: parseFloat(b[0]),
+                        amount: parseFloat(b[1])
                     }));
-                }
-                // Asks: sorted low to high
-                if (data.A && Array.isArray(data.A)) {
-                    this.data.asks = data.A.slice(0, 3).map(a => ({
-                        price: parseFloat(a.P),
-                        amount: parseFloat(a.A)
-                    }));
+                    if (this.data.bids.length > 0) {
+                        this.data.bid = this.data.bids[0].price;
+                    }
                 }
 
-                // Update best bid/ask from orderbook
-                if (this.data.bids.length > 0) {
-                    this.data.bid = this.data.bids[0].price;
+                // Asks: [[price, amount], ...] - low to high
+                if (ob.asks && Array.isArray(ob.asks)) {
+                    this.data.asks = ob.asks.slice(0, 3).map(a => ({
+                        price: parseFloat(a[0]),
+                        amount: parseFloat(a[1])
+                    }));
+                    if (this.data.asks.length > 0) {
+                        this.data.ask = this.data.asks[0].price;
+                    }
                 }
-                if (this.data.asks.length > 0) {
-                    this.data.ask = this.data.asks[0].price;
-                }
+
                 this.data.timestamp = Date.now();
             }
+        } catch (error) {
+            // Silent fail - ticker still works
         }
     }
 
@@ -130,6 +155,7 @@ class BTCTurkWebSocket {
     }
 
     disconnect() {
+        this.stopOrderbookPolling();
         if (this.reconnectInterval) {
             clearTimeout(this.reconnectInterval);
             this.reconnectInterval = null;
