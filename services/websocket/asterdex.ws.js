@@ -19,7 +19,17 @@ class AsterdexWebSocket {
 
             this.ws = new WebSocket(`wss://fstream.asterdex.com/stream?streams=${streams.join('/')}`);
 
+            // Set connection timeout
+            const connectionTimeout = setTimeout(() => {
+                if (this.ws && this.ws.readyState !== WebSocket.OPEN) {
+                    console.warn('[Asterdex] Connection timeout - service may be unavailable');
+                    this.ws.close();
+                }
+            }, 10000);
+
             this.ws.on('open', () => {
+                clearTimeout(connectionTimeout);
+                this.reconnectAttempts = 0; // Reset on successful connection
                 console.log('[Asterdex] Connected');
             });
 
@@ -65,11 +75,15 @@ class AsterdexWebSocket {
     reconnect() {
         if (this.reconnectInterval) return;
 
+        // Exponential backoff: 5s, 10s, 20s, 40s... max 60s (Asterdex may be unreliable)
+        const delay = Math.min(5000 * Math.pow(2, this.reconnectAttempts || 0), 60000);
+        console.log(`[Asterdex] Reconnecting in ${delay}ms...`);
+
         this.reconnectInterval = setTimeout(() => {
-            console.log('[Asterdex] Reconnecting...');
+            this.reconnectAttempts = (this.reconnectAttempts || 0) + 1;
             this.reconnectInterval = null;
             this.connect();
-        }, 5000);
+        }, delay);
     }
 
     getData(symbol) {

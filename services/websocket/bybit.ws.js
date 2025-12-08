@@ -16,6 +16,7 @@ class BybitWebSocket {
 
             this.ws.on('open', () => {
                 console.log('[Bybit] Connected');
+                this.reconnectAttempts = 0; // Reset on successful connection
                 this.subscribe();
                 this.startPing();
             });
@@ -142,11 +143,15 @@ class BybitWebSocket {
     reconnect() {
         if (this.reconnectInterval) return;
 
+        // Exponential backoff: 1s, 2s, 4s, 8s... max 30s
+        const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts || 0), 30000);
+        console.log(`[Bybit] Reconnecting in ${delay}ms...`);
+
         this.reconnectInterval = setTimeout(() => {
-            console.log('[Bybit] Reconnecting...');
+            this.reconnectAttempts = (this.reconnectAttempts || 0) + 1;
             this.reconnectInterval = null;
             this.connect();
-        }, 5000);
+        }, delay);
     }
 
     getData(symbol) {

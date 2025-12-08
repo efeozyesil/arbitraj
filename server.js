@@ -74,6 +74,7 @@ async function startServer() {
 
 
 // Initialize ALL Arbitrage Services (10 pairs from 5 exchanges)
+// NOTE: Pair names MUST match frontend sidebar IDs exactly
 const arbitragePairs = [
     { name: 'binance-okx', a: { name: 'Binance', slug: 'binance', ws: binanceWS }, b: { name: 'OKX', slug: 'okx', ws: okxWS } },
     { name: 'binance-hyperliquid', a: { name: 'Binance', slug: 'binance', ws: binanceWS }, b: { name: 'Hyperliquid', slug: 'hyperliquid', ws: hyperliquidWS } },
@@ -82,9 +83,9 @@ const arbitragePairs = [
     { name: 'okx-hyperliquid', a: { name: 'OKX', slug: 'okx', ws: okxWS }, b: { name: 'Hyperliquid', slug: 'hyperliquid', ws: hyperliquidWS } },
     { name: 'okx-bybit', a: { name: 'OKX', slug: 'okx', ws: okxWS }, b: { name: 'Bybit', slug: 'bybit', ws: bybitWS } },
     { name: 'okx-asterdex', a: { name: 'OKX', slug: 'okx', ws: okxWS }, b: { name: 'Asterdex', slug: 'asterdex', ws: asterdexWS } },
-    { name: 'hyperliquid-bybit', a: { name: 'Hyperliquid', slug: 'hyperliquid', ws: hyperliquidWS }, b: { name: 'Bybit', slug: 'bybit', ws: bybitWS } },
-    { name: 'hyperliquid-asterdex', a: { name: 'Hyperliquid', slug: 'hyperliquid', ws: hyperliquidWS }, b: { name: 'Asterdex', slug: 'asterdex', ws: asterdexWS } },
-    { name: 'bybit-asterdex', a: { name: 'Bybit', slug: 'bybit', ws: bybitWS }, b: { name: 'Asterdex', slug: 'asterdex', ws: asterdexWS } }
+    { name: 'bybit-hyperliquid', a: { name: 'Bybit', slug: 'bybit', ws: bybitWS }, b: { name: 'Hyperliquid', slug: 'hyperliquid', ws: hyperliquidWS } },
+    { name: 'bybit-asterdex', a: { name: 'Bybit', slug: 'bybit', ws: bybitWS }, b: { name: 'Asterdex', slug: 'asterdex', ws: asterdexWS } },
+    { name: 'hyperliquid-asterdex', a: { name: 'Hyperliquid', slug: 'hyperliquid', ws: hyperliquidWS }, b: { name: 'Asterdex', slug: 'asterdex', ws: asterdexWS } }
 ];
 
 const arbitrageServices = {};
