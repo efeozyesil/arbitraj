@@ -24,17 +24,36 @@ class BybitWebSocket {
                 try {
                     const message = JSON.parse(data);
 
-                    // Handle ticker updates (price only, funding comes from REST API)
+                    // Handle ticker updates
                     if (message.topic && message.topic.startsWith('tickers.')) {
-                        const tickerData = message.data;
-                        const symbol = tickerData.symbol;
+                        const payload = message.data;
+                        const updateList = Array.isArray(payload) ? payload : [payload];
 
-                        const existingData = this.data.get(symbol) || {};
-                        this.data.set(symbol, {
-                            symbol: symbol,
-                            markPrice: parseFloat(tickerData.markPrice || tickerData.lastPrice),
-                            fundingRate: existingData.fundingRate || 0,
-                            nextFundingTime: existingData.nextFundingTime || Date.now()
+                        updateList.forEach(tickerData => {
+                            const symbol = tickerData.symbol;
+                            const existingData = this.data.get(symbol) || {};
+
+                            // Merge new data with existing data to prevent nulls in delta updates
+                            const newPrice = parseFloat(tickerData.markPrice || tickerData.lastPrice || existingData.markPrice || 0);
+
+                            // Funding Rate: Bybit sends "0.0001" string. Convert to %. fallback to existing.
+                            let fRate = existingData.fundingRate;
+                            if (tickerData.fundingRate) {
+                                fRate = parseFloat(tickerData.fundingRate) * 100;
+                            }
+
+                            // Next Funding Time: fallback to existing
+                            let nTime = existingData.nextFundingTime;
+                            if (tickerData.nextFundingTime) {
+                                nTime = parseInt(tickerData.nextFundingTime);
+                            }
+
+                            this.data.set(symbol, {
+                                symbol: symbol,
+                                markPrice: newPrice,
+                                fundingRate: fRate || 0,
+                                nextFundingTime: nTime || (Date.now() + 28800000)
+                            });
                         });
                     }
                 } catch (error) {

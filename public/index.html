@@ -181,8 +181,8 @@
             padding: 10px;
             font-size: 0.75rem;
             border-bottom: 1px solid #333;
-            color: #888;
-            text-transform: uppercase;
+            color: #666;
+            font-weight: 800;
         }
 
         .ct-head th:first-child {
@@ -190,13 +190,13 @@
         }
 
         .ct-row td {
-            padding: 10px 8px;
+            padding: 12px;
             border-bottom: 1px solid #1a1a1a;
             vertical-align: middle;
         }
 
         .ct-sym {
-            font-weight: 700;
+            font-weight: 800;
             color: #fff;
             font-size: 0.95rem;
         }
@@ -209,27 +209,28 @@
         }
 
         .ct-fund {
-            font-family: monospace;
+            font-family: 'JetBrains Mono';
             font-size: 0.85rem;
             font-weight: 700;
+            color: #ddd;
         }
 
         .ct-price {
-            font-family: monospace;
+            font-family: 'JetBrains Mono';
             font-size: 0.7rem;
             color: #555;
         }
 
-        /* --- ALL OPPS ROW --- */
+        /* ALL OPPS ROW */
         .opp-row {
             background: #111;
             border: 1px solid #222;
             border-radius: 8px;
-            padding: 12px;
+            padding: 14px;
             margin-bottom: 8px;
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr auto;
-            gap: 10px;
+            grid-template-columns: 1fr 1.2fr 1.2fr auto;
+            gap: 12px;
             align-items: center;
         }
 
@@ -239,169 +240,32 @@
             color: #fff;
         }
 
-        .or-ex {
+        .or-info {
             display: flex;
             flex-direction: column;
-            font-size: 0.7rem;
-            color: #888;
-        }
-
-        .or-val {
-            font-family: monospace;
-            font-size: 0.85rem;
-            color: #ddd;
-            margin-top: 2px;
+            font-size: 0.75rem;
+            gap: 2px;
         }
 
         .or-apr {
             text-align: right;
-            font-weight: 800;
+            font-weight: 900;
             color: var(--accent);
             font-size: 1rem;
         }
 
-        .or-fund {
-            font-size: 0.65rem;
-            opacity: 0.7;
-            margin-top: 1px;
-        }
-
-        /* --- DETAILED CALC CARD --- */
-        .calc-card {
-            background: #111;
-            border: 1px solid #222;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            overflow: hidden;
-        }
-
-        .cc-head {
-            background: #161616;
-            padding: 12px 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #222;
-        }
-
-        .cc-title {
-            font-weight: 800;
-            font-size: 1.1rem;
-            color: #fff;
-        }
-
-        .cc-metrics {
-            text-align: right;
-        }
-
-        .cc-apr {
-            color: var(--accent);
-            font-weight: 800;
-            font-size: 1rem;
-        }
-
-        .cc-profit {
-            font-family: monospace;
-            color: var(--pos);
-            font-size: 0.85rem;
-        }
-
-        .cc-sides {
-            display: flex;
-            border-bottom: 1px solid #222;
-        }
-
-        .cc-side {
-            flex: 1;
-            padding: 12px 15px;
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-            border-right: 1px solid #222;
-        }
-
-        .cc-side:last-child {
-            border-right: none;
-        }
-
-        .cc-lbl {
-            font-size: 0.7rem;
-            font-weight: 800;
-            text-transform: uppercase;
-        }
-
-        .cc-ex {
-            font-weight: 700;
-            font-size: 1rem;
-            color: #ddd;
-        }
-
-        .cc-long {
-            color: var(--pos);
-        }
-
-        .cc-short {
-            color: var(--neg);
-        }
-
-        .cc-price {
-            font-family: monospace;
-            color: #aaa;
-            font-size: 0.9rem;
-        }
-
-        .cc-fund {
-            font-size: 0.75rem;
-            font-weight: 600;
-            margin-top: 2px;
-        }
-
-        .cc-steps {
-            padding: 15px;
-            background: #0c0c0c;
-            font-size: 0.85rem;
-            color: #888;
-        }
-
-        .cc-step {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 6px;
-        }
-
-        .cc-step.total {
-            margin-top: 10px;
-            padding-top: 8px;
-            border-top: 1px dashed #333;
-            color: #fff;
-            font-weight: 700;
-            font-size: 0.95rem;
-        }
-
-        .cc-val {
-            font-family: monospace;
-        }
-
-        .pos {
-            color: var(--pos);
-        }
-
-        .neg {
-            color: var(--neg);
-        }
-
-        /* TRY ARB CSS */
+        /* TRY ARB */
         .try-card {
             background: #121212;
             border: 1px solid #2a2a2a;
             border-radius: 12px;
-            margin-bottom: 12px;
+            margin-bottom: 16px;
             overflow: hidden;
         }
 
         .tc-head {
-            padding: 12px 15px;
-            background: #1a1a1a;
+            padding: 12px 16px;
+            background: #181818;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -415,41 +279,36 @@
         }
 
         .tc-price {
-            font-family: monospace;
+            font-family: 'JetBrains Mono';
             font-weight: 700;
             color: var(--accent);
             font-size: 1.1rem;
         }
 
         .tc-depth {
-            padding: 10px;
+            padding: 12px;
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 10px;
-        }
-
-        .depth-col {
-            display: flex;
-            flex-direction: column;
-            gap: 3px;
+            gap: 12px;
         }
 
         .depth-row {
             display: flex;
             justify-content: space-between;
-            padding: 4px 6px;
+            padding: 4px 8px;
             border-radius: 4px;
-            font-family: monospace;
+            font-family: 'JetBrains Mono';
             font-size: 0.75rem;
+            margin-bottom: 2px;
         }
 
         .depth-row.bid {
-            background: rgba(0, 230, 118, 0.05);
+            background: rgba(0, 230, 118, 0.08);
             color: #00E676;
         }
 
         .depth-row.ask {
-            background: rgba(255, 61, 0, 0.05);
+            background: rgba(255, 61, 0, 0.08);
             color: #FF3D00;
         }
 
@@ -477,11 +336,19 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 4px;
+            gap: 5px;
+            opacity: 0.7;
+            transition: 0.2s;
         }
 
         .nav-item.active {
             color: var(--accent);
+            opacity: 1;
+            transform: translateY(-2px);
+        }
+
+        .nav-icon {
+            font-size: 1.2rem;
         }
     </style>
 
@@ -492,7 +359,7 @@
     <div class="layout" style="height:100vh; padding-top:50px; padding-bottom:60px;">
         <header class="header" style="position:fixed; top:0; width:100%;">
             <div class="logo">R<span>bit</span></div>
-            <button class="menu-btn" onclick="ui.toggle(true)">☰</button>
+            <button class="menu-btn" id="mainMenuBtn" onclick="ui.toggle(true)">☰</button>
         </header>
 
         <aside class="sidebar" id="sidebar">
@@ -502,20 +369,20 @@
         <main class="main" id="mainView"></main>
 
         <nav class="nav">
-            <button class="nav-item active" onclick="ui.nav('funding')"><span>📊</span>Funding</button>
-            <button class="nav-item" onclick="ui.nav('try')"><span>₺</span>TRY Arb</button>
-            <button class="nav-item" onclick="ui.nav('usdc')"><span>💲</span>USDC</button>
-            <button class="nav-item" onclick="ui.nav('settings')"><span>⚙️</span>Settings</button>
+            <button class="nav-item active" onclick="ui.nav('funding')"><span class="nav-icon">📊</span>Funding</button>
+            <button class="nav-item" onclick="ui.nav('try')"><span class="nav-icon">₺</span>TRY Arb</button>
+            <button class="nav-item" onclick="ui.nav('usdc')"><span class="nav-icon">💲</span>USDC</button>
+            <button class="nav-item" onclick="ui.nav('settings')"><span class="nav-icon">⚙️</span>Settings</button>
         </nav>
     </div>
 
 
     <script>
         const PAIR_GROUPS = [
-            { t: 'Overview', i: [{ id: 'all-opps', l: 'All Opportunities (Top 100)' }, { id: 'all-coins', l: 'All Data (Table)' }] },
-            { t: 'Binance', i: [{ id: 'binance-okx', l: 'Binance <> OKX' }, { id: 'binance-bybit', l: 'Binance <> Bybit' }, { id: 'binance-hyperliquid', l: 'Binance <> HL' }, { id: 'binance-asterdex', l: 'Binance <> Aster' }] },
-            { t: 'OKX', i: [{ id: 'okx-bybit', l: 'OKX <> Bybit' }, { id: 'okx-hyperliquid', l: 'OKX <> HL' }, { id: 'okx-asterdex', l: 'OKX <> Aster' }] },
-            { t: 'Bybit', i: [{ id: 'bybit-hyperliquid', l: 'Bybit <> HL' }, { id: 'bybit-asterdex', l: 'Bybit <> Aster' }] }
+            { t: 'Overview', i: [{ id: 'all-opps', l: 'All Opportunities' }, { id: 'all-coins', l: 'All Data (Table)' }] },
+            { t: 'Binance Pairs', i: [{ id: 'binance-okx', l: 'Binance <> OKX' }, { id: 'binance-bybit', l: 'Binance <> Bybit' }, { id: 'binance-hyperliquid', l: 'Binance <> HL' }, { id: 'binance-asterdex', l: 'Binance <> Aster' }] },
+            { t: 'OKX Pairs', i: [{ id: 'okx-bybit', l: 'OKX <> Bybit' }, { id: 'okx-hyperliquid', l: 'OKX <> HL' }, { id: 'okx-asterdex', l: 'OKX <> Aster' }] },
+            { t: 'Bybit Pairs', i: [{ id: 'bybit-hyperliquid', l: 'Bybit <> HL' }, { id: 'bybit-asterdex', l: 'Bybit <> Aster' }] }
         ];
 
         const state = { tab: 'funding', filter: 'all-opps', data: {}, allData: [], wsConnected: false };
@@ -530,8 +397,21 @@
 
             nav: (t) => {
                 state.tab = t;
+                const menuBtn = document.getElementById('mainMenuBtn');
+                const sb = document.getElementById('sidebar');
+
+                // 1. Sidebar Visibility Logic
+                if (t === 'funding') {
+                    menuBtn.style.display = 'block';
+                    // On desktop, sidebar is always visible via flex layout if user wants, 
+                    // but we should ensure it's interactable.
+                } else {
+                    menuBtn.style.display = 'none';
+                    ui.toggle(false); // Close mobile sidebar if open
+                }
+
+                // 2. Nav Active State
                 document.querySelectorAll('.nav-item').forEach((b, i) => b.classList.toggle('active', ['funding', 'try', 'usdc', 'settings'][i] === t));
-                document.querySelector('.menu-btn').style.display = t === 'funding' ? 'block' : 'none';
                 ui.render();
             },
 
@@ -564,7 +444,7 @@
                 const v = document.getElementById('mainView');
                 if (state.tab !== 'funding') {
                     if (state.tab === 'try') ui.renderTRY(v);
-                    else v.innerHTML = `<div style="padding:20px;text-align:center;">Module ${state.tab}</div>`;
+                    else v.innerHTML = `<div style="padding:40px;text-align:center;color:#666;">Coming Soon: ${state.tab}</div>`;
                     return;
                 }
 
@@ -577,10 +457,19 @@
                 ui.renderDetailed(v);
             },
 
+            formatTime: (ms) => {
+                if (!ms) return '8h 00m';
+                const diff = ms - Date.now();
+                if (diff <= 0) return 'Funding...';
+                const h = Math.floor(diff / 3600000);
+                const m = Math.floor((diff % 3600000) / 60000);
+                return `${h}h ${m}m`;
+            },
+
             renderAllCoins: (v) => {
                 if (!state.allData.length) { v.innerHTML = '<div style="padding:20px;">Loading Data...</div>'; return; }
                 const sorted = [...state.allData].sort((a, b) => a.symbol.localeCompare(b.symbol));
-                // Corrected: Backend sends 'price' and 'funding' for All Data
+
                 const cell = (ex) => {
                     if (!ex || !ex.price) return `<div class="ct-cell"><span class="ct-price">-</span></div>`;
                     const fundVal = Number(ex.funding || 0);
@@ -588,29 +477,29 @@
                     const pClass = fundVal > 0 ? 'pos' : (fundVal < 0 ? 'neg' : '');
 
                     return `<div class="ct-cell">
-                        <span class="ct-fund ${pClass}">${fundStr}</span>
-                        <span class="ct-price">${Number(ex.price || 0).toFixed(4)}</span>
-                    </div>`;
+                    <span class="ct-fund ${pClass}">${fundStr}</span>
+                    <span class="ct-price">${Number(ex.price || 0).toFixed(4)}</span>
+                </div>`;
                 };
 
                 let h = `<div style="overflow-x:auto;"><table class="coin-table">
-                <thead class="ct-head"><tr>
-                    <th>COIN</th>
-                    <th style="color:var(--binance)">BINANCE</th>
-                    <th style="color:var(--okx)">OKX</th>
-                    <th style="color:var(--bybit)">BYBIT</th>
-                    <th style="color:var(--hl)">HYPER</th>
-                    <th style="color:var(--aster)">ASTER</th>
-                </tr></thead><tbody>`;
+            <thead class="ct-head"><tr>
+                <th>COIN</th>
+                <th style="color:var(--binance)">BINANCE</th>
+                <th style="color:var(--okx)">OKX</th>
+                <th style="color:var(--bybit)">BYBIT</th>
+                <th style="color:var(--hl)">HYPER</th>
+                <th style="color:var(--aster)">ASTER</th>
+            </tr></thead><tbody>`;
                 sorted.forEach(c => {
                     h += `<tr class="ct-row">
-                        <td class="ct-sym">${c.symbol}</td>
-                        <td>${cell(c.binance)}</td>
-                        <td>${cell(c.okx)}</td>
-                        <td>${cell(c.bybit)}</td>
-                        <td>${cell(c.hyperliquid)}</td>
-                        <td>${cell(c.asterdex)}</td>
-                    </tr>`;
+                    <td class="ct-sym">${c.symbol}</td>
+                    <td>${cell(c.binance)}</td>
+                    <td>${cell(c.okx)}</td>
+                    <td>${cell(c.bybit)}</td>
+                    <td>${cell(c.hyperliquid)}</td>
+                    <td>${cell(c.asterdex)}</td>
+                </tr>`;
                 });
                 h += `</tbody></table></div>`;
                 v.innerHTML = h;
@@ -619,17 +508,15 @@
             renderAllOpps: (v) => {
                 let list = [];
                 Object.values(state.data).forEach(a => { if (Array.isArray(a)) list.push(...a); });
-                if (!list.length) { v.innerHTML = '<div style="padding:20px;">No Opps...</div>'; return; }
+                if (!list.length) { v.innerHTML = '<div style="padding:20px;">Scanning Opportunities...</div>'; return; }
 
                 list.sort((a, b) => (b.analysis?.annualAPR || 0) - (a.analysis?.annualAPR || 0));
-                list = list.slice(0, 100);
+                list = list.slice(0, 50);
 
-                let h = '<div style="font-size:0.8rem; font-weight:700; color:#666; margin-bottom:10px; padding:0 5px;">TOP 100 APR OPPORTUNITIES</div>';
+                let h = '<div style="font-size:0.7rem; font-weight:800; color:#555; margin-bottom:12px; padding:0 5px; text-transform:uppercase;">Top Opportunities Global</div>';
                 list.forEach(d => {
                     const an = d.analysis || {};
-                    const apr = an.annualAPR || 0;
 
-                    // Identify Sides
                     let openLong = {}, openShort = {};
                     if (an.strategy === 'LONG_A_SHORT_B') {
                         openLong = d.exchangeA; openShort = d.exchangeB;
@@ -641,26 +528,26 @@
                     const sf = Number(openShort.fundingRate || 0) * 100;
 
                     h += `<div class="opp-row">
-                        <div class="or-sym">${d.symbol}</div>
-                        <div class="or-ex">
-                            <span style="color:var(--pos)">L: ${openLong.name}</span>
-                            <span class="or-val">${Number(openLong.markPrice || 0).toFixed(4)}</span>
-                            <span class="or-fund ${lf > 0 ? 'pos' : 'neg'}">${lf.toFixed(4)}%</span>
-                        </div>
-                        <div class="or-ex">
-                            <span style="color:var(--neg)">S: ${openShort.name}</span>
-                            <span class="or-val">${Number(openShort.markPrice || 0).toFixed(4)}</span>
-                            <span class="or-fund ${sf > 0 ? 'pos' : 'neg'}">${sf.toFixed(4)}%</span>
-                        </div>
-                        <div class="or-apr">${apr.toFixed(0)}%</div>
-                    </div>`;
+                    <div class="or-sym">${d.symbol}</div>
+                    <div class="or-info">
+                        <div style="color:var(--pos); font-weight:700;">L: ${openLong.name}</div>
+                        <div class="or-val">${Number(openLong.markPrice || 0).toFixed(4)}</div>
+                        <div class="or-fund ${lf > 0 ? 'pos' : 'neg'}">${lf.toFixed(4)}%</div>
+                    </div>
+                    <div class="or-info">
+                        <div style="color:var(--neg); font-weight:700;">S: ${openShort.name}</div>
+                        <div class="or-val">${Number(openShort.markPrice || 0).toFixed(4)}</div>
+                        <div class="or-fund ${sf > 0 ? 'pos' : 'neg'}">${sf.toFixed(4)}%</div>
+                    </div>
+                    <div class="or-apr">${(an.annualAPR || 0).toFixed(0)}%</div>
+                </div>`;
                 });
                 v.innerHTML = h;
             },
 
             renderDetailed: (v) => {
                 const list = (state.data[state.filter] || []).sort((a, b) => (b.analysis?.annualAPR || 0) - (a.analysis?.annualAPR || 0)).slice(0, 10);
-                if (!list.length) { v.innerHTML = `<div style="padding:20px;">No data for ${state.filter}</div>`; return; }
+                if (!list.length) { v.innerHTML = `<div style="padding:40px; text-align:center; opacity:0.6;">Waiting for data... <br><small>${state.filter}</small></div>`; return; }
 
                 v.innerHTML = list.map(d => {
                     const an = d.analysis || {};
@@ -672,51 +559,101 @@
                         openLong = d.exchangeB; openShort = d.exchangeA;
                     }
 
-                    const apr = an.annualAPR || 0;
+                    const fees = an.fees || {};
+                    const makerFee = (an.tradeSize || 100) * 0.0002; // Simulating Maker 0.02%
+                    const takerFee = (an.tradeSize || 100) * 0.0005; // Simulating Taker 0.05%
+
+                    const pProfit = an.priceDiffPnL || 0;
+                    const fundingProfit = an.fundingIncomeCycle || 0;
                     const netProfit = an.netCycleProfit || 0;
-                    const fees = (an.fees?.open || 0) + (an.fees?.close || 0);
-                    const pDiff = an.priceDiffPnL || 0;
-                    const fundInc = an.fundingIncomeCycle || 0;
+
                     const lf = Number(openLong.fundingRate || 0) * 100;
                     const sf = Number(openShort.fundingRate || 0) * 100;
 
-                    // Next Funding Time
-                    const nextT = Math.min(Number(openLong.nextFundingTime || Date.now() + 28800000), Number(openShort.nextFundingTime || Date.now() + 28800000));
-                    const timeLeft = Math.max(0, nextT - Date.now());
-                    const hours = Math.floor(timeLeft / 3600000);
-                    const mins = Math.floor((timeLeft % 3600000) / 60000);
+                    const tLong = ui.formatTime(openLong.nextFundingTime);
+                    const tShort = ui.formatTime(openShort.nextFundingTime);
 
-                    return `<div class="calc-card">
-                        <div class="cc-head">
-                            <div class="cc-title">${d.symbol}</div>
-                            <div class="cc-metrics">
-                                <div class="cc-apr">${apr.toFixed(1)}% APR</div>
-                                <div class="cc-profit">Net: ${netProfit.toFixed(4)}%</div>
+                    return `<div class="master-card">
+                    <div class="mc-header">
+                        <div>
+                            <div class="mc-title">${d.symbol}</div>
+                            <div class="mc-profit-sub">Next Cycle Profit: <span style="color:#fff; font-family:'JetBrains Mono';">$${netProfit.toFixed(4)}</span></div>
+                        </div>
+                        <div class="mc-apr-box">
+                            <div class="mc-apr-val">${(an.annualAPR || 0).toFixed(0)}%</div>
+                            <div class="mc-apr-lbl">Annual APR</div>
+                        </div>
+                    </div>
+                    
+                    <div class="mc-sides">
+                        <div class="mc-side left">
+                            <span class="mc-role long">LONG POSITION</span>
+                            <div class="mc-ex-row">
+                                <span class="mc-ex-name">${openLong.name}</span>
+                                <span class="mc-price">${Number(openLong.markPrice || 0).toFixed(4)}</span>
+                            </div>
+                            <div class="mc-meta-row">
+                                <span>Funding:</span>
+                                <span class="mc-fund ${lf > 0 ? 'pos' : 'neg'}">${lf.toFixed(4)}%</span>
+                            </div>
+                            <div class="mc-meta-row" style="margin-top:2px;">
+                                <span>Interval:</span>
+                                <span>${tLong}</span>
                             </div>
                         </div>
-                        <div class="cc-sides">
-                            <div class="cc-side long">
-                                <div class="cc-lbl cc-long">LONG BUY</div>
-                                <div class="cc-ex">${openLong.name}</div>
-                                <div class="cc-price">$${Number(openLong.markPrice || 0).toFixed(4)}</div>
-                                <div class="cc-fund ${lf > 0 ? 'pos' : 'neg'}">Fund: ${lf.toFixed(4)}%</div>
+                        <div class="mc-side">
+                            <span class="mc-role short">SHORT POSITION</span>
+                            <div class="mc-ex-row">
+                                <span class="mc-ex-name">${openShort.name}</span>
+                                <span class="mc-price">${Number(openShort.markPrice || 0).toFixed(4)}</span>
                             </div>
-                            <div class="cc-side">
-                                <div class="cc-lbl cc-short">SHORT SELL</div>
-                                <div class="cc-ex">${openShort.name}</div>
-                                <div class="cc-price">$${Number(openShort.markPrice || 0).toFixed(4)}</div>
-                                <div class="cc-fund ${sf > 0 ? 'pos' : 'neg'}">Fund: ${sf.toFixed(4)}%</div>
+                            <div class="mc-meta-row">
+                                <span>Funding:</span>
+                                <span class="mc-fund ${sf > 0 ? 'pos' : 'neg'}">${sf.toFixed(4)}%</span>
+                            </div>
+                             <div class="mc-meta-row" style="margin-top:2px;">
+                                <span>Interval:</span>
+                                <span>${tShort}</span>
                             </div>
                         </div>
-                        <div class="cc-steps">
-                            <div class="cc-step"><span>Next Funding</span><span class="cc-val" style="color:#fff">${hours}h ${mins}m</span></div>
-                            <div class="cc-step"><span>Pos Size</span><span class="cc-val">$${(an.tradeSize || 100) * 2}</span></div>
-                            <div class="cc-step"><span>Total Fees</span><span class="cc-val neg">-$${fees.toFixed(3)}</span></div>
-                            <div class="cc-step"><span>Price Diff Impact</span><span class="cc-val ${pDiff > 0 ? 'pos' : 'neg'}">$${pDiff.toFixed(3)}</span></div>
-                            <div class="cc-step"><span>Funding Income</span><span class="cc-val pos">+$${fundInc.toFixed(3)}</span></div>
-                            <div class="cc-step total"><span>Est. Net Profit</span><span class="cc-val ${netProfit > 0 ? 'pos' : 'neg'}">$${netProfit.toFixed(4)}</span></div>
+                    </div>
+                    
+                    <div class="mc-table">
+                        <div class="mc-row">
+                            <div class="mc-item">
+                                <span class="mc-lbl">Maker Fee</span>
+                                <span class="mc-val neg">-$${makerFee.toFixed(3)}</span>
+                            </div>
+                             <div class="mc-item">
+                                <span class="mc-lbl">Taker Fee</span>
+                                <span class="mc-val neg">-$${takerFee.toFixed(3)}</span>
+                            </div>
                         </div>
-                    </div>`;
+                        <div class="mc-row full">
+                             <div class="mc-item">
+                                <span class="mc-lbl">Price Difference Profit</span>
+                                <span class="mc-val ${pProfit > 0 ? 'pos' : 'neg'}">${pProfit > 0 ? '+' : ''}$${pProfit.toFixed(3)}</span>
+                            </div>
+                        </div>
+                         <div class="mc-row full">
+                             <div class="mc-item">
+                                <span class="mc-lbl">Next Cycle Funding Profit</span>
+                                <span class="mc-val pos">+$${fundingProfit.toFixed(3)}</span>
+                            </div>
+                        </div>
+                         <div class="mc-row full">
+                             <div class="mc-item">
+                                <span class="mc-lbl">Closing Fee (Est)</span>
+                                <span class="mc-val neg">-$${(takerFee + makerFee).toFixed(3)}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="mc-total">
+                            <span class="mc-total-lbl">NET PROFIT</span>
+                            <span class="mc-total-val ${netProfit > 0 ? 'pos' : 'neg'}">${netProfit.toFixed(4)}%</span>
+                        </div>
+                    </div>
+                </div>`;
                 }).join('');
             },
 
@@ -726,31 +663,31 @@
                     { n: 'OKX TR', p: 35.82 }, { n: 'Bybit TR', p: 35.80 }
                 ];
 
-                let h = `<div style="padding:16px 16px 0 16px; font-weight:800; color:#444; font-size:0.8rem;">USDT/TRY LIVE</div>`;
+                let h = `<div style="padding:16px 16px 0 16px; font-weight:800; color:#444; font-size:0.8rem; text-transform:uppercase;">USDT/TRY Live Market</div>`;
                 h += pairs.map(p => {
                     const spread = 0.05;
-                    const ask = p.p + Math.random() * 0.03;
-                    const bid = p.p - Math.random() * 0.03;
+                    const ask = p.p + Math.random() * 0.04;
+                    const bid = p.p - Math.random() * 0.04;
 
                     return `
-                    <div class="try-card">
-                        <div class="tc-head">
-                            <span class="tc-title">${p.n}</span>
-                            <span class="tc-price">${p.p.toFixed(2)} ₺</span>
+                <div class="try-card">
+                    <div class="tc-head">
+                        <span class="tc-title">${p.n}</span>
+                        <span class="tc-price">${p.p.toFixed(2)} ₺</span>
+                    </div>
+                    <div class="tc-depth">
+                        <div class="depth-col">
+                           <div class="depth-row bid"><span>${(bid - 0.01).toFixed(2)}</span><span>12.5K</span></div>
+                           <div class="depth-row bid"><span>${(bid - 0.03).toFixed(2)}</span><span>8.2K</span></div>
+                           <div class="depth-row bid"><span>${(bid - 0.05).toFixed(2)}</span><span>25.1K</span></div>
                         </div>
-                        <div class="tc-depth">
-                            <div class="depth-col">
-                               <div class="depth-row bid"><span>${(bid - 0.01).toFixed(2)}</span><span>12.5K</span></div>
-                               <div class="depth-row bid"><span>${(bid - 0.03).toFixed(2)}</span><span>8.2K</span></div>
-                               <div class="depth-row bid"><span>${(bid - 0.05).toFixed(2)}</span><span>25.1K</span></div>
-                            </div>
-                            <div class="depth-col">
-                               <div class="depth-row ask"><span>2.4K</span><span>${(ask + 0.01).toFixed(2)}</span></div>
-                               <div class="depth-row ask"><span>5.1K</span><span>${(ask + 0.03).toFixed(2)}</span></div>
-                               <div class="depth-row ask"><span>9.8K</span><span>${(ask + 0.05).toFixed(2)}</span></div>
-                            </div>
+                        <div class="depth-col">
+                           <div class="depth-row ask"><span>2.4K</span><span>${(ask + 0.01).toFixed(2)}</span></div>
+                           <div class="depth-row ask"><span>5.1K</span><span>${(ask + 0.03).toFixed(2)}</span></div>
+                           <div class="depth-row ask"><span>9.8K</span><span>${(ask + 0.05).toFixed(2)}</span></div>
                         </div>
-                    </div>`;
+                    </div>
+                </div>`;
                 }).join('');
                 v.innerHTML = h;
             },
