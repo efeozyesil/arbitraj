@@ -32,12 +32,23 @@ class ArbitrageService {
 
                 if (!dataA || !dataB) {
                     // Veri henüz gelmediyse atla
-                    // Spam önlemek için sadece %1 ihtimalle log bas
-                    if (Math.random() < 0.01) {
-                        if (!dataA) console.warn(`[${this.nameA}] Missing data for ${symbolA}`);
-                        if (!dataB) console.warn(`[${this.nameB}] Missing data for ${symbolB}`);
-                    }
                     return;
+                }
+
+                // STRICT VALIDATION: Both exchanges must have valid price AND funding rate
+                const priceA = parseFloat(dataA.markPrice);
+                const priceB = parseFloat(dataB.markPrice);
+                const fundingA = parseFloat(dataA.fundingRate);
+                const fundingB = parseFloat(dataB.fundingRate);
+
+                if (!priceA || isNaN(priceA) || priceA <= 0) {
+                    return; // Invalid price on exchange A
+                }
+                if (!priceB || isNaN(priceB) || priceB <= 0) {
+                    return; // Invalid price on exchange B
+                }
+                if (isNaN(fundingA) || isNaN(fundingB)) {
+                    return; // Invalid funding rate
                 }
 
                 // Arbitraj Analizi

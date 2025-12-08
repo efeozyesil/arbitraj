@@ -126,10 +126,18 @@ function broadcastData() {
     // 2. Get Consolidated All Data (All Coins x All Exchanges)
     const allCoinsData = getAllExchangeData();
 
+    // 3. TRY Arbitrage Data (Placeholder - TODO: integrate real Turkish exchange APIs)
+    const tryData = getTRYData();
+
+    // 4. USDC Arbitrage Data (Placeholder - TODO: integrate real USDC/USDT pairs)
+    const usdcData = getUSDCData();
+
     const message = JSON.stringify({
         type: 'ARBITRAGE_UPDATE',
         data: combinedData,
         allData: allCoinsData,
+        tryData: tryData,
+        usdcData: usdcData,
         timestamp: Date.now()
     });
 
@@ -138,6 +146,38 @@ function broadcastData() {
             client.send(message);
         }
     });
+}
+
+// TRY/USDT data from Turkish exchanges (simulated for now)
+function getTRYData() {
+    // TODO: Integrate real WebSocket connections:
+    // - Binance TR: wss://stream.binance.tr
+    // - Paribu: API
+    // - BTCTurk: wss://ws.btcturk.com
+    // - OKX TR: API
+
+    // Simulated data with slight random fluctuation
+    const baseRate = 35.85;
+    return [
+        { name: 'Binance TR', bid: baseRate - 0.02 + Math.random() * 0.04, ask: baseRate + 0.02 + Math.random() * 0.02 },
+        { name: 'Paribu', bid: baseRate + 0.05 + Math.random() * 0.03, ask: baseRate + 0.10 + Math.random() * 0.02 },
+        { name: 'BTCTurk', bid: baseRate + Math.random() * 0.03, ask: baseRate + 0.03 + Math.random() * 0.02 },
+        { name: 'OKX TR', bid: baseRate - 0.05 + Math.random() * 0.03, ask: baseRate - 0.02 + Math.random() * 0.02 }
+    ];
+}
+
+// USDC/USDT data (simulated for now)
+function getUSDCData() {
+    // TODO: Integrate real data from:
+    // - Binance USDC/USDT spot
+    // - OKX USDC/USDT spot
+    // - Bybit USDC/USDT spot
+
+    return [
+        { exchange: 'Binance', pair: 'USDC/USDT', bid: 0.9998 + Math.random() * 0.0002, ask: 1.0001 + Math.random() * 0.0001 },
+        { exchange: 'OKX', pair: 'USDC/USDT', bid: 0.9997 + Math.random() * 0.0002, ask: 1.0002 + Math.random() * 0.0001 },
+        { exchange: 'Bybit', pair: 'USDC/USDT', bid: 0.9999 + Math.random() * 0.0002, ask: 1.0001 + Math.random() * 0.0001 }
+    ];
 }
 
 function getAllExchangeData() {

@@ -19,6 +19,7 @@
             --bg-card: #0F0F0F;
             --bg-card-hover: #141414;
             --bg-header: rgba(10, 10, 10, 0.95);
+            --bg-sidebar-hint: #0a0a0a;
             --border-color: #222;
             --text-main: #EAEAEA;
             --text-dim: #888;
@@ -39,15 +40,17 @@
             -webkit-tap-highlight-color: transparent;
         }
 
+        html,
         body {
             margin: 0;
+            padding: 0;
             background-color: var(--bg-body);
             color: var(--text-main);
             font-family: var(--font-main);
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
+            height: 100%;
             overflow: hidden;
+            /* Disable pull-to-refresh on mobile */
+            overscroll-behavior: none;
         }
 
         /* SCROLLBAR */
@@ -75,6 +78,40 @@
             border-bottom: 1px solid var(--border-color);
             z-index: 100;
             backdrop-filter: blur(10px);
+            position: relative;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 0;
+        }
+
+        /* SIDEBAR HINT - Left edge button that reveals sidebar */
+        .sidebar-hint {
+            display: none;
+            /* Hidden on desktop */
+            width: 44px;
+            height: 54px;
+            background: var(--bg-sidebar-hint);
+            border: none;
+            border-right: 1px solid #1a1a1a;
+            color: #666;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-left: -16px;
+            /* Extend to edge */
+            padding-left: 16px;
+        }
+
+        .sidebar-hint:hover {
+            color: var(--text-accent);
+            background: #111;
+        }
+
+        .sidebar-hint:active {
+            background: #161616;
         }
 
         .logo {
@@ -82,30 +119,22 @@
             font-weight: 900;
             letter-spacing: -0.5px;
             color: #fff;
+            margin-left: 12px;
         }
 
         .logo span {
             color: var(--text-accent);
         }
 
-        .menu-btn {
-            background: none;
-            border: none;
-            font-size: 1.4rem;
-            color: #fff;
-            display: none;
-            cursor: pointer;
-        }
-
         /* LAYOUT */
         .layout {
             display: flex;
             flex: 1;
-            height: calc(100vh - 54px - 60px);
+            height: calc(100% - 54px - 60px);
             position: relative;
+            overflow: hidden;
         }
 
-        /* - header - nav */
         .sidebar {
             width: 240px;
             background: #080808;
@@ -119,32 +148,42 @@
         .main {
             flex: 1;
             overflow-y: auto;
+            overflow-x: hidden;
             padding: 16px;
-            padding-bottom: 40px;
+            padding-bottom: 80px;
             width: 100%;
-            max-width: 800px;
-            margin: 0 auto;
+            /* Disable pull-to-refresh in main scroll area */
+            overscroll-behavior: contain;
         }
 
-        /* MOBILE SIDEBAR */
+        /* MOBILE */
         .overlay {
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.85);
             backdrop-filter: blur(4px);
             z-index: 101;
         }
 
         @media (max-width: 768px) {
+            .sidebar-hint {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
             .sidebar {
                 position: fixed;
-                inset: 0 auto 0 0;
+                left: 0;
+                top: 0;
+                bottom: 0;
                 z-index: 102;
                 transform: translateX(-100%);
                 transition: transform 0.25s ease;
                 border-right: 1px solid #333;
-                width: 80%;
+                width: 75%;
+                max-width: 280px;
             }
 
             .sidebar.active {
@@ -155,19 +194,18 @@
                 display: block;
             }
 
-            .menu-btn {
-                display: block;
-            }
-
             .main {
                 padding: 12px;
+                padding-bottom: 80px;
             }
 
             .layout {
-                height: calc(100vh - 54px);
+                height: calc(100% - 54px);
             }
 
-            /* Full height minus header */
+            .logo {
+                margin-left: 8px;
+            }
         }
 
         /* SIDEBAR STYLES */
@@ -211,14 +249,13 @@
             font-weight: 700;
         }
 
-        /* --- PREMIUM CARD DESIGN --- */
+        /* --- PREMIUM CARD DESIGN (Symmetric Layout) --- */
         .master-card {
             background: var(--bg-card);
             border: 1px solid var(--border-color);
             border-radius: 12px;
             margin-bottom: 20px;
             overflow: hidden;
-            position: relative;
         }
 
         .mc-header {
@@ -259,6 +296,7 @@
             text-align: right;
         }
 
+        /* SYMMETRIC SIDES - Labels outside, values center */
         .mc-sides {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -267,24 +305,41 @@
 
         .mc-side {
             padding: 14px;
-            position: relative;
+            display: flex;
+            flex-direction: column;
         }
 
         .mc-side:first-child {
             border-right: 1px solid var(--border-color);
             background: linear-gradient(90deg, rgba(46, 189, 133, 0.03) 0%, transparent 100%);
+            align-items: flex-start;
+            /* Labels left */
         }
+
+        .mc-side:first-child .mc-grid {
+            align-items: flex-end;
+        }
+
+        /* Values to center */
 
         .mc-side:last-child {
             background: linear-gradient(-90deg, rgba(246, 70, 93, 0.03) 0%, transparent 100%);
+            align-items: flex-end;
+            /* Labels right */
+            text-align: right;
         }
+
+        .mc-side:last-child .mc-grid {
+            align-items: flex-start;
+        }
+
+        /* Values to center */
 
         .mc-lbl {
             font-size: 0.65rem;
             font-weight: 800;
             text-transform: uppercase;
             margin-bottom: 6px;
-            display: block;
         }
 
         .long {
@@ -310,9 +365,10 @@
 
         .mc-grid {
             margin-top: 10px;
-            display: grid;
-            grid-template-columns: 1fr;
+            display: flex;
+            flex-direction: column;
             gap: 4px;
+            width: 100%;
         }
 
         .mc-row {
@@ -320,6 +376,16 @@
             justify-content: space-between;
             font-size: 0.7rem;
             color: #555;
+        }
+
+        /* Left side: label left, value right (toward center) */
+        .mc-side:first-child .mc-row {
+            flex-direction: row;
+        }
+
+        /* Right side: label right, value left (toward center) */
+        .mc-side:last-child .mc-row {
+            flex-direction: row-reverse;
         }
 
         .mc-val {
@@ -380,58 +446,70 @@
             color: var(--pos);
         }
 
-        /* ALL DATA TABLE */
+        /* ALL DATA TABLE - Responsive */
         .table-wrap {
-            overflow-x: auto;
             border: 1px solid var(--border-color);
             border-radius: 8px;
             background: var(--bg-card);
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
         }
 
         .ctable {
             width: 100%;
             border-collapse: collapse;
-            min-width: 600px;
+            min-width: 500px;
         }
 
         .ctable th {
             text-align: right;
-            padding: 12px;
+            padding: 10px 8px;
             background: #111;
             color: #666;
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             font-weight: 800;
             border-bottom: 1px solid #222;
+            position: sticky;
+            top: 0;
+            z-index: 1;
         }
 
         .ctable th:first-child {
             text-align: left;
+            padding-left: 12px;
         }
 
         .ctable td {
-            padding: 10px 12px;
+            padding: 8px;
             border-bottom: 1px solid #1a1a1a;
             text-align: right;
             vertical-align: middle;
+        }
+
+        .ctable td:first-child {
+            text-align: left;
+            font-weight: 700;
+            color: #fff;
+            padding-left: 12px;
+            font-size: 0.85rem;
         }
 
         .ct-cell {
             display: flex;
             flex-direction: column;
             align-items: flex-end;
-            gap: 2px;
+            gap: 1px;
         }
 
         .ct-f {
             font-family: var(--font-mono);
             font-weight: 700;
-            font-size: 0.8rem;
-            color: #ddd;
+            font-size: 0.75rem;
         }
 
         .ct-p {
             font-family: var(--font-mono);
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             color: #555;
         }
 
@@ -512,6 +590,7 @@
             font-size: 1.2rem;
         }
 
+        /* TRY CARD */
         .try-card {
             background: #111;
             border: 1px solid #222;
@@ -565,13 +644,56 @@
             background: rgba(246, 70, 93, 0.1);
             color: var(--neg);
         }
+
+        /* USDC CARD */
+        .usdc-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+
+        .usdc-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .usdc-pair {
+            font-weight: 800;
+            font-size: 1rem;
+        }
+
+        .usdc-spread {
+            font-family: var(--font-mono);
+            color: var(--pos);
+            font-weight: 700;
+        }
+
+        .usdc-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            margin-bottom: 4px;
+        }
+
+        .usdc-lbl {
+            color: #666;
+        }
+
+        .usdc-val {
+            font-family: var(--font-mono);
+        }
     </style>
 </head>
 
 <body>
     <div class="header">
-        <div class="logo">R<span>bit</span></div>
-        <button class="menu-btn" id="menuBtn" onclick="ui.toggle(true)">☰</button>
+        <div class="header-left">
+            <button class="sidebar-hint" id="sidebarHint" onclick="ui.toggle(true)">☰</button>
+            <div class="logo">R<span>bit</span></div>
+        </div>
     </div>
 
     <div class="overlay" onclick="ui.toggle(false)"></div>
@@ -598,21 +720,22 @@
             { t: 'Hyperliquid Pairs', i: [{ id: 'hyperliquid-asterdex', l: 'HL <> Aster' }] }
         ];
 
-        const state = { tab: 'funding', filter: 'all-opps', data: {}, allData: [] };
+        const state = { tab: 'funding', filter: 'all-opps', data: {}, allData: [], tryData: [], usdcData: [] };
 
         const ui = {
             init: () => {
                 ui.buildSidebar();
                 ui.nav('funding');
                 app.connect();
-                setInterval(ui.updateTryData, 2000);
+                setInterval(ui.updateLiveData, 2000);
             },
 
             nav: (t) => {
                 state.tab = t;
-                const btn = document.getElementById('menuBtn');
-                if (t === 'funding') btn.style.display = 'block';
-                else { btn.style.display = 'none'; ui.toggle(false); }
+                const hint = document.getElementById('sidebarHint');
+                // Only show sidebar hint on Funding tab
+                hint.style.display = (t === 'funding') ? 'flex' : 'none';
+                if (t !== 'funding') ui.toggle(false);
 
                 document.querySelectorAll('.nav-item').forEach((b, i) => b.classList.toggle('active', ['funding', 'try', 'usdc', 'settings'][i] === t));
                 ui.render();
@@ -645,11 +768,10 @@
 
             render: () => {
                 const v = document.getElementById('mainView');
-                if (state.tab !== 'funding') {
-                    if (state.tab === 'try') ui.renderTRY(v);
-                    else v.innerHTML = `<div style="padding:40px;text-align:center;color:#444;">Module ${state.tab}</div>`;
-                    return;
-                }
+                if (state.tab === 'try') return ui.renderTRY(v);
+                if (state.tab === 'usdc') return ui.renderUSDC(v);
+                if (state.tab === 'settings') return ui.renderSettings(v);
+                if (state.tab !== 'funding') { v.innerHTML = `<div style="padding:40px;text-align:center;color:#444;">Module ${state.tab}</div>`; return; }
 
                 document.querySelectorAll('.sb-btn').forEach(b => b.classList.remove('active'));
                 const b = document.getElementById('btn-' + state.filter);
@@ -663,7 +785,7 @@
             formatTime: (ms) => {
                 if (!ms) return '8h 00m';
                 const diff = ms - Date.now();
-                if (diff <= 0) return 'Funding...';
+                if (diff <= 0) return 'Now';
                 const h = Math.floor(diff / 3600000);
                 const m = Math.floor((diff % 3600000) / 60000);
                 return `${h}h ${m}m`;
@@ -674,16 +796,16 @@
                 const sorted = [...state.allData].sort((a, b) => a.symbol.localeCompare(b.symbol));
 
                 const cell = (ex) => {
-                    if (!ex || !ex.price) return `<div class="ct-cell"><span class="ct-p">-</span></div>`;
+                    if (!ex || !ex.price) return `<td><span style="color:#333;">-</span></td>`;
                     const f = Number(ex.funding || 0);
-                    // Backend already sends funding rate as percentage (e.g., 0.01 = 0.01%)
                     const fs = isNaN(f) ? '0.00%' : f.toFixed(4) + '%';
+                    // Color based on funding rate
                     const cls = f > 0 ? 'pos' : (f < 0 ? 'neg' : '');
 
-                    return `<div class="ct-cell">
+                    return `<td><div class="ct-cell">
                     <span class="ct-f ${cls}">${fs}</span>
-                    <span class="ct-p">${Number(ex.price).toFixed(4)}</span>
-                </div>`;
+                    <span class="ct-p">${Number(ex.price).toFixed(2)}</span>
+                </div></td>`;
                 };
 
                 let h = `<div class="table-wrap"><table class="ctable">
@@ -692,17 +814,17 @@
                 <th style="color:var(--binance)">Binance</th>
                 <th style="color:var(--okx)">OKX</th>
                 <th style="color:var(--bybit)">Bybit</th>
-                <th style="color:var(--hl)">Hyper</th>
+                <th style="color:var(--hl)">HL</th>
                 <th style="color:var(--aster)">Aster</th>
             </tr></thead><tbody>`;
                 sorted.forEach(c => {
                     h += `<tr>
                     <td>${c.symbol}</td>
-                    <td>${cell(c.binance)}</td>
-                    <td>${cell(c.okx)}</td>
-                    <td>${cell(c.bybit)}</td>
-                    <td>${cell(c.hyperliquid)}</td>
-                    <td>${cell(c.asterdex)}</td>
+                    ${cell(c.binance)}
+                    ${cell(c.okx)}
+                    ${cell(c.bybit)}
+                    ${cell(c.hyperliquid)}
+                    ${cell(c.asterdex)}
                 </tr>`;
                 });
                 h += `</tbody></table></div>`;
@@ -720,14 +842,10 @@
                 let h = '<div style="font-size:0.7rem; font-weight:800; color:#444; margin-bottom:10px; padding-left:4px; text-transform:uppercase;">Top Opportunities</div>';
                 list.forEach(d => {
                     const an = d.analysis || {};
-                    let L = d.exchangeA, S = d.exchangeB;
-                    if (an.strategy === 'SHORT_A_LONG_B') { L = d.exchangeB; S = d.exchangeA; }
-
                     const isA_Long = an.strategy === 'LONG_A_SHORT_B';
-                    L = isA_Long ? d.exchangeA : d.exchangeB;
-                    S = isA_Long ? d.exchangeB : d.exchangeA;
+                    const L = isA_Long ? d.exchangeA : d.exchangeB;
+                    const S = isA_Long ? d.exchangeB : d.exchangeA;
 
-                    // Backend already sends funding rate as percentage
                     const lf = Number(L.fundingRate || 0), sf = Number(S.fundingRate || 0);
 
                     h += `<div class="opp-row">
@@ -762,7 +880,6 @@
                     const takerFee = (an.tradeSize || 100) * 0.0005;
                     const netProfit = an.netCycleProfit || 0;
 
-                    // Backend already sends funding rate as percentage
                     const lf = Number(L.fundingRate || 0);
                     const sf = Number(S.fundingRate || 0);
 
@@ -777,7 +894,7 @@
                             <div class="mc-apr-lbl">Annual APR</div>
                         </div>
                     </div>
-                    
+
                     <div class="mc-sides">
                         <div class="mc-side">
                             <span class="mc-lbl long">Long Buy</span>
@@ -792,19 +909,19 @@
                             <span class="mc-lbl short">Short Sell</span>
                             <div class="mc-ex">${S.name}</div>
                             <div class="mc-price">$${Number(S.markPrice).toFixed(4)}</div>
-                             <div class="mc-grid">
+                            <div class="mc-grid">
                                 <div class="mc-row"><span>Funding</span><span class="mc-val ${sf > 0 ? 'pos' : 'neg'}">${sf.toFixed(4)}%</span></div>
                                 <div class="mc-row"><span>Interval</span><span class="mc-val">${ui.formatTime(S.nextFundingTime)}</span></div>
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="mc-breakdown">
                         <div class="mcb-row"><span class="mcb-lbl">Est. Maker Fee</span><span class="mcb-val neg">-$${makerFee.toFixed(3)}</span></div>
                         <div class="mcb-row"><span class="mcb-lbl">Est. Taker Fee</span><span class="mcb-val neg">-$${takerFee.toFixed(3)}</span></div>
                         <div class="mcb-row"><span class="mcb-lbl">Price Diff PnL</span><span class="mcb-val ${(an.priceDiffPnL || 0) > 0 ? 'pos' : 'neg'}">$${(an.priceDiffPnL || 0).toFixed(3)}</span></div>
                         <div class="mcb-row"><span class="mcb-lbl">Funding Income</span><span class="mcb-val pos">+$${(an.fundingIncomeCycle || 0).toFixed(3)}</span></div>
-                        
+
                         <div class="mcb-total">
                             <span class="mcb-tot-lbl">Net Cycle Profit</span>
                             <span class="mcb-tot-val ${netProfit > 0 ? 'pos' : 'neg'}">$${netProfit.toFixed(4)}</span>
@@ -815,23 +932,102 @@
             },
 
             renderTRY: (v) => {
-                const pairs = [{ n: 'Binance TR', p: 35.84 }, { n: 'Paribu', p: 35.92 }, { n: 'OKX TR', p: 35.82 }, { n: 'Bybit TR', p: 35.80 }];
-                let h = `<div style="padding:10px 4px; font-weight:800; color:#555; font-size:0.7rem;">USDT/TRY LIVE</div>`;
-                h += pairs.map(p => {
-                    const ask = p.p + Math.random() * 0.04;
-                    const bid = p.p - Math.random() * 0.04;
+                const exchanges = state.tryData.length ? state.tryData : [
+                    { name: 'Binance TR', bid: 35.82, ask: 35.84 },
+                    { name: 'Paribu', bid: 35.90, ask: 35.95 },
+                    { name: 'BTCTurk', bid: 35.85, ask: 35.88 },
+                    { name: 'OKX TR', bid: 35.80, ask: 35.83 }
+                ];
+
+                let h = `<div style="font-size:0.7rem; font-weight:800; color:#444; margin-bottom:10px; text-transform:uppercase;">USDT/TRY Live Prices</div>`;
+                h += exchanges.map(ex => {
+                    const mid = ((ex.bid + ex.ask) / 2).toFixed(2);
+                    const spread = ((ex.ask - ex.bid) / ex.bid * 100).toFixed(3);
                     return `<div class="try-card">
-                    <div class="tc-h"><span class="tc-t">${p.n}</span><span class="tc-p">${p.p.toFixed(2)} ₺</span></div>
-                    <div class="tc-d">
-                        <div class="tc-c"><div class="tr bid"><span>${(bid - 0.01).toFixed(2)}</span><span>12K</span></div><div class="tr bid"><span>${(bid - 0.05).toFixed(2)}</span><span>8K</span></div></div>
-                        <div class="tc-c"><div class="tr ask"><span>${(ask + 0.01).toFixed(2)}</span><span>2K</span></div><div class="tr ask"><span>${(ask + 0.05).toFixed(2)}</span><span>5K</span></div></div>
+                    <div class="tc-h">
+                        <span class="tc-t">${ex.name}</span>
+                        <span class="tc-p">${mid} ₺</span>
                     </div>
+                    <div class="tc-d">
+                        <div>
+                            <div class="tr tb"><span>Bid</span><span>${ex.bid.toFixed(2)}</span></div>
+                        </div>
+                        <div>
+                            <div class="tr ta"><span>Ask</span><span>${ex.ask.toFixed(2)}</span></div>
+                        </div>
+                    </div>
+                    <div style="padding:0 10px 10px; font-size:0.7rem; color:#666;">Spread: ${spread}%</div>
                 </div>`;
                 }).join('');
+
+                // Arbitrage opportunities
+                if (exchanges.length >= 2) {
+                    h += `<div style="font-size:0.7rem; font-weight:800; color:#444; margin:20px 0 10px; text-transform:uppercase;">Arbitrage Opportunities</div>`;
+                    const sorted = [...exchanges].sort((a, b) => a.ask - b.ask);
+                    const cheapest = sorted[0];
+                    const expensive = sorted[sorted.length - 1];
+                    const profit = ((expensive.bid - cheapest.ask) / cheapest.ask * 100).toFixed(3);
+
+                    h += `<div class="usdc-card">
+                    <div class="usdc-header">
+                        <span class="usdc-pair">Buy ${cheapest.name} → Sell ${expensive.name}</span>
+                        <span class="usdc-spread ${profit > 0 ? 'pos' : 'neg'}">${profit}%</span>
+                    </div>
+                    <div class="usdc-row"><span class="usdc-lbl">Buy Price</span><span class="usdc-val">${cheapest.ask.toFixed(2)} ₺</span></div>
+                    <div class="usdc-row"><span class="usdc-lbl">Sell Price</span><span class="usdc-val">${expensive.bid.toFixed(2)} ₺</span></div>
+                </div>`;
+                }
+
                 v.innerHTML = h;
             },
 
-            updateTryData: () => { if (state.tab === 'try') ui.renderTRY(document.getElementById('mainView')); }
+            renderUSDC: (v) => {
+                const pairs = state.usdcData.length ? state.usdcData : [
+                    { exchange: 'Binance', pair: 'USDC/USDT', bid: 0.9998, ask: 1.0001 },
+                    { exchange: 'OKX', pair: 'USDC/USDT', bid: 0.9997, ask: 1.0002 },
+                    { exchange: 'Bybit', pair: 'USDC/USDT', bid: 0.9999, ask: 1.0001 }
+                ];
+
+                let h = `<div style="font-size:0.7rem; font-weight:800; color:#444; margin-bottom:10px; text-transform:uppercase;">USDC/USDT Prices</div>`;
+                pairs.forEach(p => {
+                    const spread = ((p.ask - p.bid) * 10000).toFixed(1);
+                    h += `<div class="usdc-card">
+                    <div class="usdc-header">
+                        <span class="usdc-pair">${p.exchange}</span>
+                        <span class="usdc-spread">${spread} bps</span>
+                    </div>
+                    <div class="usdc-row"><span class="usdc-lbl">Bid</span><span class="usdc-val pos">${p.bid.toFixed(4)}</span></div>
+                    <div class="usdc-row"><span class="usdc-lbl">Ask</span><span class="usdc-val neg">${p.ask.toFixed(4)}</span></div>
+                </div>`;
+                });
+                v.innerHTML = h;
+            },
+
+            renderSettings: (v) => {
+                v.innerHTML = `
+                <div style="font-size:0.7rem; font-weight:800; color:#444; margin-bottom:20px; text-transform:uppercase;">Settings</div>
+                <div class="usdc-card">
+                    <div style="margin-bottom:16px;">
+                        <label style="display:block; font-size:0.8rem; color:#888; margin-bottom:6px;">Maker Fee (%)</label>
+                        <input type="number" value="0.02" step="0.01" style="width:100%; padding:10px; background:#1a1a1a; border:1px solid #333; border-radius:6px; color:#fff; font-family:var(--font-mono);">
+                    </div>
+                    <div style="margin-bottom:16px;">
+                        <label style="display:block; font-size:0.8rem; color:#888; margin-bottom:6px;">Taker Fee (%)</label>
+                        <input type="number" value="0.05" step="0.01" style="width:100%; padding:10px; background:#1a1a1a; border:1px solid #333; border-radius:6px; color:#fff; font-family:var(--font-mono);">
+                    </div>
+                    <div>
+                        <label style="display:block; font-size:0.8rem; color:#888; margin-bottom:6px;">Trade Size (USD)</label>
+                        <input type="number" value="100" step="10" style="width:100%; padding:10px; background:#1a1a1a; border:1px solid #333; border-radius:6px; color:#fff; font-family:var(--font-mono);">
+                    </div>
+                </div>
+                <button style="width:100%; padding:14px; background:var(--text-accent); border:none; border-radius:8px; color:#000; font-weight:700; font-size:0.9rem; cursor:pointer; margin-top:10px;">Save Settings</button>
+            `;
+            },
+
+            updateLiveData: () => {
+                if (state.tab === 'try') ui.renderTRY(document.getElementById('mainView'));
+                if (state.tab === 'usdc') ui.renderUSDC(document.getElementById('mainView'));
+            }
         };
 
         const app = {
@@ -840,7 +1036,13 @@
                 ws.onmessage = e => {
                     try {
                         const m = JSON.parse(e.data);
-                        if (m.type === 'ARBITRAGE_UPDATE') { state.data = m.data; if (m.allData) state.allData = m.allData; if (state.tab === 'funding') ui.render(); }
+                        if (m.type === 'ARBITRAGE_UPDATE') {
+                            state.data = m.data;
+                            if (m.allData) state.allData = m.allData;
+                            if (m.tryData) state.tryData = m.tryData;
+                            if (m.usdcData) state.usdcData = m.usdcData;
+                            if (state.tab === 'funding') ui.render();
+                        }
                     } catch (e) { }
                 };
                 ws.onclose = () => setTimeout(app.connect, 2000);
