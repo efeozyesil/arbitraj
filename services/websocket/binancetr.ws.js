@@ -2,8 +2,7 @@ const axios = require('axios');
 
 /**
  * Binance TR REST API Service
- * Uses REST polling since WebSocket is unreliable
- * API: https://api.binance.me/api/v3/ticker/bookTicker
+ * Fetches ticker and orderbook data
  */
 class BinanceTRService {
     constructor() {
@@ -11,6 +10,8 @@ class BinanceTRService {
             bid: 0,
             ask: 0,
             last: 0,
+            bids: [], // Top 3 bids
+            asks: [], // Top 3 asks
             timestamp: 0
         };
         this.pollInterval = null;
@@ -19,53 +20,59 @@ class BinanceTRService {
     connect() {
         console.log('[Binance TR] Starting REST API polling...');
         // Initial fetch
-        this.fetchTicker();
+        this.fetchData();
         // Poll every 2 seconds
-        this.pollInterval = setInterval(() => this.fetchTicker(), 2000);
+        this.pollInterval = setInterval(() => this.fetchData(), 2000);
     }
 
-    async fetchTicker() {
+    async fetchData() {
         try {
-            // Try the main Binance API with TRY pair
-            const response = await axios.get('https://api.binance.me/api/v3/ticker/bookTicker', {
+            // Fetch ticker
+            const tickerResponse = await axios.get('https://api.binance.me/api/v3/ticker/bookTicker', {
                 params: { symbol: 'USDTTRY' },
-                timeout: 5000,
-                headers: {
-                    'User-Agent': 'Mozilla/5.0 (compatible; RbitBot/1.0)'
-                }
+                timeout: 5000
             });
 
-            if (response.data && response.data.bidPrice) {
-                this.data = {
-                    bid: parseFloat(response.data.bidPrice) || 0,
-                    ask: parseFloat(response.data.askPrice) || 0,
-                    last: (parseFloat(response.data.bidPrice) + parseFloat(response.data.askPrice)) / 2,
-                    timestamp: Date.now()
-                };
+            if (tickerResponse.data && tickerResponse.data.bidPrice) {
+                this.data.bid = parseFloat(tickerResponse.data.bidPrice) || 0;
+                this.data.ask = parseFloat(tickerResponse.data.askPrice) || 0;
+                this.data.last = (this.data.bid + this.data.ask) / 2;
+                this.data.timestamp = Date.now();
             }
-        } catch (error) {
-            // Try alternative endpoint
-            try {
-                const altResponse = await axios.get('https://www.binance.tr/gateway-api/v2/public/marketdata/products', {
-                    timeout: 5000
-                });
 
-                if (altResponse.data && altResponse.data.data) {
-                    const usdtTry = altResponse.data.data.find(p => p.s === 'USDTTRY' || p.symbol === 'USDTTRY');
-                    if (usdtTry) {
-                        this.data = {
-                            bid: parseFloat(usdtTry.b || usdtTry.bidPrice) || 0,
-                            ask: parseFloat(usdtTry.a || usdtTry.askPrice) || 0,
-                            last: parseFloat(usdtTry.c || usdtTry.lastPrice) || 0,
-                            timestamp: Date.now()
-                        };
+            // Fetch orderbook depth
+            const depthResponse = await axios.get('https://api.binance.me/api/v3/depth', {
+                params: { symbol: 'USDTTRY', limit: 5 },
+                timeout: 5000
+            });
+
+            if (depthResponse.data) {
+                // Bids: [[price, quantity], ...] - sorted high to low
+                if (depthResponse.data.bids && Array.isArray(depthResponse.data.bids)) {
+                    this.data.bids = depthResponse.data.bids.slice(0, 3).map(b => ({
+                        price: parseFloat(b[0]),
+                        amount: parseFloat(b[1])
+                    }));
+                    if (this.data.bids.length > 0) {
+                        this.data.bid = this.data.bids[0].price;
                     }
                 }
-            } catch (altError) {
-                // Silent fail - will retry on next interval
-                if (this.data.timestamp === 0) {
-                    console.warn('[Binance TR] Failed to fetch ticker:', error.message);
+                // Asks: [[price, quantity], ...] - sorted low to high
+                if (depthResponse.data.asks && Array.isArray(depthResponse.data.asks)) {
+                    this.data.asks = depthResponse.data.asks.slice(0, 3).map(a => ({
+                        price: parseFloat(a[0]),
+                        amount: parseFloat(a[1])
+                    }));
+                    if (this.data.asks.length > 0) {
+                        this.data.ask = this.data.asks[0].price;
+                    }
                 }
+                this.data.timestamp = Date.now();
+            }
+        } catch (error) {
+            // Silent fail - will retry on next interval
+            if (this.data.timestamp === 0) {
+                console.warn('[Binance TR] Failed to fetch data:', error.message);
             }
         }
     }

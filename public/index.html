@@ -958,53 +958,67 @@
                     return;
                 }
 
-                // Helper for decimal formatting (3 digits for Paribu/BTCTurk)
+                // Helper for decimal formatting (3 digits for Paribu/BTCTurk, 2 for others)
                 const formatPrice = (price, name) => {
                     if (!price || price === 0) return '-';
                     const decimals = (name === 'Paribu' || name === 'BTCTurk') ? 3 : 2;
                     return price.toFixed(decimals);
                 };
 
-                let h = `<div style="font-size:0.7rem; font-weight:800; color:#444; margin-bottom:10px; text-transform:uppercase;">USDT/TRY Live Prices (3-Level Depth)</div>`;
+                // Helper for volume formatting (K for thousands, M for millions)
+                const formatVolume = (vol) => {
+                    if (!vol || vol === 0) return '-';
+                    if (vol >= 1000000) return (vol / 1000000).toFixed(1) + 'M';
+                    if (vol >= 1000) return (vol / 1000).toFixed(1) + 'K';
+                    return vol.toFixed(0);
+                };
+
+                let h = `<div style="font-size:0.7rem; font-weight:800; color:#444; margin-bottom:10px; text-transform:uppercase;">USDT/TRY Live Orderbook</div>`;
 
                 h += exchanges.map(ex => {
                     if (ex.bid === 0 && ex.ask === 0) return ''; // Skip empty data
 
                     const mid = ((ex.bid + ex.ask) / 2);
                     const spread = ex.bid > 0 ? ((ex.ask - ex.bid) / ex.bid * 100) : 0;
-                    const hasBids = ex.bids && ex.bids.length > 0;
-                    const hasAsks = ex.asks && ex.asks.length > 0;
 
-                    let orderbookHtml = '';
-                    if (hasBids || hasAsks) {
-                        orderbookHtml = `<div class="tc-d">
-                            <div>
-                                <div style="font-size:0.6rem; color:#666; margin-bottom:4px; text-transform:uppercase;">Bids (Buy)</div>
-                                ${(hasBids ? ex.bids : [{ price: ex.bid, amount: 0 }]).slice(0, 3).map((b, i) =>
-                            `<div class="tr tb"><span>${formatPrice(b.price, ex.name)}</span><span>${b.amount ? b.amount.toFixed(0) : '-'}</span></div>`
-                        ).join('')}
-                            </div>
-                            <div>
-                                <div style="font-size:0.6rem; color:#666; margin-bottom:4px; text-transform:uppercase;">Asks (Sell)</div>
-                                ${(hasAsks ? ex.asks : [{ price: ex.ask, amount: 0 }]).slice(0, 3).map((a, i) =>
-                            `<div class="tr ta"><span>${formatPrice(a.price, ex.name)}</span><span>${a.amount ? a.amount.toFixed(0) : '-'}</span></div>`
-                        ).join('')}
-                            </div>
-                        </div>`;
-                    } else {
-                        orderbookHtml = `<div class="tc-d">
-                            <div><div class="tr tb"><span>Bid</span><span>${formatPrice(ex.bid, ex.name)}</span></div></div>
-                            <div><div class="tr ta"><span>Ask</span><span>${formatPrice(ex.ask, ex.name)}</span></div></div>
-                        </div>`;
-                    }
+                    // Get bids and asks, fallback to single level if no depth
+                    const bids = (ex.bids && ex.bids.length > 0) ? ex.bids.slice(0, 3) : [{ price: ex.bid, amount: 0 }];
+                    const asks = (ex.asks && ex.asks.length > 0) ? ex.asks.slice(0, 3) : [{ price: ex.ask, amount: 0 }];
+
+                    // Pad to 3 levels
+                    while (bids.length < 3) bids.push({ price: 0, amount: 0 });
+                    while (asks.length < 3) asks.push({ price: 0, amount: 0 });
 
                     return `<div class="try-card">
                         <div class="tc-h">
                             <span class="tc-t">${ex.name}</span>
                             <span class="tc-p">${formatPrice(mid, ex.name)} ₺</span>
                         </div>
-                        ${orderbookHtml}
-                        <div style="padding:0 10px 10px; font-size:0.7rem; color:#666;">Spread: ${spread.toFixed(3)}%</div>
+                        <div class="tc-d" style="gap:0;">
+                            <!-- ASKS (Red) - Volume left, Price right (toward center) -->
+                            <div style="border-right:1px solid #222;">
+                                ${asks.map(a => a.price > 0 ? `
+                                    <div class="tr ta" style="justify-content:space-between;">
+                                        <span style="color:#666;">${formatVolume(a.amount)}</span>
+                                        <span>${formatPrice(a.price, ex.name)}</span>
+                                    </div>
+                                ` : `<div class="tr" style="color:#333;">-</div>`).join('')}
+                            </div>
+                            <!-- BIDS (Green) - Price left (toward center), Volume right -->
+                            <div>
+                                ${bids.map(b => b.price > 0 ? `
+                                    <div class="tr tb" style="justify-content:space-between;">
+                                        <span>${formatPrice(b.price, ex.name)}</span>
+                                        <span style="color:#666;">${formatVolume(b.amount)}</span>
+                                    </div>
+                                ` : `<div class="tr" style="color:#333;">-</div>`).join('')}
+                            </div>
+                        </div>
+                        <div style="padding:4px 10px 10px; font-size:0.65rem; color:#555; display:flex; justify-content:space-between;">
+                            <span>Spread: ${spread.toFixed(3)}%</span>
+                            <span style="color:var(--neg);">ASK</span>
+                            <span style="color:var(--pos);">BID</span>
+                        </div>
                     </div>`;
                 }).join('');
 
