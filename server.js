@@ -4,12 +4,18 @@ const WebSocket = require('ws');
 const path = require('path');
 require('dotenv').config();
 
-// WebSocket Services
+// Perpetual Futures WebSocket Services
 const BinanceWebSocket = require('./services/websocket/binance.ws');
 const OKXWebSocket = require('./services/websocket/okx.ws');
 const HyperliquidWebSocket = require('./services/websocket/hyperliquid.ws');
 const BybitWebSocket = require('./services/websocket/bybit.ws');
 const AsterdexWebSocket = require('./services/websocket/asterdex.ws');
+
+// Turkish Exchange Services (USDT/TRY)
+const BinanceTRWebSocket = require('./services/websocket/binancetr.ws');
+const BTCTurkWebSocket = require('./services/websocket/btcturk.ws');
+const OKXTRWebSocket = require('./services/websocket/okxtr.ws');
+const ParibuService = require('./services/websocket/paribu.service');
 
 const ArbitrageService = require('./services/arbitrage.service');
 
@@ -31,11 +37,18 @@ const allCoins = ArbitrageService.getCoinList();
 const okxSymbols = allCoins.map(c => c.okx).filter(s => s);
 const bybitSymbols = allCoins.map(c => c.bybit).filter(s => s);
 
+// Perpetual Futures Exchanges
 const binanceWS = new BinanceWebSocket();
 const okxWS = new OKXWebSocket(okxSymbols);
 const hyperliquidWS = new HyperliquidWebSocket();
 const bybitWS = new BybitWebSocket(bybitSymbols);
 const asterdexWS = new AsterdexWebSocket();
+
+// Turkish Exchanges (USDT/TRY)
+const binanceTRWS = new BinanceTRWebSocket();
+const btcturkWS = new BTCTurkWebSocket();
+const okxTRWS = new OKXTRWebSocket();
+const paribuService = new ParibuService();
 
 const metadataService = require('./services/metadata.service');
 
@@ -50,15 +63,22 @@ async function startServer() {
             console.error('Metadata fetch failed (continuing with fallbacks):', err.message);
         }
 
-        // 2. Start WebSocket Connections
-        console.log('Connecting to WebSockets...');
+        // 2. Start WebSocket Connections (Perpetual Futures)
+        console.log('Connecting to Perpetual Futures WebSockets...');
         binanceWS.connect();
         okxWS.connect();
         hyperliquidWS.connect();
         bybitWS.connect();
         asterdexWS.connect();
 
-        // 3. Services are now ready and listening
+        // 3. Start Turkish Exchange Connections (USDT/TRY)
+        console.log('Connecting to Turkish Exchange WebSockets...');
+        binanceTRWS.connect();
+        btcturkWS.connect();
+        okxTRWS.connect();
+        paribuService.connect();
+
+        // 4. Services are now ready and listening
         console.log('Services initialized.');
 
         // Start Server
@@ -147,23 +167,45 @@ function broadcastData() {
         }
     });
 }
-
-// TRY/USDT data from Turkish exchanges (simulated for now)
+// TRY/USDT data from Turkish exchanges (REAL DATA)
 function getTRYData() {
-    // TODO: Integrate real WebSocket connections:
-    // - Binance TR: wss://stream.binance.tr
-    // - Paribu: API
-    // - BTCTurk: wss://ws.btcturk.com
-    // - OKX TR: API
+    const binanceTR = binanceTRWS.getData();
+    const btcturk = btcturkWS.getData();
+    const okxTR = okxTRWS.getData();
+    const paribu = paribuService.getData();
 
-    // Simulated data with slight random fluctuation
-    const baseRate = 35.85;
-    return [
-        { name: 'Binance TR', bid: baseRate - 0.02 + Math.random() * 0.04, ask: baseRate + 0.02 + Math.random() * 0.02 },
-        { name: 'Paribu', bid: baseRate + 0.05 + Math.random() * 0.03, ask: baseRate + 0.10 + Math.random() * 0.02 },
-        { name: 'BTCTurk', bid: baseRate + Math.random() * 0.03, ask: baseRate + 0.03 + Math.random() * 0.02 },
-        { name: 'OKX TR', bid: baseRate - 0.05 + Math.random() * 0.03, ask: baseRate - 0.02 + Math.random() * 0.02 }
-    ];
+    // Helper to check if data is valid (has recent timestamp)
+    const isValid = (data) => data && data.timestamp > 0 && (data.bid > 0 || data.ask > 0);
+
+    const result = [];
+
+    if (isValid(binanceTR)) {
+        result.push({ name: 'Binance TR', bid: binanceTR.bid, ask: binanceTR.ask, last: binanceTR.last });
+    }
+
+    if (isValid(btcturk)) {
+        result.push({ name: 'BTCTurk', bid: btcturk.bid, ask: btcturk.ask, last: btcturk.last });
+    }
+
+    if (isValid(okxTR)) {
+        result.push({ name: 'OKX TR', bid: okxTR.bid, ask: okxTR.ask, last: okxTR.last });
+    }
+
+    if (isValid(paribu)) {
+        result.push({ name: 'Paribu', bid: paribu.bid, ask: paribu.ask, last: paribu.last });
+    }
+
+    // If no real data yet, return placeholder with zeros
+    if (result.length === 0) {
+        return [
+            { name: 'Binance TR', bid: 0, ask: 0, last: 0 },
+            { name: 'BTCTurk', bid: 0, ask: 0, last: 0 },
+            { name: 'OKX TR', bid: 0, ask: 0, last: 0 },
+            { name: 'Paribu', bid: 0, ask: 0, last: 0 }
+        ];
+    }
+
+    return result;
 }
 
 // USDC/USDT data (simulated for now)

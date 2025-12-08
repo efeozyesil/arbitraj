@@ -311,26 +311,24 @@
 
         .mc-side:first-child {
             border-right: 1px solid var(--border-color);
-            background: linear-gradient(90deg, rgba(46, 189, 133, 0.03) 0%, transparent 100%);
+            background: linear-gradient(90deg, rgba(46, 189, 133, 0.08) 0%, transparent 70%);
             align-items: flex-start;
-            /* Labels left */
         }
 
         .mc-side:first-child .mc-grid {
-            align-items: flex-end;
+            align-items: stretch;
         }
 
         /* Values to center */
 
         .mc-side:last-child {
-            background: linear-gradient(-90deg, rgba(246, 70, 93, 0.03) 0%, transparent 100%);
+            background: linear-gradient(-90deg, rgba(246, 70, 93, 0.08) 0%, transparent 70%);
             align-items: flex-end;
-            /* Labels right */
             text-align: right;
         }
 
         .mc-side:last-child .mc-grid {
-            align-items: flex-start;
+            align-items: stretch;
         }
 
         /* Values to center */
@@ -376,16 +374,33 @@
             justify-content: space-between;
             font-size: 0.7rem;
             color: #555;
+            width: 100%;
         }
 
-        /* Left side: label left, value right (toward center) */
+        /* Left side: label at LEFT edge, value at RIGHT (toward center) */
         .mc-side:first-child .mc-row {
             flex-direction: row;
         }
 
-        /* Right side: label right, value left (toward center) */
+        .mc-side:first-child .mc-row span:first-child {
+            text-align: left;
+        }
+
+        .mc-side:first-child .mc-row .mc-val {
+            text-align: right;
+        }
+
+        /* Right side: label at RIGHT edge, value at LEFT (toward center) */
         .mc-side:last-child .mc-row {
             flex-direction: row-reverse;
+        }
+
+        .mc-side:last-child .mc-row span:first-child {
+            text-align: right;
+        }
+
+        .mc-side:last-child .mc-row .mc-val {
+            text-align: left;
         }
 
         .mc-val {
