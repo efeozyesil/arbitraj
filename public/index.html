@@ -5,121 +5,146 @@
     <meta charset="UTF-8">
     <meta name="viewport"
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Rbit Terminal</title>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap"
-        rel="stylesheet">
+    <title>Rbit | Premium Arbitrage</title>
 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800;900&family=JetBrains+Mono:wght@400;500;700;800&display=swap"
+        rel="stylesheet">
 
     <style>
         :root {
-            --bg: #050505;
-            --card-bg: #111;
-            --text: #e0e0e0;
-            --accent: #F7931A;
-            --pos: #00E676;
-            --neg: #FF3D00;
+            --bg-body: #050505;
+            --bg-card: #0F0F0F;
+            --bg-card-hover: #141414;
+            --bg-header: rgba(10, 10, 10, 0.95);
+            --border-color: #222;
+            --text-main: #EAEAEA;
+            --text-dim: #888;
+            --text-accent: #F7931A;
+            --pos: #2ebd85;
+            --neg: #f6465d;
+            --font-main: 'Inter', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
             --binance: #FCD535;
             --okx: #fff;
             --bybit: #FFB119;
-            --hl: #00D4FF;
-            --aster: #A088FF;
-            --border: #222;
+            --hl: #2D9CDB;
+            --aster: #9B51E0;
         }
 
         * {
             box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            outline: none;
             -webkit-tap-highlight-color: transparent;
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, sans-serif;
-            background: var(--bg);
-            color: var(--text);
+            margin: 0;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            font-family: var(--font-main);
             height: 100vh;
             display: flex;
             flex-direction: column;
+            overflow: hidden;
         }
 
-        /* HEADER */
+        /* SCROLLBAR */
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 2px;
+        }
+
+        /* HERO HEADER */
         .header {
-            height: 50px;
+            height: 54px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0 15px;
-            border-bottom: 1px solid var(--border);
-            background: #080808;
-            z-index: 50;
+            padding: 0 16px;
+            background: var(--bg-header);
+            border-bottom: 1px solid var(--border-color);
+            z-index: 100;
+            backdrop-filter: blur(10px);
         }
 
         .logo {
-            font-weight: 800;
-            font-size: 1.1rem;
+            font-size: 1.2rem;
+            font-weight: 900;
+            letter-spacing: -0.5px;
             color: #fff;
         }
 
         .logo span {
-            color: var(--accent);
+            color: var(--text-accent);
         }
 
         .menu-btn {
             background: none;
             border: none;
-            font-size: 1.5rem;
+            font-size: 1.4rem;
             color: #fff;
             display: none;
+            cursor: pointer;
         }
 
         /* LAYOUT */
         .layout {
             display: flex;
             flex: 1;
-            overflow: hidden;
+            height: calc(100vh - 54px - 60px);
             position: relative;
         }
 
+        /* - header - nav */
         .sidebar {
-            width: 260px;
-            background: #0a0a0a;
-            border-right: 1px solid var(--border);
-            overflow-y: auto;
+            width: 240px;
+            background: #080808;
+            border-right: 1px solid var(--border-color);
             display: flex;
             flex-direction: column;
+            overflow-y: auto;
+            flex-shrink: 0;
         }
 
         .main {
             flex: 1;
             overflow-y: auto;
-            padding: 15px;
-            padding-bottom: 80px;
+            padding: 16px;
+            padding-bottom: 40px;
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
         }
 
         /* MOBILE SIDEBAR */
         .overlay {
             display: none;
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 100;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(4px);
+            z-index: 101;
         }
 
         @media (max-width: 768px) {
             .sidebar {
                 position: fixed;
-                top: 0;
-                left: 0;
-                height: 100%;
-                z-index: 101;
+                inset: 0 auto 0 0;
+                z-index: 102;
                 transform: translateX(-100%);
-                transition: 0.2s;
-                padding-top: 50px;
+                transition: transform 0.25s ease;
+                border-right: 1px solid #333;
+                width: 80%;
             }
 
             .sidebar.active {
@@ -133,72 +158,261 @@
             .menu-btn {
                 display: block;
             }
+
+            .main {
+                padding: 12px;
+            }
+
+            .layout {
+                height: calc(100vh - 54px);
+            }
+
+            /* Full height minus header */
         }
 
-        /* SIDEBAR ITEMS */
+        /* SIDEBAR STYLES */
         .sb-sec {
-            padding: 15px;
-            border-bottom: 1px solid #1a1a1a;
+            margin-bottom: 2px;
+            border-bottom: 1px solid #141414;
         }
 
         .sb-head {
-            font-size: 0.75rem;
-            color: #666;
-            font-weight: 700;
+            padding: 14px 16px 8px;
+            font-size: 0.65rem;
+            font-weight: 800;
+            color: #555;
             text-transform: uppercase;
-            margin-bottom: 10px;
+            letter-spacing: 0.5px;
         }
 
         .sb-btn {
-            display: block;
             width: 100%;
             text-align: left;
-            padding: 10px;
             background: transparent;
             border: none;
-            color: #bbb;
-            font-size: 0.9rem;
-            margin-bottom: 2px;
-            border-radius: 4px;
+            padding: 10px 16px;
+            color: #999;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: 0.1s;
+            border-left: 2px solid transparent;
+        }
+
+        .sb-btn:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.02);
         }
 
         .sb-btn.active {
-            background: #1a1a1a;
-            color: var(--accent);
+            background: linear-gradient(90deg, rgba(247, 147, 26, 0.08) 0%, transparent 100%);
+            color: var(--text-accent);
+            border-left-color: var(--text-accent);
             font-weight: 700;
         }
 
-        /* --- ALL DATA TABLE --- */
-        .coin-table {
+        /* --- PREMIUM CARD DESIGN --- */
+        .master-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            margin-bottom: 20px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .mc-header {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border-color);
+            background: linear-gradient(180deg, rgba(30, 30, 30, 0.4) 0%, transparent 100%);
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .mc-title {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 2px;
+        }
+
+        .mc-sub {
+            font-size: 0.75rem;
+            color: #888;
+            font-family: var(--font-mono);
+        }
+
+        .mc-apr {
+            font-size: 1.2rem;
+            font-weight: 900;
+            color: var(--text-accent);
+            text-align: right;
+            text-shadow: 0 0 10px rgba(247, 147, 26, 0.15);
+        }
+
+        .mc-apr-lbl {
+            font-size: 0.65rem;
+            color: #555;
+            font-weight: 700;
+            text-transform: uppercase;
+            text-align: right;
+        }
+
+        .mc-sides {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .mc-side {
+            padding: 14px;
+            position: relative;
+        }
+
+        .mc-side:first-child {
+            border-right: 1px solid var(--border-color);
+            background: linear-gradient(90deg, rgba(46, 189, 133, 0.03) 0%, transparent 100%);
+        }
+
+        .mc-side:last-child {
+            background: linear-gradient(-90deg, rgba(246, 70, 93, 0.03) 0%, transparent 100%);
+        }
+
+        .mc-lbl {
+            font-size: 0.65rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        .long {
+            color: var(--pos);
+        }
+
+        .short {
+            color: var(--neg);
+        }
+
+        .mc-ex {
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: #ddd;
+            margin-bottom: 2px;
+        }
+
+        .mc-price {
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            color: #888;
+        }
+
+        .mc-grid {
+            margin-top: 10px;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 4px;
+        }
+
+        .mc-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.7rem;
+            color: #555;
+        }
+
+        .mc-val {
+            font-family: var(--font-mono);
+            color: #ccc;
+            font-weight: 600;
+        }
+
+        .pos {
+            color: var(--pos);
+        }
+
+        .neg {
+            color: var(--neg);
+        }
+
+        .mc-breakdown {
+            padding: 14px;
+            background: #080808;
+            border-top: 1px solid #1a1a1a;
+        }
+
+        .mcb-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+            font-size: 0.8rem;
+        }
+
+        .mcb-lbl {
+            color: #666;
+        }
+
+        .mcb-val {
+            font-family: var(--font-mono);
+            color: #ccc;
+        }
+
+        .mcb-total {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px dashed #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .mcb-tot-lbl {
+            font-weight: 800;
+            font-size: 0.85rem;
+            color: #fff;
+        }
+
+        .mcb-tot-val {
+            font-family: var(--font-mono);
+            font-weight: 800;
+            font-size: 1.1rem;
+            color: var(--pos);
+        }
+
+        /* ALL DATA TABLE */
+        .table-wrap {
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: var(--bg-card);
+        }
+
+        .ctable {
             width: 100%;
             border-collapse: collapse;
-            min-width: 700px;
-            display: table;
+            min-width: 600px;
         }
 
-        .ct-head th {
+        .ctable th {
             text-align: right;
-            padding: 10px;
-            font-size: 0.75rem;
-            border-bottom: 1px solid #333;
+            padding: 12px;
+            background: #111;
             color: #666;
+            font-size: 0.7rem;
             font-weight: 800;
+            border-bottom: 1px solid #222;
         }
 
-        .ct-head th:first-child {
+        .ctable th:first-child {
             text-align: left;
         }
 
-        .ct-row td {
-            padding: 12px;
+        .ctable td {
+            padding: 10px 12px;
             border-bottom: 1px solid #1a1a1a;
+            text-align: right;
             vertical-align: middle;
-        }
-
-        .ct-sym {
-            font-weight: 800;
-            color: #fff;
-            font-size: 0.95rem;
         }
 
         .ct-cell {
@@ -208,141 +422,88 @@
             gap: 2px;
         }
 
-        .ct-fund {
-            font-family: 'JetBrains Mono';
-            font-size: 0.85rem;
+        .ct-f {
+            font-family: var(--font-mono);
             font-weight: 700;
+            font-size: 0.8rem;
             color: #ddd;
         }
 
-        .ct-price {
-            font-family: 'JetBrains Mono';
+        .ct-p {
+            font-family: var(--font-mono);
             font-size: 0.7rem;
             color: #555;
         }
 
-        /* ALL OPPS ROW */
+        /* OPP LIST ROW */
         .opp-row {
-            background: #111;
-            border: 1px solid #222;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            padding: 12px;
             border-radius: 8px;
-            padding: 14px;
             margin-bottom: 8px;
             display: grid;
-            grid-template-columns: 1fr 1.2fr 1.2fr auto;
-            gap: 12px;
+            grid-template-columns: 1fr 1fr 1fr auto;
+            gap: 8px;
             align-items: center;
         }
 
-        .or-sym {
+        .opp-sym {
             font-weight: 800;
-            font-size: 1rem;
+            font-size: 0.9rem;
             color: #fff;
         }
 
-        .or-info {
+        .opp-inf {
             display: flex;
             flex-direction: column;
-            font-size: 0.75rem;
-            gap: 2px;
+            font-size: 0.7rem;
         }
 
-        .or-apr {
-            text-align: right;
-            font-weight: 900;
-            color: var(--accent);
-            font-size: 1rem;
+        .opp-inf span {
+            font-family: var(--font-mono);
+            color: #888;
         }
 
-        /* TRY ARB */
-        .try-card {
-            background: #121212;
-            border: 1px solid #2a2a2a;
-            border-radius: 12px;
-            margin-bottom: 16px;
-            overflow: hidden;
-        }
-
-        .tc-head {
-            padding: 12px 16px;
-            background: #181818;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #2a2a2a;
-        }
-
-        .tc-title {
-            font-weight: 700;
-            color: #fff;
+        .opp-apr {
+            font-weight: 800;
+            color: var(--text-accent);
             font-size: 0.95rem;
+            text-align: right;
         }
 
-        .tc-price {
-            font-family: 'JetBrains Mono';
-            font-weight: 700;
-            color: var(--accent);
-            font-size: 1.1rem;
-        }
-
-        .tc-depth {
-            padding: 12px;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
-
-        .depth-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-family: 'JetBrains Mono';
-            font-size: 0.75rem;
-            margin-bottom: 2px;
-        }
-
-        .depth-row.bid {
-            background: rgba(0, 230, 118, 0.08);
-            color: #00E676;
-        }
-
-        .depth-row.ask {
-            background: rgba(255, 61, 0, 0.08);
-            color: #FF3D00;
-        }
-
-        /* NAV */
+        /* BOTTOM NAV */
         .nav {
             position: fixed;
             bottom: 0;
             width: 100%;
             height: 60px;
-            background: #080808;
-            border-top: 1px solid #222;
+            background: var(--bg-header);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid var(--border-color);
             display: flex;
             justify-content: space-around;
             align-items: center;
-            z-index: 50;
+            z-index: 99;
             padding-bottom: env(safe-area-inset-bottom);
         }
 
         .nav-item {
             background: none;
             border: none;
-            color: #555;
-            font-size: 0.7rem;
-            font-weight: 600;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 5px;
-            opacity: 0.7;
+            gap: 4px;
+            font-size: 0.65rem;
+            font-weight: 600;
+            color: #555;
+            opacity: 0.8;
             transition: 0.2s;
         }
 
         .nav-item.active {
-            color: var(--accent);
+            color: var(--text-accent);
             opacity: 1;
             transform: translateY(-2px);
         }
@@ -350,371 +511,336 @@
         .nav-icon {
             font-size: 1.2rem;
         }
-    </style>
 
+        .try-card {
+            background: #111;
+            border: 1px solid #222;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            overflow: hidden;
+        }
+
+        .tc-h {
+            padding: 10px 14px;
+            background: #161616;
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px solid #222;
+        }
+
+        .tc-t {
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .tc-p {
+            font-family: var(--font-mono);
+            color: var(--text-accent);
+            font-weight: 700;
+        }
+
+        .tc-d {
+            padding: 10px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .tr {
+            display: flex;
+            justify-content: space-between;
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            padding: 2px 4px;
+            border-radius: 2px;
+            margin-bottom: 2px;
+        }
+
+        .tb {
+            background: rgba(46, 189, 133, 0.1);
+            color: var(--pos);
+        }
+
+        .ta {
+            background: rgba(246, 70, 93, 0.1);
+            color: var(--neg);
+        }
+    </style>
 </head>
 
 <body>
-    <div class="overlay" onclick="ui.toggle(false)"></div>
-    <div class="layout" style="height:100vh; padding-top:50px; padding-bottom:60px;">
-        <header class="header" style="position:fixed; top:0; width:100%;">
-            <div class="logo">R<span>bit</span></div>
-            <button class="menu-btn" id="mainMenuBtn" onclick="ui.toggle(true)">☰</button>
-        </header>
+    <div class="header">
+        <div class="logo">R<span>bit</span></div>
+        <button class="menu-btn" id="menuBtn" onclick="ui.toggle(true)">☰</button>
+    </div>
 
+    <div class="overlay" onclick="ui.toggle(false)"></div>
+    <div class="layout">
         <aside class="sidebar" id="sidebar">
             <div id="sbContent"></div>
         </aside>
-
         <main class="main" id="mainView"></main>
-
-        <nav class="nav">
-            <button class="nav-item active" onclick="ui.nav('funding')"><span class="nav-icon">📊</span>Funding</button>
-            <button class="nav-item" onclick="ui.nav('try')"><span class="nav-icon">₺</span>TRY Arb</button>
-            <button class="nav-item" onclick="ui.nav('usdc')"><span class="nav-icon">💲</span>USDC</button>
-            <button class="nav-item" onclick="ui.nav('settings')"><span class="nav-icon">⚙️</span>Settings</button>
-        </nav>
     </div>
 
+    <nav class="nav">
+        <button class="nav-item active" onclick="ui.nav('funding')"><span class="nav-icon">📊</span>Funding</button>
+        <button class="nav-item" onclick="ui.nav('try')"><span class="nav-icon">₺</span>TRY Arb</button>
+        <button class="nav-item" onclick="ui.nav('usdc')"><span class="nav-icon">💲</span>USDC</button>
+        <button class="nav-item" onclick="ui.nav('settings')"><span class="nav-icon">⚙️</span>Settings</button>
+    </nav>
 
     <script>
-        const PAIR_GROUPS = [
-            { t: 'Overview', i: [{ id: 'all-opps', l: 'All Opportunities' }, { id: 'all-coins', l: 'All Data (Table)' }] },
-            { t: 'Binance Pairs', i: [{ id: 'binance-okx', l: 'Binance <> OKX' }, { id: 'binance-bybit', l: 'Binance <> Bybit' }, { id: 'binance-hyperliquid', l: 'Binance <> HL' }, { id: 'binance-asterdex', l: 'Binance <> Aster' }] },
-            { t: 'OKX Pairs', i: [{ id: 'okx-bybit', l: 'OKX <> Bybit' }, { id: 'okx-hyperliquid', l: 'OKX <> HL' }, { id: 'okx-asterdex', l: 'OKX <> Aster' }] },
-            { t: 'Bybit Pairs', i: [{ id: 'bybit-hyperliquid', l: 'Bybit <> HL' }, { id: 'bybit-asterdex', l: 'Bybit <> Aster' }] }
-        ];
+    const PAIR_GROUPS = [
+        { t: 'Overview', i: [{id:'all-opps', l:'All Opportunities'}, {id:'all-coins', l:'All Data (Table)'}] },
+        { t: 'Binance Pairs', i: [{id:'binance-okx', l:'Binance <> OKX'}, {id:'binance-bybit', l:'Binance <> Bybit'}, {id:'binance-hyperliquid', l:'Binance <> HL'}, {id:'binance-asterdex', l:'Binance <> Aster'}] },
+        { t: 'OKX Pairs', i: [{id:'okx-bybit', l:'OKX <> Bybit'}, {id:'okx-hyperliquid', l:'OKX <> HL'}, {id:'okx-asterdex', l:'OKX <> Aster'}] },
+        { t: 'Bybit Pairs', i: [{id:'bybit-hyperliquid', l:'Bybit <> HL'}, {id:'bybit-asterdex', l:'Bybit <> Aster'}] }
+    ];
 
-        const state = { tab: 'funding', filter: 'all-opps', data: {}, allData: [], wsConnected: false };
+    const state = { tab: 'funding', filter: 'all-opps', data: {}, allData: [] };
 
-        const ui = {
-            init: () => {
-                ui.buildSidebar();
-                ui.nav('funding');
-                app.connect();
-                setInterval(ui.updateTryData, 2000);
-            },
+    const ui = {
+        init: () => {
+            ui.buildSidebar();
+            ui.nav('funding');
+            app.connect();
+            setInterval(ui.updateTryData, 2000); 
+        },
 
-            nav: (t) => {
-                state.tab = t;
-                const menuBtn = document.getElementById('mainMenuBtn');
-                const sb = document.getElementById('sidebar');
+        nav: (t) => {
+            state.tab = t;
+            const btn = document.getElementById('menuBtn');
+            if(t === 'funding') btn.style.display = 'block'; 
+            else { btn.style.display = 'none'; ui.toggle(false); }
 
-                // 1. Sidebar Visibility Logic
-                if (t === 'funding') {
-                    menuBtn.style.display = 'block';
-                    // On desktop, sidebar is always visible via flex layout if user wants, 
-                    // but we should ensure it's interactable.
-                } else {
-                    menuBtn.style.display = 'none';
-                    ui.toggle(false); // Close mobile sidebar if open
-                }
+            document.querySelectorAll('.nav-item').forEach((b,i) => b.classList.toggle('active', ['funding','try','usdc','settings'][i]===t));
+            ui.render();
+        },
 
-                // 2. Nav Active State
-                document.querySelectorAll('.nav-item').forEach((b, i) => b.classList.toggle('active', ['funding', 'try', 'usdc', 'settings'][i] === t));
-                ui.render();
-            },
+        toggle: (s) => {
+            const sb = document.getElementById('sidebar');
+            const ov = document.querySelector('.overlay');
+            if(s) { sb.classList.add('active'); ov.classList.add('active'); }
+            else { sb.classList.remove('active'); ov.classList.remove('active'); }
+        },
 
-            toggle: (s) => {
-                const sb = document.getElementById('sidebar');
-                const ov = document.querySelector('.overlay');
-                if (s) { sb.classList.add('active'); ov.classList.add('active'); }
-                else { sb.classList.remove('active'); ov.classList.remove('active'); }
-            },
-
-            buildSidebar: () => {
-                let h = '';
-                PAIR_GROUPS.forEach(g => {
-                    h += `<div class="sb-sec"><div class="sb-head">${g.t}</div>`;
-                    g.i.forEach(it => {
-                        h += `<button class="sb-btn" id="btn-${it.id}" onclick="ui.setFilter('${it.id}')">${it.l}</button>`;
-                    });
-                    h += `</div>`;
+        buildSidebar: () => {
+            let h = '';
+            PAIR_GROUPS.forEach(g => {
+                h += `<div class="sb-sec"><div class="sb-head">${g.t}</div>`;
+                g.i.forEach(it => {
+                    h += `<button class="sb-btn" id="btn-${it.id}" onclick="ui.setFilter('${it.id}')">${it.l}</button>`;
                 });
-                document.getElementById('sbContent').innerHTML = h;
-            },
+                h += `</div>`;
+            });
+            document.getElementById('sbContent').innerHTML = h;
+        },
 
-            setFilter: (f) => {
-                state.filter = f;
-                ui.toggle(false);
-                ui.render();
-            },
+        setFilter: (f) => {
+            state.filter = f;
+            ui.toggle(false);
+            ui.render();
+        },
 
-            render: () => {
-                const v = document.getElementById('mainView');
-                if (state.tab !== 'funding') {
-                    if (state.tab === 'try') ui.renderTRY(v);
-                    else v.innerHTML = `<div style="padding:40px;text-align:center;color:#666;">Coming Soon: ${state.tab}</div>`;
-                    return;
-                }
+        render: () => {
+            const v = document.getElementById('mainView');
+            if(state.tab !== 'funding') {
+                if(state.tab === 'try') ui.renderTRY(v);
+                else v.innerHTML = `<div style="padding:40px;text-align:center;color:#444;">Module ${state.tab}</div>`; 
+                return;
+            }
 
-                document.querySelectorAll('.sb-btn').forEach(b => b.classList.remove('active'));
-                const b = document.getElementById('btn-' + state.filter);
-                if (b) b.classList.add('active');
+            document.querySelectorAll('.sb-btn').forEach(b => b.classList.remove('active'));
+            const b = document.getElementById('btn-'+state.filter);
+            if(b) b.classList.add('active');
 
-                if (state.filter === 'all-coins') return ui.renderAllCoins(v);
-                if (state.filter === 'all-opps') return ui.renderAllOpps(v);
-                ui.renderDetailed(v);
-            },
+            if(state.filter === 'all-coins') return ui.renderAllCoins(v);
+            if(state.filter === 'all-opps') return ui.renderAllOpps(v);
+            ui.renderDetailed(v);
+        },
 
-            formatTime: (ms) => {
-                if (!ms) return '8h 00m';
-                const diff = ms - Date.now();
-                if (diff <= 0) return 'Funding...';
-                const h = Math.floor(diff / 3600000);
-                const m = Math.floor((diff % 3600000) / 60000);
-                return `${h}h ${m}m`;
-            },
+        formatTime: (ms) => {
+             if(!ms) return '8h 00m';
+             const diff = ms - Date.now();
+             if(diff <= 0) return 'Funding...';
+             const h = Math.floor(diff / 3600000);
+             const m = Math.floor((diff % 3600000) / 60000);
+             return `${h}h ${m}m`;
+        },
 
-            renderAllCoins: (v) => {
-                if (!state.allData.length) { v.innerHTML = '<div style="padding:20px;">Loading Data...</div>'; return; }
-                const sorted = [...state.allData].sort((a, b) => a.symbol.localeCompare(b.symbol));
-
-                const cell = (ex) => {
-                    if (!ex || !ex.price) return `<div class="ct-cell"><span class="ct-price">-</span></div>`;
-                    const fundVal = Number(ex.funding || 0);
-                    const fundStr = isNaN(fundVal) ? '0.0000%' : (fundVal * 100).toFixed(4) + '%';
-                    const pClass = fundVal > 0 ? 'pos' : (fundVal < 0 ? 'neg' : '');
-
-                    return `<div class="ct-cell">
-                    <span class="ct-fund ${pClass}">${fundStr}</span>
-                    <span class="ct-price">${Number(ex.price || 0).toFixed(4)}</span>
+        renderAllCoins: (v) => {
+            if(!state.allData.length) { v.innerHTML = '<div style="padding:20px;text-align:center;color:#666;">Loading Data...</div>'; return; }
+            const sorted = [...state.allData].sort((a,b) => a.symbol.localeCompare(b.symbol));
+            
+            const cell = (ex) => {
+                if(!ex || !ex.price) return `<div class="ct-cell"><span class="ct-p">-</span></div>`;
+                const f = Number(ex.funding || 0);
+                const fs = isNaN(f) ? '0.00%' : (f*100).toFixed(4)+'%';
+                const cls = f > 0 ? 'pos' : (f < 0 ? 'neg' : '');
+                
+                return `<div class="ct-cell">
+                    <span class="ct-f ${cls}">${fs}</span>
+                    <span class="ct-p">${Number(ex.price).toFixed(4)}</span>
                 </div>`;
-                };
-
-                let h = `<div style="overflow-x:auto;"><table class="coin-table">
-            <thead class="ct-head"><tr>
-                <th>COIN</th>
-                <th style="color:var(--binance)">BINANCE</th>
+            };
+            
+            let h = `<div class="table-wrap"><table class="ctable">
+            <thead><tr>
+                <th>Coin</th>
+                <th style="color:var(--binance)">Binance</th>
                 <th style="color:var(--okx)">OKX</th>
-                <th style="color:var(--bybit)">BYBIT</th>
-                <th style="color:var(--hl)">HYPER</th>
-                <th style="color:var(--aster)">ASTER</th>
+                <th style="color:var(--bybit)">Bybit</th>
+                <th style="color:var(--hl)">Hyper</th>
+                <th style="color:var(--aster)">Aster</th>
             </tr></thead><tbody>`;
-                sorted.forEach(c => {
-                    h += `<tr class="ct-row">
-                    <td class="ct-sym">${c.symbol}</td>
+            sorted.forEach(c => {
+                h += `<tr>
+                    <td>${c.symbol}</td>
                     <td>${cell(c.binance)}</td>
                     <td>${cell(c.okx)}</td>
                     <td>${cell(c.bybit)}</td>
                     <td>${cell(c.hyperliquid)}</td>
                     <td>${cell(c.asterdex)}</td>
                 </tr>`;
-                });
-                h += `</tbody></table></div>`;
-                v.innerHTML = h;
-            },
+            });
+            h += `</tbody></table></div>`;
+            v.innerHTML = h;
+        },
 
-            renderAllOpps: (v) => {
-                let list = [];
-                Object.values(state.data).forEach(a => { if (Array.isArray(a)) list.push(...a); });
-                if (!list.length) { v.innerHTML = '<div style="padding:20px;">Scanning Opportunities...</div>'; return; }
+        renderAllOpps: (v) => {
+            let list = [];
+            Object.values(state.data).forEach(a => { if(Array.isArray(a)) list.push(...a); });
+            if(!list.length) { v.innerHTML = '<div style="padding:20px;text-align:center;color:#666;">Scanning...</div>'; return; }
+            
+            list.sort((a,b) => (b.analysis?.annualAPR||0) - (a.analysis?.annualAPR||0));
+            list = list.slice(0, 50);
 
-                list.sort((a, b) => (b.analysis?.annualAPR || 0) - (a.analysis?.annualAPR || 0));
-                list = list.slice(0, 50);
+            let h = '<div style="font-size:0.7rem; font-weight:800; color:#444; margin-bottom:10px; padding-left:4px; text-transform:uppercase;">Top Opportunities</div>';
+            list.forEach(d => {
+                const an = d.analysis || {};
+                let L = d.exchangeA, S = d.exchangeB;
+                if(an.strategy === 'SHORT_A_LONG_B') { L = d.exchangeB; S = d.exchangeA; } 
 
-                let h = '<div style="font-size:0.7rem; font-weight:800; color:#555; margin-bottom:12px; padding:0 5px; text-transform:uppercase;">Top Opportunities Global</div>';
-                list.forEach(d => {
-                    const an = d.analysis || {};
+                const isA_Long = an.strategy === 'LONG_A_SHORT_B';
+                L = isA_Long ? d.exchangeA : d.exchangeB;
+                S = isA_Long ? d.exchangeB : d.exchangeA;
 
-                    let openLong = {}, openShort = {};
-                    if (an.strategy === 'LONG_A_SHORT_B') {
-                        openLong = d.exchangeA; openShort = d.exchangeB;
-                    } else {
-                        openLong = d.exchangeB; openShort = d.exchangeA;
-                    }
-
-                    const lf = Number(openLong.fundingRate || 0) * 100;
-                    const sf = Number(openShort.fundingRate || 0) * 100;
-
-                    h += `<div class="opp-row">
-                    <div class="or-sym">${d.symbol}</div>
-                    <div class="or-info">
-                        <div style="color:var(--pos); font-weight:700;">L: ${openLong.name}</div>
-                        <div class="or-val">${Number(openLong.markPrice || 0).toFixed(4)}</div>
-                        <div class="or-fund ${lf > 0 ? 'pos' : 'neg'}">${lf.toFixed(4)}%</div>
+                const lf = Number(L.fundingRate||0)*100, sf = Number(S.fundingRate||0)*100;
+                
+                h += `<div class="opp-row">
+                    <div class="opp-sym">${d.symbol}</div>
+                    <div class="opp-inf">
+                        <span style="color:var(--pos); font-weight:700;">L: ${L.name}</span>
+                        <span>${Number(L.markPrice).toFixed(4)}</span>
+                        <span class="${lf>0?'pos':'neg'}">${lf.toFixed(4)}%</span>
                     </div>
-                    <div class="or-info">
-                        <div style="color:var(--neg); font-weight:700;">S: ${openShort.name}</div>
-                        <div class="or-val">${Number(openShort.markPrice || 0).toFixed(4)}</div>
-                        <div class="or-fund ${sf > 0 ? 'pos' : 'neg'}">${sf.toFixed(4)}%</div>
+                    <div class="opp-inf">
+                        <span style="color:var(--neg); font-weight:700;">S: ${S.name}</span>
+                        <span>${Number(S.markPrice).toFixed(4)}</span>
+                        <span class="${sf>0?'pos':'neg'}">${sf.toFixed(4)}%</span>
                     </div>
-                    <div class="or-apr">${(an.annualAPR || 0).toFixed(0)}%</div>
+                    <div class="opp-apr">${(an.annualAPR||0).toFixed(0)}%</div>
                 </div>`;
-                });
-                v.innerHTML = h;
-            },
+            });
+            v.innerHTML = h;
+        },
 
-            renderDetailed: (v) => {
-                const list = (state.data[state.filter] || []).sort((a, b) => (b.analysis?.annualAPR || 0) - (a.analysis?.annualAPR || 0)).slice(0, 10);
-                if (!list.length) { v.innerHTML = `<div style="padding:40px; text-align:center; opacity:0.6;">Waiting for data... <br><small>${state.filter}</small></div>`; return; }
+        renderDetailed: (v) => {
+            const list = (state.data[state.filter] || []).sort((a,b) => (b.analysis?.annualAPR||0) - (a.analysis?.annualAPR||0)).slice(0, 10);
+            if(!list.length) { v.innerHTML = `<div style="padding:40px; text-align:center; opacity:0.5;">Waiting for data...</div>`; return; }
 
-                v.innerHTML = list.map(d => {
-                    const an = d.analysis || {};
+            v.innerHTML = list.map(d => {
+                const an = d.analysis || {};
+                const isA_Long = an.strategy === 'LONG_A_SHORT_B';
+                const L = isA_Long ? d.exchangeA : d.exchangeB;
+                const S = isA_Long ? d.exchangeB : d.exchangeA;
 
-                    let openLong = {}, openShort = {};
-                    if (an.strategy === 'LONG_A_SHORT_B') {
-                        openLong = d.exchangeA; openShort = d.exchangeB;
-                    } else {
-                        openLong = d.exchangeB; openShort = d.exchangeA;
-                    }
+                const makerFee = (an.tradeSize||100) * 0.0002; 
+                const takerFee = (an.tradeSize||100) * 0.0005;
+                const netProfit = an.netCycleProfit || 0;
+                
+                const lf = Number(L.fundingRate||0)*100;
+                const sf = Number(S.fundingRate||0)*100;
 
-                    const fees = an.fees || {};
-                    const makerFee = (an.tradeSize || 100) * 0.0002; // Simulating Maker 0.02%
-                    const takerFee = (an.tradeSize || 100) * 0.0005; // Simulating Taker 0.05%
-
-                    const pProfit = an.priceDiffPnL || 0;
-                    const fundingProfit = an.fundingIncomeCycle || 0;
-                    const netProfit = an.netCycleProfit || 0;
-
-                    const lf = Number(openLong.fundingRate || 0) * 100;
-                    const sf = Number(openShort.fundingRate || 0) * 100;
-
-                    const tLong = ui.formatTime(openLong.nextFundingTime);
-                    const tShort = ui.formatTime(openShort.nextFundingTime);
-
-                    return `<div class="master-card">
+                return `<div class="master-card">
                     <div class="mc-header">
                         <div>
                             <div class="mc-title">${d.symbol}</div>
-                            <div class="mc-profit-sub">Next Cycle Profit: <span style="color:#fff; font-family:'JetBrains Mono';">$${netProfit.toFixed(4)}</span></div>
+                            <div class="mc-sub">Next Profit: <span class="pos">$${netProfit.toFixed(4)}</span></div>
                         </div>
-                        <div class="mc-apr-box">
-                            <div class="mc-apr-val">${(an.annualAPR || 0).toFixed(0)}%</div>
+                        <div>
+                            <div class="mc-apr">${(an.annualAPR||0).toFixed(0)}%</div>
                             <div class="mc-apr-lbl">Annual APR</div>
                         </div>
                     </div>
                     
                     <div class="mc-sides">
-                        <div class="mc-side left">
-                            <span class="mc-role long">LONG POSITION</span>
-                            <div class="mc-ex-row">
-                                <span class="mc-ex-name">${openLong.name}</span>
-                                <span class="mc-price">${Number(openLong.markPrice || 0).toFixed(4)}</span>
-                            </div>
-                            <div class="mc-meta-row">
-                                <span>Funding:</span>
-                                <span class="mc-fund ${lf > 0 ? 'pos' : 'neg'}">${lf.toFixed(4)}%</span>
-                            </div>
-                            <div class="mc-meta-row" style="margin-top:2px;">
-                                <span>Interval:</span>
-                                <span>${tLong}</span>
+                        <div class="mc-side">
+                            <span class="mc-lbl long">Long Buy</span>
+                            <div class="mc-ex">${L.name}</div>
+                            <div class="mc-price">$${Number(L.markPrice).toFixed(4)}</div>
+                            <div class="mc-grid">
+                                <div class="mc-row"><span>Funding</span><span class="mc-val ${lf>0?'pos':'neg'}">${lf.toFixed(4)}%</span></div>
+                                <div class="mc-row"><span>Interval</span><span class="mc-val">${ui.formatTime(L.nextFundingTime)}</span></div>
                             </div>
                         </div>
                         <div class="mc-side">
-                            <span class="mc-role short">SHORT POSITION</span>
-                            <div class="mc-ex-row">
-                                <span class="mc-ex-name">${openShort.name}</span>
-                                <span class="mc-price">${Number(openShort.markPrice || 0).toFixed(4)}</span>
-                            </div>
-                            <div class="mc-meta-row">
-                                <span>Funding:</span>
-                                <span class="mc-fund ${sf > 0 ? 'pos' : 'neg'}">${sf.toFixed(4)}%</span>
-                            </div>
-                             <div class="mc-meta-row" style="margin-top:2px;">
-                                <span>Interval:</span>
-                                <span>${tShort}</span>
+                            <span class="mc-lbl short">Short Sell</span>
+                            <div class="mc-ex">${S.name}</div>
+                            <div class="mc-price">$${Number(S.markPrice).toFixed(4)}</div>
+                             <div class="mc-grid">
+                                <div class="mc-row"><span>Funding</span><span class="mc-val ${sf>0?'pos':'neg'}">${sf.toFixed(4)}%</span></div>
+                                <div class="mc-row"><span>Interval</span><span class="mc-val">${ui.formatTime(S.nextFundingTime)}</span></div>
                             </div>
                         </div>
                     </div>
                     
-                    <div class="mc-table">
-                        <div class="mc-row">
-                            <div class="mc-item">
-                                <span class="mc-lbl">Maker Fee</span>
-                                <span class="mc-val neg">-$${makerFee.toFixed(3)}</span>
-                            </div>
-                             <div class="mc-item">
-                                <span class="mc-lbl">Taker Fee</span>
-                                <span class="mc-val neg">-$${takerFee.toFixed(3)}</span>
-                            </div>
-                        </div>
-                        <div class="mc-row full">
-                             <div class="mc-item">
-                                <span class="mc-lbl">Price Difference Profit</span>
-                                <span class="mc-val ${pProfit > 0 ? 'pos' : 'neg'}">${pProfit > 0 ? '+' : ''}$${pProfit.toFixed(3)}</span>
-                            </div>
-                        </div>
-                         <div class="mc-row full">
-                             <div class="mc-item">
-                                <span class="mc-lbl">Next Cycle Funding Profit</span>
-                                <span class="mc-val pos">+$${fundingProfit.toFixed(3)}</span>
-                            </div>
-                        </div>
-                         <div class="mc-row full">
-                             <div class="mc-item">
-                                <span class="mc-lbl">Closing Fee (Est)</span>
-                                <span class="mc-val neg">-$${(takerFee + makerFee).toFixed(3)}</span>
-                            </div>
-                        </div>
+                    <div class="mc-breakdown">
+                        <div class="mcb-row"><span class="mcb-lbl">Est. Maker Fee</span><span class="mcb-val neg">-$${makerFee.toFixed(3)}</span></div>
+                        <div class="mcb-row"><span class="mcb-lbl">Est. Taker Fee</span><span class="mcb-val neg">-$${takerFee.toFixed(3)}</span></div>
+                        <div class="mcb-row"><span class="mcb-lbl">Price Diff PnL</span><span class="mcb-val ${(an.priceDiffPnL||0)>0?'pos':'neg'}">$${(an.priceDiffPnL||0).toFixed(3)}</span></div>
+                        <div class="mcb-row"><span class="mcb-lbl">Funding Income</span><span class="mcb-val pos">+$${(an.fundingIncomeCycle||0).toFixed(3)}</span></div>
                         
-                        <div class="mc-total">
-                            <span class="mc-total-lbl">NET PROFIT</span>
-                            <span class="mc-total-val ${netProfit > 0 ? 'pos' : 'neg'}">${netProfit.toFixed(4)}%</span>
+                        <div class="mcb-total">
+                            <span class="mcb-tot-lbl">Net Cycle Profit</span>
+                            <span class="mcb-tot-val ${netProfit>0?'pos':'neg'}">$${netProfit.toFixed(4)}</span>
                         </div>
                     </div>
                 </div>`;
-                }).join('');
-            },
+            }).join('');
+        },
 
-            renderTRY: (v) => {
-                const pairs = [
-                    { n: 'Binance TR', p: 35.84 }, { n: 'Paribu', p: 35.92 },
-                    { n: 'OKX TR', p: 35.82 }, { n: 'Bybit TR', p: 35.80 }
-                ];
-
-                let h = `<div style="padding:16px 16px 0 16px; font-weight:800; color:#444; font-size:0.8rem; text-transform:uppercase;">USDT/TRY Live Market</div>`;
-                h += pairs.map(p => {
-                    const spread = 0.05;
-                    const ask = p.p + Math.random() * 0.04;
-                    const bid = p.p - Math.random() * 0.04;
-
-                    return `
-                <div class="try-card">
-                    <div class="tc-head">
-                        <span class="tc-title">${p.n}</span>
-                        <span class="tc-price">${p.p.toFixed(2)} ₺</span>
-                    </div>
-                    <div class="tc-depth">
-                        <div class="depth-col">
-                           <div class="depth-row bid"><span>${(bid - 0.01).toFixed(2)}</span><span>12.5K</span></div>
-                           <div class="depth-row bid"><span>${(bid - 0.03).toFixed(2)}</span><span>8.2K</span></div>
-                           <div class="depth-row bid"><span>${(bid - 0.05).toFixed(2)}</span><span>25.1K</span></div>
-                        </div>
-                        <div class="depth-col">
-                           <div class="depth-row ask"><span>2.4K</span><span>${(ask + 0.01).toFixed(2)}</span></div>
-                           <div class="depth-row ask"><span>5.1K</span><span>${(ask + 0.03).toFixed(2)}</span></div>
-                           <div class="depth-row ask"><span>9.8K</span><span>${(ask + 0.05).toFixed(2)}</span></div>
-                        </div>
+        renderTRY: (v) => {
+            const pairs = [{n:'Binance TR',p:35.84}, {n:'Paribu',p:35.92}, {n:'OKX TR',p:35.82}, {n:'Bybit TR',p:35.80}];
+            let h = `<div style="padding:10px 4px; font-weight:800; color:#555; font-size:0.7rem;">USDT/TRY LIVE</div>`;
+            h += pairs.map(p => {
+                const ask = p.p + Math.random()*0.04;
+                const bid = p.p - Math.random()*0.04;
+                return `<div class="try-card">
+                    <div class="tc-h"><span class="tc-t">${p.n}</span><span class="tc-p">${p.p.toFixed(2)} ₺</span></div>
+                    <div class="tc-d">
+                        <div class="tc-c"><div class="tr bid"><span>${(bid-0.01).toFixed(2)}</span><span>12K</span></div><div class="tr bid"><span>${(bid-0.05).toFixed(2)}</span><span>8K</span></div></div>
+                        <div class="tc-c"><div class="tr ask"><span>${(ask+0.01).toFixed(2)}</span><span>2K</span></div><div class="tr ask"><span>${(ask+0.05).toFixed(2)}</span><span>5K</span></div></div>
                     </div>
                 </div>`;
-                }).join('');
-                v.innerHTML = h;
-            },
+            }).join('');
+            v.innerHTML = h;
+        },
 
-            updateTryData: () => {
-                if (state.tab === 'try') ui.renderTRY(document.getElementById('mainView'));
-            }
-        };
+        updateTryData: () => { if(state.tab==='try') ui.renderTRY(document.getElementById('mainView')); }
+    };
 
-        const app = {
-            connect: () => {
-                const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-                const ws = new WebSocket(`${proto}//${window.location.host}`);
-                ws.onmessage = (e) => {
-                    try {
-                        const msg = JSON.parse(e.data);
-                        if (msg.type === 'ARBITRAGE_UPDATE') {
-                            state.data = msg.data;
-                            if (msg.allData) state.allData = msg.allData;
-                            if (state.tab === 'funding') ui.render();
-                        }
-                    } catch (e) { }
-                };
-                ws.onclose = () => setTimeout(app.connect, 2000);
-            }
-        };
-        window.onload = ui.init;
+    const app = {
+        connect: () => {
+            const ws = new WebSocket((location.protocol==='https:'?'wss:':'ws:')+'//'+location.host);
+            ws.onmessage = e => { try {
+                const m = JSON.parse(e.data);
+                if(m.type==='ARBITRAGE_UPDATE') { state.data=m.data; if(m.allData) state.allData=m.allData; if(state.tab==='funding') ui.render(); }
+            } catch(e){} };
+            ws.onclose = () => setTimeout(app.connect, 2000);
+        }
+    };
+    window.onload = ui.init;
     </script>
 </body>
 
