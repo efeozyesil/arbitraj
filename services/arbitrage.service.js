@@ -51,6 +51,21 @@ class ArbitrageService {
                     return; // Invalid funding rate
                 }
 
+                // Skip if BOTH funding rates are exactly 0 (likely delisted or stale data)
+                if (fundingA === 0 && fundingB === 0) {
+                    return;
+                }
+
+                // Skip if data is stale (no recent timestamp) - check if older than 5 minutes
+                const now = Date.now();
+                const maxAge = 5 * 60 * 1000; // 5 minutes
+                if (dataA.timestamp && (now - dataA.timestamp) > maxAge) {
+                    return; // Stale data on exchange A
+                }
+                if (dataB.timestamp && (now - dataB.timestamp) > maxAge) {
+                    return; // Stale data on exchange B
+                }
+
                 // Arbitraj Analizi
                 const analysis = this.analyzeArbitrage(dataA, dataB, symbolA, symbolB);
 

@@ -167,7 +167,7 @@ function broadcastData() {
         }
     });
 }
-// TRY/USDT data from Turkish exchanges (REAL DATA)
+// TRY/USDT data from Turkish exchanges (REAL DATA with Orderbook)
 function getTRYData() {
     const binanceTR = binanceTRWS.getData();
     const btcturk = btcturkWS.getData();
@@ -180,28 +180,56 @@ function getTRYData() {
     const result = [];
 
     if (isValid(binanceTR)) {
-        result.push({ name: 'Binance TR', bid: binanceTR.bid, ask: binanceTR.ask, last: binanceTR.last });
+        result.push({
+            name: 'Binance TR',
+            bid: binanceTR.bid,
+            ask: binanceTR.ask,
+            last: binanceTR.last,
+            bids: binanceTR.bids || [],
+            asks: binanceTR.asks || []
+        });
     }
 
     if (isValid(btcturk)) {
-        result.push({ name: 'BTCTurk', bid: btcturk.bid, ask: btcturk.ask, last: btcturk.last });
+        result.push({
+            name: 'BTCTurk',
+            bid: btcturk.bid,
+            ask: btcturk.ask,
+            last: btcturk.last,
+            bids: btcturk.bids || [],
+            asks: btcturk.asks || []
+        });
     }
 
     if (isValid(okxTR)) {
-        result.push({ name: 'OKX TR', bid: okxTR.bid, ask: okxTR.ask, last: okxTR.last });
+        result.push({
+            name: 'OKX TR',
+            bid: okxTR.bid,
+            ask: okxTR.ask,
+            last: okxTR.last,
+            bids: okxTR.bids || [],
+            asks: okxTR.asks || []
+        });
     }
 
     if (isValid(paribu)) {
-        result.push({ name: 'Paribu', bid: paribu.bid, ask: paribu.ask, last: paribu.last });
+        result.push({
+            name: 'Paribu',
+            bid: paribu.bid,
+            ask: paribu.ask,
+            last: paribu.last,
+            bids: paribu.bids || [],
+            asks: paribu.asks || []
+        });
     }
 
     // If no real data yet, return placeholder with zeros
     if (result.length === 0) {
         return [
-            { name: 'Binance TR', bid: 0, ask: 0, last: 0 },
-            { name: 'BTCTurk', bid: 0, ask: 0, last: 0 },
-            { name: 'OKX TR', bid: 0, ask: 0, last: 0 },
-            { name: 'Paribu', bid: 0, ask: 0, last: 0 }
+            { name: 'Binance TR', bid: 0, ask: 0, last: 0, bids: [], asks: [] },
+            { name: 'BTCTurk', bid: 0, ask: 0, last: 0, bids: [], asks: [] },
+            { name: 'OKX TR', bid: 0, ask: 0, last: 0, bids: [], asks: [] },
+            { name: 'Paribu', bid: 0, ask: 0, last: 0, bids: [], asks: [] }
         ];
     }
 

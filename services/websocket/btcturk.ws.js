@@ -12,6 +12,8 @@ class BTCTurkWebSocket {
             bid: 0,
             ask: 0,
             last: 0,
+            bids: [], // Top 3 bids
+            asks: [], // Top 3 asks
             timestamp: 0
         };
         this.reconnectInterval = null;
@@ -56,17 +58,14 @@ class BTCTurkWebSocket {
     subscribe() {
         if (this.ws && this.ws.readyState === WebSocket.OPEN) {
             // Subscribe to USDTTRY ticker
-            const subscribeMsg = [
-                151, // Join channel
-                {
-                    type: 151,
-                    channel: 'ticker',
-                    event: 'USDTTRY',
-                    join: true
-                }
-            ];
-            this.ws.send(JSON.stringify(subscribeMsg));
-            console.log('[BTCTurk] Subscribed to USDTTRY ticker');
+            const tickerMsg = [151, { type: 151, channel: 'ticker', event: 'USDTTRY', join: true }];
+            this.ws.send(JSON.stringify(tickerMsg));
+
+            // Subscribe to USDTTRY orderbook
+            const orderbookMsg = [151, { type: 151, channel: 'orderbook', event: 'USDTTRY', join: true }];
+            this.ws.send(JSON.stringify(orderbookMsg));
+
+            console.log('[BTCTurk] Subscribed to USDTTRY ticker and orderbook');
         }
     }
 
@@ -78,13 +77,37 @@ class BTCTurkWebSocket {
 
             // Channel 402 = TickerPair
             if (channel === 402 && data.PS === 'USDTTRY') {
-                this.data = {
-                    bid: parseFloat(data.B) || 0,   // Best bid
-                    ask: parseFloat(data.A) || 0,   // Best ask
-                    last: parseFloat(data.LA) || 0, // Last price
-                    volume: parseFloat(data.V) || 0,
-                    timestamp: Date.now()
-                };
+                this.data.bid = parseFloat(data.B) || this.data.bid;
+                this.data.ask = parseFloat(data.A) || this.data.ask;
+                this.data.last = parseFloat(data.LA) || this.data.last;
+                this.data.timestamp = Date.now();
+            }
+
+            // Channel 431 = OrderBookFull
+            if (channel === 431 && data.PS === 'USDTTRY') {
+                // Bids: sorted high to low
+                if (data.B && Array.isArray(data.B)) {
+                    this.data.bids = data.B.slice(0, 3).map(b => ({
+                        price: parseFloat(b.P),
+                        amount: parseFloat(b.A)
+                    }));
+                }
+                // Asks: sorted low to high
+                if (data.A && Array.isArray(data.A)) {
+                    this.data.asks = data.A.slice(0, 3).map(a => ({
+                        price: parseFloat(a.P),
+                        amount: parseFloat(a.A)
+                    }));
+                }
+
+                // Update best bid/ask from orderbook
+                if (this.data.bids.length > 0) {
+                    this.data.bid = this.data.bids[0].price;
+                }
+                if (this.data.asks.length > 0) {
+                    this.data.ask = this.data.asks[0].price;
+                }
+                this.data.timestamp = Date.now();
             }
         }
     }

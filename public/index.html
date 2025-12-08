@@ -947,50 +947,85 @@
             },
 
             renderTRY: (v) => {
-                const exchanges = state.tryData.length ? state.tryData : [
-                    { name: 'Binance TR', bid: 35.82, ask: 35.84 },
-                    { name: 'Paribu', bid: 35.90, ask: 35.95 },
-                    { name: 'BTCTurk', bid: 35.85, ask: 35.88 },
-                    { name: 'OKX TR', bid: 35.80, ask: 35.83 }
-                ];
+                const exchanges = state.tryData.length ? state.tryData : [];
 
-                let h = `<div style="font-size:0.7rem; font-weight:800; color:#444; margin-bottom:10px; text-transform:uppercase;">USDT/TRY Live Prices</div>`;
+                if (!exchanges.length || exchanges.every(ex => ex.bid === 0)) {
+                    v.innerHTML = `<div style="padding:40px; text-align:center; opacity:0.5;">
+                        <div style="font-size:1.5rem; margin-bottom:10px;">₺</div>
+                        <div>Connecting to Turkish exchanges...</div>
+                        <div style="font-size:0.7rem; color:#666; margin-top:10px;">Binance TR, BTCTurk, OKX TR, Paribu</div>
+                    </div>`;
+                    return;
+                }
+
+                // Helper for decimal formatting (3 digits for Paribu/BTCTurk)
+                const formatPrice = (price, name) => {
+                    if (!price || price === 0) return '-';
+                    const decimals = (name === 'Paribu' || name === 'BTCTurk') ? 3 : 2;
+                    return price.toFixed(decimals);
+                };
+
+                let h = `<div style="font-size:0.7rem; font-weight:800; color:#444; margin-bottom:10px; text-transform:uppercase;">USDT/TRY Live Prices (3-Level Depth)</div>`;
+
                 h += exchanges.map(ex => {
-                    const mid = ((ex.bid + ex.ask) / 2).toFixed(2);
-                    const spread = ((ex.ask - ex.bid) / ex.bid * 100).toFixed(3);
+                    if (ex.bid === 0 && ex.ask === 0) return ''; // Skip empty data
+
+                    const mid = ((ex.bid + ex.ask) / 2);
+                    const spread = ex.bid > 0 ? ((ex.ask - ex.bid) / ex.bid * 100) : 0;
+                    const hasBids = ex.bids && ex.bids.length > 0;
+                    const hasAsks = ex.asks && ex.asks.length > 0;
+
+                    let orderbookHtml = '';
+                    if (hasBids || hasAsks) {
+                        orderbookHtml = `<div class="tc-d">
+                            <div>
+                                <div style="font-size:0.6rem; color:#666; margin-bottom:4px; text-transform:uppercase;">Bids (Buy)</div>
+                                ${(hasBids ? ex.bids : [{ price: ex.bid, amount: 0 }]).slice(0, 3).map((b, i) =>
+                            `<div class="tr tb"><span>${formatPrice(b.price, ex.name)}</span><span>${b.amount ? b.amount.toFixed(0) : '-'}</span></div>`
+                        ).join('')}
+                            </div>
+                            <div>
+                                <div style="font-size:0.6rem; color:#666; margin-bottom:4px; text-transform:uppercase;">Asks (Sell)</div>
+                                ${(hasAsks ? ex.asks : [{ price: ex.ask, amount: 0 }]).slice(0, 3).map((a, i) =>
+                            `<div class="tr ta"><span>${formatPrice(a.price, ex.name)}</span><span>${a.amount ? a.amount.toFixed(0) : '-'}</span></div>`
+                        ).join('')}
+                            </div>
+                        </div>`;
+                    } else {
+                        orderbookHtml = `<div class="tc-d">
+                            <div><div class="tr tb"><span>Bid</span><span>${formatPrice(ex.bid, ex.name)}</span></div></div>
+                            <div><div class="tr ta"><span>Ask</span><span>${formatPrice(ex.ask, ex.name)}</span></div></div>
+                        </div>`;
+                    }
+
                     return `<div class="try-card">
-                    <div class="tc-h">
-                        <span class="tc-t">${ex.name}</span>
-                        <span class="tc-p">${mid} ₺</span>
-                    </div>
-                    <div class="tc-d">
-                        <div>
-                            <div class="tr tb"><span>Bid</span><span>${ex.bid.toFixed(2)}</span></div>
+                        <div class="tc-h">
+                            <span class="tc-t">${ex.name}</span>
+                            <span class="tc-p">${formatPrice(mid, ex.name)} ₺</span>
                         </div>
-                        <div>
-                            <div class="tr ta"><span>Ask</span><span>${ex.ask.toFixed(2)}</span></div>
-                        </div>
-                    </div>
-                    <div style="padding:0 10px 10px; font-size:0.7rem; color:#666;">Spread: ${spread}%</div>
-                </div>`;
+                        ${orderbookHtml}
+                        <div style="padding:0 10px 10px; font-size:0.7rem; color:#666;">Spread: ${spread.toFixed(3)}%</div>
+                    </div>`;
                 }).join('');
 
                 // Arbitrage opportunities
-                if (exchanges.length >= 2) {
+                const validExchanges = exchanges.filter(ex => ex.bid > 0 && ex.ask > 0);
+                if (validExchanges.length >= 2) {
                     h += `<div style="font-size:0.7rem; font-weight:800; color:#444; margin:20px 0 10px; text-transform:uppercase;">Arbitrage Opportunities</div>`;
-                    const sorted = [...exchanges].sort((a, b) => a.ask - b.ask);
+                    const sorted = [...validExchanges].sort((a, b) => a.ask - b.ask);
                     const cheapest = sorted[0];
                     const expensive = sorted[sorted.length - 1];
-                    const profit = ((expensive.bid - cheapest.ask) / cheapest.ask * 100).toFixed(3);
+                    const profit = ((expensive.bid - cheapest.ask) / cheapest.ask * 100);
 
                     h += `<div class="usdc-card">
-                    <div class="usdc-header">
-                        <span class="usdc-pair">Buy ${cheapest.name} → Sell ${expensive.name}</span>
-                        <span class="usdc-spread ${profit > 0 ? 'pos' : 'neg'}">${profit}%</span>
-                    </div>
-                    <div class="usdc-row"><span class="usdc-lbl">Buy Price</span><span class="usdc-val">${cheapest.ask.toFixed(2)} ₺</span></div>
-                    <div class="usdc-row"><span class="usdc-lbl">Sell Price</span><span class="usdc-val">${expensive.bid.toFixed(2)} ₺</span></div>
-                </div>`;
+                        <div class="usdc-header">
+                            <span class="usdc-pair">Buy ${cheapest.name} → Sell ${expensive.name}</span>
+                            <span class="usdc-spread ${profit > 0 ? 'pos' : 'neg'}">${profit.toFixed(3)}%</span>
+                        </div>
+                        <div class="usdc-row"><span class="usdc-lbl">Buy Price (Ask)</span><span class="usdc-val">${formatPrice(cheapest.ask, cheapest.name)} ₺</span></div>
+                        <div class="usdc-row"><span class="usdc-lbl">Sell Price (Bid)</span><span class="usdc-val">${formatPrice(expensive.bid, expensive.name)} ₺</span></div>
+                        <div class="usdc-row"><span class="usdc-lbl">Gross Profit</span><span class="usdc-val ${profit > 0 ? 'pos' : 'neg'}">${profit.toFixed(3)}%</span></div>
+                    </div>`;
                 }
 
                 v.innerHTML = h;

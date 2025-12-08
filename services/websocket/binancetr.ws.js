@@ -1,100 +1,73 @@
-const WebSocket = require('ws');
+const axios = require('axios');
 
 /**
- * Binance TR WebSocket Service
- * WebSocket: wss://stream-tr.2meta.app/ws
- * Docs: https://binance-docs.github.io/apidocs/spot/en
+ * Binance TR REST API Service
+ * Uses REST polling since WebSocket is unreliable
+ * API: https://api.binance.me/api/v3/ticker/bookTicker
  */
-class BinanceTRWebSocket {
+class BinanceTRService {
     constructor() {
-        this.ws = null;
         this.data = {
             bid: 0,
             ask: 0,
             last: 0,
             timestamp: 0
         };
-        this.reconnectInterval = null;
-        this.reconnectAttempts = 0;
-        this.pingInterval = null;
+        this.pollInterval = null;
     }
 
     connect() {
+        console.log('[Binance TR] Starting REST API polling...');
+        // Initial fetch
+        this.fetchTicker();
+        // Poll every 2 seconds
+        this.pollInterval = setInterval(() => this.fetchTicker(), 2000);
+    }
+
+    async fetchTicker() {
         try {
-            console.log('[Binance TR] Connecting to WebSocket...');
-            // Binance TR uses combined streams
-            this.ws = new WebSocket('wss://stream-tr.2meta.app/ws/usdttry@ticker');
-
-            this.ws.on('open', () => {
-                console.log('[Binance TR] Connected');
-                this.reconnectAttempts = 0;
-                this.startPing();
-            });
-
-            this.ws.on('message', (data) => {
-                try {
-                    const message = JSON.parse(data.toString());
-                    this.handleMessage(message);
-                } catch (error) {
-                    // Ignore parse errors
+            // Try the main Binance API with TRY pair
+            const response = await axios.get('https://api.binance.me/api/v3/ticker/bookTicker', {
+                params: { symbol: 'USDTTRY' },
+                timeout: 5000,
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (compatible; RbitBot/1.0)'
                 }
             });
 
-            this.ws.on('error', (error) => {
-                console.error('[Binance TR] WebSocket error:', error.message);
-            });
-
-            this.ws.on('close', () => {
-                console.log('[Binance TR] Disconnected');
-                this.stopPing();
-                this.reconnect();
-            });
-
-        } catch (error) {
-            console.error('[Binance TR] Connection error:', error.message);
-            this.reconnect();
-        }
-    }
-
-    handleMessage(message) {
-        // Binance ticker format
-        if (message.e === '24hrTicker' && message.s === 'USDTTRY') {
-            this.data = {
-                bid: parseFloat(message.b) || 0,   // Best bid price
-                ask: parseFloat(message.a) || 0,   // Best ask price
-                last: parseFloat(message.c) || 0,  // Last price
-                volume: parseFloat(message.v) || 0,
-                timestamp: Date.now()
-            };
-        }
-    }
-
-    startPing() {
-        this.pingInterval = setInterval(() => {
-            if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-                this.ws.ping();
+            if (response.data && response.data.bidPrice) {
+                this.data = {
+                    bid: parseFloat(response.data.bidPrice) || 0,
+                    ask: parseFloat(response.data.askPrice) || 0,
+                    last: (parseFloat(response.data.bidPrice) + parseFloat(response.data.askPrice)) / 2,
+                    timestamp: Date.now()
+                };
             }
-        }, 30000);
-    }
+        } catch (error) {
+            // Try alternative endpoint
+            try {
+                const altResponse = await axios.get('https://www.binance.tr/gateway-api/v2/public/marketdata/products', {
+                    timeout: 5000
+                });
 
-    stopPing() {
-        if (this.pingInterval) {
-            clearInterval(this.pingInterval);
-            this.pingInterval = null;
+                if (altResponse.data && altResponse.data.data) {
+                    const usdtTry = altResponse.data.data.find(p => p.s === 'USDTTRY' || p.symbol === 'USDTTRY');
+                    if (usdtTry) {
+                        this.data = {
+                            bid: parseFloat(usdtTry.b || usdtTry.bidPrice) || 0,
+                            ask: parseFloat(usdtTry.a || usdtTry.askPrice) || 0,
+                            last: parseFloat(usdtTry.c || usdtTry.lastPrice) || 0,
+                            timestamp: Date.now()
+                        };
+                    }
+                }
+            } catch (altError) {
+                // Silent fail - will retry on next interval
+                if (this.data.timestamp === 0) {
+                    console.warn('[Binance TR] Failed to fetch ticker:', error.message);
+                }
+            }
         }
-    }
-
-    reconnect() {
-        if (this.reconnectInterval) return;
-
-        const delay = Math.min(5000 * Math.pow(2, this.reconnectAttempts), 60000);
-        console.log(`[Binance TR] Reconnecting in ${delay}ms...`);
-
-        this.reconnectInterval = setTimeout(() => {
-            this.reconnectAttempts++;
-            this.reconnectInterval = null;
-            this.connect();
-        }, delay);
     }
 
     getData() {
@@ -102,15 +75,11 @@ class BinanceTRWebSocket {
     }
 
     disconnect() {
-        this.stopPing();
-        if (this.reconnectInterval) {
-            clearTimeout(this.reconnectInterval);
-            this.reconnectInterval = null;
-        }
-        if (this.ws) {
-            this.ws.close();
+        if (this.pollInterval) {
+            clearInterval(this.pollInterval);
+            this.pollInterval = null;
         }
     }
 }
 
-module.exports = BinanceTRWebSocket;
+module.exports = BinanceTRService;

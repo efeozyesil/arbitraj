@@ -11,6 +11,8 @@ class OKXTRWebSocket {
             bid: 0,
             ask: 0,
             last: 0,
+            bids: [], // Top 3 bids
+            asks: [], // Top 3 asks
             timestamp: 0
         };
         this.reconnectInterval = null;
@@ -32,10 +34,12 @@ class OKXTRWebSocket {
 
             this.ws.on('message', (data) => {
                 try {
-                    const message = JSON.parse(data.toString());
+                    const str = data.toString();
+                    if (str.includes('pong')) return; // Ignore pong
+                    const message = JSON.parse(str);
                     this.handleMessage(message);
                 } catch (error) {
-                    // Ignore parse errors (pong messages etc)
+                    // Ignore parse errors
                 }
             });
 
@@ -58,30 +62,61 @@ class OKXTRWebSocket {
     subscribe() {
         if (this.ws && this.ws.readyState === WebSocket.OPEN) {
             // Subscribe to USDT-TRY spot ticker
-            const subscribeMsg = {
+            const tickerMsg = {
                 op: 'subscribe',
-                args: [
-                    { channel: 'tickers', instId: 'USDT-TRY' }
-                ]
+                args: [{ channel: 'tickers', instId: 'USDT-TRY' }]
             };
-            this.ws.send(JSON.stringify(subscribeMsg));
-            console.log('[OKX TR] Subscribed to USDT-TRY ticker');
+            this.ws.send(JSON.stringify(tickerMsg));
+
+            // Subscribe to USDT-TRY orderbook (5 levels)
+            const orderbookMsg = {
+                op: 'subscribe',
+                args: [{ channel: 'books5', instId: 'USDT-TRY' }]
+            };
+            this.ws.send(JSON.stringify(orderbookMsg));
+
+            console.log('[OKX TR] Subscribed to USDT-TRY ticker and orderbook');
         }
     }
 
     handleMessage(message) {
-        // OKX ticker format
-        if (message.data && message.arg && message.arg.instId === 'USDT-TRY') {
-            const ticker = message.data[0];
-            if (ticker) {
-                this.data = {
-                    bid: parseFloat(ticker.bidPx) || 0,
-                    ask: parseFloat(ticker.askPx) || 0,
-                    last: parseFloat(ticker.last) || 0,
-                    volume: parseFloat(ticker.vol24h) || 0,
-                    timestamp: Date.now()
-                };
+        if (!message.data || !message.arg) return;
+
+        const instId = message.arg.instId;
+        if (instId !== 'USDT-TRY') return;
+
+        const channel = message.arg.channel;
+        const ticker = message.data[0];
+
+        if (channel === 'tickers' && ticker) {
+            this.data.bid = parseFloat(ticker.bidPx) || this.data.bid;
+            this.data.ask = parseFloat(ticker.askPx) || this.data.ask;
+            this.data.last = parseFloat(ticker.last) || this.data.last;
+            this.data.timestamp = Date.now();
+        }
+
+        if (channel === 'books5' && ticker) {
+            // Bids: [[price, size, 0, numOrders], ...]
+            if (ticker.bids && Array.isArray(ticker.bids)) {
+                this.data.bids = ticker.bids.slice(0, 3).map(b => ({
+                    price: parseFloat(b[0]),
+                    amount: parseFloat(b[1])
+                }));
+                if (this.data.bids.length > 0) {
+                    this.data.bid = this.data.bids[0].price;
+                }
             }
+            // Asks: [[price, size, 0, numOrders], ...]
+            if (ticker.asks && Array.isArray(ticker.asks)) {
+                this.data.asks = ticker.asks.slice(0, 3).map(a => ({
+                    price: parseFloat(a[0]),
+                    amount: parseFloat(a[1])
+                }));
+                if (this.data.asks.length > 0) {
+                    this.data.ask = this.data.asks[0].price;
+                }
+            }
+            this.data.timestamp = Date.now();
         }
     }
 
