@@ -1153,9 +1153,12 @@
                             <div class="mcb-row"><span class="mcb-lbl" style="font-size:0.6rem;">Price Diff</span><span class="mcb-val ${priceDiff > 0 ? 'pos' : 'neg'}" style="font-size:0.7rem;">${priceDiff >= 0 ? '+' : ''}$${priceDiff.toFixed(3)}</span></div>
                             <div class="mcb-row"><span class="mcb-lbl" style="font-size:0.6rem;">Funding (8h)</span><span class="mcb-val ${std8hFundingTotal >= 0 ? 'pos' : 'neg'}" style="font-size:0.7rem;">${std8hFundingTotal >= 0 ? '+' : ''}$${std8hFundingTotal.toFixed(3)}</span></div>
                             <div style="margin-top:8px; padding-top:8px; border-top:1px solid rgba(59,130,246,0.1);">
-                                <div style="display:flex; justify-content:space-between; font-weight:700;">
+                                <div style="display:flex; justify-content:space-between; align-items:center; font-weight:700;">
                                     <span style="font-size:0.65rem; color:#888;">Net Profit</span>
-                                    <span style="font-size:0.8rem;" class="${makerProfit > 0 ? 'pos' : 'neg'}">$${makerProfit.toFixed(3)}</span>
+                                    <div style="text-align:right;">
+                                        <span style="font-size:0.8rem;" class="${makerProfit > 0 ? 'pos' : 'neg'}">$${makerProfit.toFixed(3)}</span>
+                                        <span style="font-size:0.6rem; margin-left:4px; opacity:0.7;" class="${makerProfit > 0 ? 'pos' : 'neg'}">(${(makerProfit / tradeSize * 100).toFixed(2)}%)</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -1167,9 +1170,12 @@
                             <div class="mcb-row"><span class="mcb-lbl" style="font-size:0.6rem;">Price Diff</span><span class="mcb-val ${priceDiff > 0 ? 'pos' : 'neg'}" style="font-size:0.7rem;">${priceDiff >= 0 ? '+' : ''}$${priceDiff.toFixed(3)}</span></div>
                             <div class="mcb-row"><span class="mcb-lbl" style="font-size:0.6rem;">Funding (8h)</span><span class="mcb-val ${std8hFundingTotal >= 0 ? 'pos' : 'neg'}" style="font-size:0.7rem;">${std8hFundingTotal >= 0 ? '+' : ''}$${std8hFundingTotal.toFixed(3)}</span></div>
                             <div style="margin-top:8px; padding-top:8px; border-top:1px solid rgba(249,115,22,0.1);">
-                                <div style="display:flex; justify-content:space-between; font-weight:700;">
+                                <div style="display:flex; justify-content:space-between; align-items:center; font-weight:700;">
                                     <span style="font-size:0.65rem; color:#888;">Net Profit</span>
-                                    <span style="font-size:0.8rem;" class="${takerProfit > 0 ? 'pos' : 'neg'}">$${takerProfit.toFixed(3)}</span>
+                                    <div style="text-align:right;">
+                                        <span style="font-size:0.8rem;" class="${takerProfit > 0 ? 'pos' : 'neg'}">$${takerProfit.toFixed(3)}</span>
+                                        <span style="font-size:0.6rem; margin-left:4px; opacity:0.7;" class="${takerProfit > 0 ? 'pos' : 'neg'}">(${(takerProfit / tradeSize * 100).toFixed(2)}%)</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -1353,7 +1359,10 @@
                     </div>
                 </div>`;
 
-                h += `<button onclick="ui.saveSettings()" style="width:100%; padding:14px; background:var(--text-accent); border:none; border-radius:8px; color:#000; font-weight:700; font-size:0.9rem; cursor:pointer; margin-top:10px;">Save Settings</button>`;
+                h += `<div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px;">
+                    <button onclick="ui.saveSettings()" style="padding:14px; background:var(--text-accent); border:none; border-radius:8px; color:#000; font-weight:700; font-size:0.9rem; cursor:pointer;">Save Settings</button>
+                    <button onclick="ui.resetSettings()" style="padding:14px; background:#333; border:1px solid #444; border-radius:8px; color:#fff; font-weight:700; font-size:0.9rem; cursor:pointer;">Reset to Defaults</button>
+                </div>`;
                 h += `<div id="settings-status" style="text-align:center; font-size:0.75rem; color:#666; margin-top:10px;"></div>`;
 
                 v.innerHTML = h;
@@ -1385,6 +1394,15 @@
                     }
                 } catch (e) { }
                 return null;
+            },
+
+            resetSettings: () => {
+                localStorage.removeItem('rbit-settings');
+                document.getElementById('settings-status').textContent = '✓ Reset to defaults!';
+                // Re-render settings page with defaults
+                setTimeout(() => {
+                    ui.renderSettings(document.getElementById('mainView'));
+                }, 500);
             },
 
             updateLiveData: () => {

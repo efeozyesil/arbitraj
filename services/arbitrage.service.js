@@ -76,6 +76,17 @@ class ArbitrageService {
                     return; // Stale data on exchange B
                 }
 
+                // PRICE RATIO CHECK: Detect 1000X/kX coin denomination mismatches
+                // If one exchange lists "1000FLOKI" and another lists "FLOKI", prices will differ by ~1000x
+                const priceRatio = priceA / priceB;
+                if (priceRatio > 100 || priceRatio < 0.01) {
+                    if (this.debugCount < 10) {
+                        console.log(`[DEBUG] Skipping ${coin.symbol} due to price ratio mismatch: ${this.nameA}=$${priceA}, ${this.nameB}=$${priceB}, ratio=${priceRatio.toFixed(4)}`);
+                        this.debugCount++;
+                    }
+                    return; // Likely 1000X denomination mismatch
+                }
+
                 // Arbitraj Analizi
                 const analysis = this.analyzeArbitrage(dataA, dataB, symbolA, symbolB);
 
