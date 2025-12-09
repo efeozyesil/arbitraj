@@ -167,7 +167,13 @@
         }
 
         @media (max-width: 768px) {
+
+            /* Sidebar hint only visible when .funding-tab class is present on body */
             .sidebar-hint {
+                display: none;
+            }
+
+            body.funding-tab .sidebar-hint {
                 display: flex;
                 align-items: center;
                 justify-content: center;
@@ -747,10 +753,13 @@
 
             nav: (t) => {
                 state.tab = t;
-                const hint = document.getElementById('sidebarHint');
-                // Only show sidebar hint on Funding tab
-                hint.style.display = (t === 'funding') ? 'flex' : 'none';
-                if (t !== 'funding') ui.toggle(false);
+                // Toggle body class for sidebar hint visibility (CSS controls this)
+                if (t === 'funding') {
+                    document.body.classList.add('funding-tab');
+                } else {
+                    document.body.classList.remove('funding-tab');
+                    ui.toggle(false); // Close sidebar when leaving funding tab
+                }
 
                 document.querySelectorAll('.nav-item').forEach((b, i) => b.classList.toggle('active', ['funding', 'try', 'usdc', 'settings'][i] === t));
                 ui.render();
@@ -851,17 +860,65 @@
                 Object.values(state.data).forEach(a => { if (Array.isArray(a)) list.push(...a); });
                 if (!list.length) { v.innerHTML = '<div style="padding:20px;text-align:center;color:#666;">Scanning...</div>'; return; }
 
-                list.sort((a, b) => (b.analysis?.annualAPR || 0) - (a.analysis?.annualAPR || 0));
+                const tradeSize = 100;
+                const now = Date.now();
+
+                // Calculate next funding profit for each opportunity
+                list = list.map(d => {
+                    const an = d.analysis || {};
+                    const det = an.detailed || {};
+                    const intervals = det.intervals || { a: 8, b: 8 };
+                    const isA_Long = an.strategy === 'LONG_A_SHORT_B';
+                    const L = isA_Long ? d.exchangeA : d.exchangeB;
+                    const S = isA_Long ? d.exchangeB : d.exchangeA;
+                    const lf = Number(L.fundingRate || 0);
+                    const sf = Number(S.fundingRate || 0);
+                    const longInterval = isA_Long ? intervals.a : intervals.b;
+                    const shortInterval = isA_Long ? intervals.b : intervals.a;
+                    const longNextTime = L.nextFundingTime || 0;
+                    const shortNextTime = S.nextFundingTime || 0;
+
+                    // Calculate next common funding point
+                    const nextCommon = Math.max(longNextTime, shortNextTime);
+
+                    // Count payments until next common
+                    let longPayments = 0, shortPayments = 0;
+                    if (longNextTime > 0 && longInterval > 0) {
+                        let t = longNextTime;
+                        while (t <= nextCommon) { longPayments++; t += longInterval * 3600000; }
+                    }
+                    if (shortNextTime > 0 && shortInterval > 0) {
+                        let t = shortNextTime;
+                        while (t <= nextCommon) { shortPayments++; t += shortInterval * 3600000; }
+                    }
+
+                    const nextLongPnL = tradeSize * (lf / 100) * longPayments * -1;
+                    const nextShortPnL = tradeSize * (sf / 100) * shortPayments * 1;
+                    const nextFundingProfit = nextLongPnL + nextShortPnL;
+
+                    return { ...d, nextFundingProfit, nextCommon };
+                });
+
+                // Filter only profitable in first cycle
+                list = list.filter(d => d.nextFundingProfit > 0);
+
+                // Sort by next funding profit (highest first)
+                list.sort((a, b) => b.nextFundingProfit - a.nextFundingProfit);
                 list = list.slice(0, 50);
 
-                let h = '<div style="font-size:0.7rem; font-weight:800; color:#444; margin-bottom:10px; padding-left:4px; text-transform:uppercase;">Top Opportunities</div>';
+                if (!list.length) {
+                    v.innerHTML = '<div style="padding:20px;text-align:center;color:#666;">No profitable opportunities in next funding cycle</div>';
+                    return;
+                }
+
+                let h = '<div style="font-size:0.7rem; font-weight:800; color:#444; margin-bottom:10px; padding-left:4px; text-transform:uppercase;">Profitable in Next Cycle</div>';
                 list.forEach(d => {
                     const an = d.analysis || {};
                     const isA_Long = an.strategy === 'LONG_A_SHORT_B';
                     const L = isA_Long ? d.exchangeA : d.exchangeB;
                     const S = isA_Long ? d.exchangeB : d.exchangeA;
-
                     const lf = Number(L.fundingRate || 0), sf = Number(S.fundingRate || 0);
+                    const profit = d.nextFundingProfit || 0;
 
                     h += `<div class="opp-row">
                     <div class="opp-sym">${d.symbol}</div>
@@ -875,15 +932,60 @@
                         <span>${Number(S.markPrice).toFixed(4)}</span>
                         <span class="${sf > 0 ? 'pos' : 'neg'}">${sf.toFixed(4)}%</span>
                     </div>
-                    <div class="opp-apr">${(an.annualAPR || 0).toFixed(0)}%</div>
+                    <div class="opp-apr pos">+$${profit.toFixed(2)}</div>
                 </div>`;
                 });
                 v.innerHTML = h;
             },
 
             renderDetailed: (v) => {
-                const list = (state.data[state.filter] || []).sort((a, b) => (b.analysis?.annualAPR || 0) - (a.analysis?.annualAPR || 0)).slice(0, 10);
+                let list = state.data[state.filter] || [];
                 if (!list.length) { v.innerHTML = `<div style="padding:40px; text-align:center; opacity:0.5;">Waiting for data...</div>`; return; }
+
+                const tradeSize = 100;
+                const now = Date.now();
+
+                // Calculate next funding profit and filter profitable ones
+                list = list.map(d => {
+                    const an = d.analysis || {};
+                    const det = an.detailed || {};
+                    const intervals = det.intervals || { a: 8, b: 8 };
+                    const isA_Long = an.strategy === 'LONG_A_SHORT_B';
+                    const L = isA_Long ? d.exchangeA : d.exchangeB;
+                    const S = isA_Long ? d.exchangeB : d.exchangeA;
+                    const lf = Number(L.fundingRate || 0);
+                    const sf = Number(S.fundingRate || 0);
+                    const longInterval = isA_Long ? intervals.a : intervals.b;
+                    const shortInterval = isA_Long ? intervals.b : intervals.a;
+                    const longNextTime = L.nextFundingTime || 0;
+                    const shortNextTime = S.nextFundingTime || 0;
+
+                    const nextCommon = Math.max(longNextTime, shortNextTime);
+                    let longPayments = 0, shortPayments = 0;
+                    if (longNextTime > 0 && longInterval > 0) {
+                        let t = longNextTime;
+                        while (t <= nextCommon) { longPayments++; t += longInterval * 3600000; }
+                    }
+                    if (shortNextTime > 0 && shortInterval > 0) {
+                        let t = shortNextTime;
+                        while (t <= nextCommon) { shortPayments++; t += shortInterval * 3600000; }
+                    }
+
+                    const nextLongPnL = tradeSize * (lf / 100) * longPayments * -1;
+                    const nextShortPnL = tradeSize * (sf / 100) * shortPayments * 1;
+                    const nextFundingProfit = nextLongPnL + nextShortPnL;
+
+                    return { ...d, nextFundingProfit };
+                }).filter(d => d.nextFundingProfit > 0);
+
+                // Sort by next funding profit
+                list.sort((a, b) => b.nextFundingProfit - a.nextFundingProfit);
+                list = list.slice(0, 10);
+
+                if (!list.length) {
+                    v.innerHTML = `<div style="padding:40px; text-align:center; opacity:0.5;">No profitable opportunities in next cycle for this pair</div>`;
+                    return;
+                }
 
                 v.innerHTML = list.map(d => {
                     const an = d.analysis || {};
@@ -1206,11 +1308,17 @@
                     Asterdex: { maker: 0.01, taker: 0.03 }
                 };
 
+                // Load saved settings
+                const saved = ui.loadSettings();
+                const savedFees = saved?.fees || {};
+                const savedTradeSize = saved?.tradeSize || 100;
+
                 let h = `<div style="font-size:0.7rem; font-weight:800; color:#444; margin-bottom:20px; text-transform:uppercase;">Exchange Fee Settings</div>`;
 
                 // Per-exchange fee cards
                 exchanges.forEach(ex => {
-                    const fees = defaultFees[ex];
+                    const exKey = ex.toLowerCase();
+                    const fees = savedFees[exKey] || defaultFees[ex];
                     h += `<div class="usdc-card" style="margin-bottom:12px;">
                         <div class="usdc-header" style="margin-bottom:12px;">
                             <span class="usdc-pair">${ex}</span>
@@ -1218,11 +1326,11 @@
                         <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
                             <div>
                                 <label style="display:block; font-size:0.65rem; color:#666; margin-bottom:4px;">Maker (%)</label>
-                                <input type="number" id="fee-${ex.toLowerCase()}-maker" value="${fees.maker}" step="0.001" style="width:100%; padding:8px; background:#1a1a1a; border:1px solid #333; border-radius:6px; color:#fff; font-family:var(--font-mono); font-size:0.8rem;">
+                                <input type="number" id="fee-${exKey}-maker" value="${fees.maker}" step="0.001" style="width:100%; padding:8px; background:#1a1a1a; border:1px solid #333; border-radius:6px; color:#fff; font-family:var(--font-mono); font-size:0.8rem;">
                             </div>
                             <div>
                                 <label style="display:block; font-size:0.65rem; color:#666; margin-bottom:4px;">Taker (%)</label>
-                                <input type="number" id="fee-${ex.toLowerCase()}-taker" value="${fees.taker}" step="0.001" style="width:100%; padding:8px; background:#1a1a1a; border:1px solid #333; border-radius:6px; color:#fff; font-family:var(--font-mono); font-size:0.8rem;">
+                                <input type="number" id="fee-${exKey}-taker" value="${fees.taker}" step="0.001" style="width:100%; padding:8px; background:#1a1a1a; border:1px solid #333; border-radius:6px; color:#fff; font-family:var(--font-mono); font-size:0.8rem;">
                             </div>
                         </div>
                     </div>`;
@@ -1233,7 +1341,7 @@
                     <div style="font-size:0.7rem; font-weight:700; color:#888; margin-bottom:10px;">Trade Configuration</div>
                     <div>
                         <label style="display:block; font-size:0.65rem; color:#666; margin-bottom:4px;">Trade Size (USD)</label>
-                        <input type="number" id="trade-size" value="100" step="10" style="width:100%; padding:10px; background:#1a1a1a; border:1px solid #333; border-radius:6px; color:#fff; font-family:var(--font-mono);">
+                        <input type="number" id="trade-size" value="${savedTradeSize}" step="10" style="width:100%; padding:10px; background:#1a1a1a; border:1px solid #333; border-radius:6px; color:#fff; font-family:var(--font-mono);">
                     </div>
                 </div>`;
 
