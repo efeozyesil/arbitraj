@@ -88,30 +88,36 @@
         }
 
         /* SIDEBAR HINT - Left edge button that reveals sidebar */
+        /* Hidden by default, only visible when body has .funding-tab class */
         .sidebar-hint {
             display: none;
-            /* Hidden on desktop */
             width: 44px;
             height: 54px;
-            background: var(--bg-sidebar-hint);
+            background: linear-gradient(135deg, rgba(249, 115, 22, 0.15) 0%, rgba(249, 115, 22, 0.05) 100%);
             border: none;
-            border-right: 1px solid #1a1a1a;
-            color: #666;
+            border-right: 1px solid rgba(249, 115, 22, 0.3);
+            color: var(--text-accent);
             font-size: 1.2rem;
             cursor: pointer;
             transition: all 0.2s;
             margin-left: -16px;
-            /* Extend to edge */
             padding-left: 16px;
         }
 
+        /* Only show when on Funding tab */
+        body.funding-tab .sidebar-hint {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
         .sidebar-hint:hover {
-            color: var(--text-accent);
-            background: #111;
+            color: #fff;
+            background: linear-gradient(135deg, rgba(249, 115, 22, 0.3) 0%, rgba(249, 115, 22, 0.15) 100%);
         }
 
         .sidebar-hint:active {
-            background: #161616;
+            background: rgba(249, 115, 22, 0.4);
         }
 
         .logo {
@@ -167,17 +173,6 @@
         }
 
         @media (max-width: 768px) {
-
-            /* Sidebar hint only visible when .funding-tab class is present on body */
-            .sidebar-hint {
-                display: none;
-            }
-
-            body.funding-tab .sidebar-hint {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            }
 
             .sidebar {
                 position: fixed;
@@ -987,15 +982,16 @@
                     return;
                 }
 
+                // Load saved settings for fee calculations
+                const savedSettings = ui.loadSettings();
+                const savedFees = savedSettings?.fees || {};
+                const savedTradeSize = savedSettings?.tradeSize || 100;
+
                 v.innerHTML = list.map(d => {
                     const an = d.analysis || {};
                     const isA_Long = an.strategy === 'LONG_A_SHORT_B';
                     const L = isA_Long ? d.exchangeA : d.exchangeB;
                     const S = isA_Long ? d.exchangeB : d.exchangeA;
-
-                    const makerFee = (an.tradeSize || 100) * 0.0002;
-                    const takerFee = (an.tradeSize || 100) * 0.0005;
-                    const netProfit = an.netCycleProfit || 0;
 
                     const lf = Number(L.fundingRate || 0);
                     const sf = Number(S.fundingRate || 0);
@@ -1005,14 +1001,18 @@
                     const cycle = det.cycle || {};
                     const intervals = det.intervals || { a: 8, b: 8 };
 
-                    // Calculate fees per trade
-                    const tradeSize = an.tradeSize || 100;
-                    const makerFeeRate = 0.0002; // 0.02%
-                    const takerFeeRate = 0.0005; // 0.05%
+                    // Use saved trade size
+                    const tradeSize = savedTradeSize;
 
-                    // Open + Close fee for both sides
-                    const makerFeeTotal = tradeSize * makerFeeRate * 4; // 2 sides x 2 trades
-                    const takerFeeTotal = tradeSize * takerFeeRate * 4;
+                    // Get exchange-specific fees from settings
+                    const longExKey = L.name.toLowerCase();
+                    const shortExKey = S.name.toLowerCase();
+                    const longFees = savedFees[longExKey] || { maker: 0.02, taker: 0.05 };
+                    const shortFees = savedFees[shortExKey] || { maker: 0.02, taker: 0.05 };
+
+                    // Calculate fees: Open Long + Close Long + Open Short + Close Short
+                    const makerFeeTotal = tradeSize * ((longFees.maker + shortFees.maker) / 100) * 2;
+                    const takerFeeTotal = tradeSize * ((longFees.taker + shortFees.taker) / 100) * 2;
 
                     const priceDiff = an.priceDiffPnL || 0;
 
@@ -1141,7 +1141,7 @@
                         <!-- Maker Column (Blue) -->
                         <div style="padding:10px; background:rgba(59,130,246,0.03); border-radius:8px; border:1px solid rgba(59,130,246,0.08);">
                             <div style="font-size:0.65rem; font-weight:700; color:rgba(59,130,246,0.8); margin-bottom:8px;">MAKER (Limit)</div>
-                            <div class="mcb-row"><span class="mcb-lbl" style="font-size:0.6rem;">Fees (4×0.02%)</span><span class="mcb-val neg" style="font-size:0.7rem;">-$${makerFeeTotal.toFixed(3)}</span></div>
+                            <div class="mcb-row"><span class="mcb-lbl" style="font-size:0.6rem;">Fees (${longFees.maker}%+${shortFees.maker}%)×2</span><span class="mcb-val neg" style="font-size:0.7rem;">-$${makerFeeTotal.toFixed(3)}</span></div>
                             <div class="mcb-row"><span class="mcb-lbl" style="font-size:0.6rem;">Price Diff</span><span class="mcb-val ${priceDiff > 0 ? 'pos' : 'neg'}" style="font-size:0.7rem;">${priceDiff >= 0 ? '+' : ''}$${priceDiff.toFixed(3)}</span></div>
                             <div class="mcb-row"><span class="mcb-lbl" style="font-size:0.6rem;">Funding (8h)</span><span class="mcb-val ${std8hFundingTotal >= 0 ? 'pos' : 'neg'}" style="font-size:0.7rem;">${std8hFundingTotal >= 0 ? '+' : ''}$${std8hFundingTotal.toFixed(3)}</span></div>
                             <div style="margin-top:8px; padding-top:8px; border-top:1px solid rgba(59,130,246,0.1);">
@@ -1155,7 +1155,7 @@
                         <!-- Taker Column (Orange) -->
                         <div style="padding:10px; background:rgba(249,115,22,0.03); border-radius:8px; border:1px solid rgba(249,115,22,0.08);">
                             <div style="font-size:0.65rem; font-weight:700; color:rgba(249,115,22,0.8); margin-bottom:8px;">TAKER (Market)</div>
-                            <div class="mcb-row"><span class="mcb-lbl" style="font-size:0.6rem;">Fees (4×0.05%)</span><span class="mcb-val neg" style="font-size:0.7rem;">-$${takerFeeTotal.toFixed(3)}</span></div>
+                            <div class="mcb-row"><span class="mcb-lbl" style="font-size:0.6rem;">Fees (${longFees.taker}%+${shortFees.taker}%)×2</span><span class="mcb-val neg" style="font-size:0.7rem;">-$${takerFeeTotal.toFixed(3)}</span></div>
                             <div class="mcb-row"><span class="mcb-lbl" style="font-size:0.6rem;">Price Diff</span><span class="mcb-val ${priceDiff > 0 ? 'pos' : 'neg'}" style="font-size:0.7rem;">${priceDiff >= 0 ? '+' : ''}$${priceDiff.toFixed(3)}</span></div>
                             <div class="mcb-row"><span class="mcb-lbl" style="font-size:0.6rem;">Funding (8h)</span><span class="mcb-val ${std8hFundingTotal >= 0 ? 'pos' : 'neg'}" style="font-size:0.7rem;">${std8hFundingTotal >= 0 ? '+' : ''}$${std8hFundingTotal.toFixed(3)}</span></div>
                             <div style="margin-top:8px; padding-top:8px; border-top:1px solid rgba(249,115,22,0.1);">
