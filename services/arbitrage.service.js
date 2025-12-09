@@ -15,6 +15,7 @@ class ArbitrageService {
             exchangeA: { taker: 0.0005, maker: 0.0002 },
             exchangeB: { taker: 0.0005, maker: 0.0002 }
         };
+        this.debugCount = 0; // For debug logging
     }
 
     getArbitrageOpportunities() {
@@ -51,15 +52,24 @@ class ArbitrageService {
                     return; // Invalid funding rate
                 }
 
-                // Skip if BOTH funding rates are exactly 0 (likely delisted or stale data)
-                if (fundingA === 0 && fundingB === 0) {
-                    return;
+                // STRICT: Skip if EITHER funding rate is exactly 0 OR very close to 0
+                // This catches delisted coins that have stale data
+                if (Math.abs(fundingA) < 0.0001 || Math.abs(fundingB) < 0.0001) {
+                    if (this.debugCount < 5) {
+                        console.log(`[DEBUG] Skipping ${coin.symbol} due to near-zero funding rate: A=${fundingA}, B=${fundingB}`);
+                        this.debugCount++;
+                    }
+                    return; // One exchange likely has stale/no data
                 }
 
                 // Skip if data is stale (no recent timestamp) - check if older than 5 minutes
                 const now = Date.now();
                 const maxAge = 5 * 60 * 1000; // 5 minutes
                 if (dataA.timestamp && (now - dataA.timestamp) > maxAge) {
+                    if (this.debugCount < 5) {
+                        console.log(`[DEBUG] Skipping ${coin.symbol} due to stale data on ${this.nameA}. Age: ${(now - dataA.timestamp) / 1000}s`);
+                        this.debugCount++;
+                    }
                     return; // Stale data on exchange A
                 }
                 if (dataB.timestamp && (now - dataB.timestamp) > maxAge) {
