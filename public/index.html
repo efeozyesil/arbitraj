@@ -145,10 +145,16 @@
             width: 240px;
             background: #080808;
             border-right: 1px solid var(--border-color);
-            display: flex;
+            display: none;
+            /* Hidden by default */
             flex-direction: column;
             overflow-y: auto;
             flex-shrink: 0;
+        }
+
+        /* Only show sidebar when on Funding tab */
+        body.funding-tab .sidebar {
+            display: flex;
         }
 
         .main {
@@ -174,7 +180,9 @@
 
         @media (max-width: 768px) {
 
-            .sidebar {
+            /* On mobile, sidebar is hidden off-screen and slides in when .active */
+            body.funding-tab .sidebar {
+                display: flex;
                 position: fixed;
                 left: 0;
                 top: 0;
@@ -187,7 +195,7 @@
                 max-width: 280px;
             }
 
-            .sidebar.active {
+            body.funding-tab .sidebar.active {
                 transform: translateX(0);
             }
 
