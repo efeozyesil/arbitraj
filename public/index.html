@@ -902,8 +902,6 @@
                     const det = an.detailed || {};
                     const cycle = det.cycle || {};
                     const intervals = det.intervals || { a: 8, b: 8 };
-                    const paymentsA = cycle.paymentsCountA || 1;
-                    const paymentsB = cycle.paymentsCountB || 1;
 
                     // Calculate fees per trade
                     const tradeSize = an.tradeSize || 100;
@@ -915,34 +913,74 @@
                     const takerFeeTotal = tradeSize * takerFeeRate * 4;
 
                     const priceDiff = an.priceDiffPnL || 0;
-                    const fundingIncome = an.fundingIncomeCycle || 0;
-
-                    // Calculate profit for each scenario
-                    const makerProfit = fundingIncome + priceDiff - makerFeeTotal;
-                    const takerProfit = fundingIncome + priceDiff - takerFeeTotal;
 
                     // Map Long/Short to A/B correctly
-                    // L = Long exchange, S = Short exchange
-                    // If strategy is LONG_A_SHORT_B: L=A, S=B
-                    // paymentsA = how many times A pays in cycle
                     const longExName = L.name;
                     const shortExName = S.name;
                     const longInterval = isA_Long ? intervals.a : intervals.b;
                     const shortInterval = isA_Long ? intervals.b : intervals.a;
-                    const longPayments = isA_Long ? paymentsA : paymentsB;
-                    const shortPayments = isA_Long ? paymentsB : paymentsA;
+                    const longNextTime = L.nextFundingTime || 0;
+                    const shortNextTime = S.nextFundingTime || 0;
 
-                    // Funding calculation:
-                    // LONG position: PAY when rate is positive, RECEIVE when negative
-                    // SHORT position: RECEIVE when rate is positive, PAY when negative
-                    const longFundingPnL = tradeSize * (lf / 100) * longPayments * -1; // Long pays when positive
-                    const shortFundingPnL = tradeSize * (sf / 100) * shortPayments * 1;  // Short receives when positive
+                    // Calculate hours remaining until next funding
+                    const now = Date.now();
+                    const longHoursRemaining = Math.max(0, (longNextTime - now) / 3600000);
+                    const shortHoursRemaining = Math.max(0, (shortNextTime - now) / 3600000);
+
+                    // === DYNAMIC NEXT FUNDING PROFIT ===
+                    // Calculate how many payments happen until the NEXT common funding point
+                    // Common endpoint = max of the two next times (when both have funded at least once)
+                    const nextCommon = Math.max(longNextTime, shortNextTime);
+                    const hoursUntilCommon = Math.max(0, (nextCommon - now) / 3600000);
+
+                    // Long exchange: how many times will it pay until nextCommon?
+                    let longNextPayments = 0;
+                    if (longNextTime > 0 && longInterval > 0) {
+                        let t = longNextTime;
+                        while (t <= nextCommon) {
+                            longNextPayments++;
+                            t += longInterval * 3600000;
+                        }
+                    }
+
+                    // Short exchange: how many times will it pay until nextCommon?
+                    let shortNextPayments = 0;
+                    if (shortNextTime > 0 && shortInterval > 0) {
+                        let t = shortNextTime;
+                        while (t <= nextCommon) {
+                            shortNextPayments++;
+                            t += shortInterval * 3600000;
+                        }
+                    }
+
+                    const nextLongPnL = tradeSize * (lf / 100) * longNextPayments * -1;
+                    const nextShortPnL = tradeSize * (sf / 100) * shortNextPayments * 1;
+                    const nextFundingTotal = nextLongPnL + nextShortPnL;
+
+                    // === STANDARD 8H CYCLE ===
+                    const std8hLongPayments = Math.floor(8 / longInterval);
+                    const std8hShortPayments = Math.floor(8 / shortInterval);
+                    const std8hLongPnL = tradeSize * (lf / 100) * std8hLongPayments * -1;
+                    const std8hShortPnL = tradeSize * (sf / 100) * std8hShortPayments * 1;
+                    const std8hFundingTotal = std8hLongPnL + std8hShortPnL;
+
+                    // Profit calculations
+                    const makerProfit = std8hFundingTotal + priceDiff - makerFeeTotal;
+                    const takerProfit = std8hFundingTotal + priceDiff - takerFeeTotal;
+
+                    // Format time remaining helper
+                    const fmtRemaining = (ms) => {
+                        if (!ms || ms <= 0) return '-';
+                        const h = Math.floor(ms / 3600000);
+                        const m = Math.floor((ms % 3600000) / 60000);
+                        return `${h}h ${m}m`;
+                    };
 
                     return `<div class="master-card">
                     <div class="mc-header">
                         <div>
                             <div class="mc-title">${d.symbol}</div>
-                            <div class="mc-sub">Cycle: ${cycle.durationHours || 8}h</div>
+                            <div class="mc-sub">Standard Cycle: 8h</div>
                         </div>
                         <div>
                             <div class="mc-apr">${(an.annualAPR || 0).toFixed(0)}%</div>
@@ -957,7 +995,8 @@
                             <div class="mc-price">$${Number(L.markPrice).toFixed(4)}</div>
                             <div class="mc-grid">
                                 <div class="mc-row"><span>Funding</span><span class="mc-val ${lf > 0 ? 'pos' : 'neg'}">${lf.toFixed(4)}%</span></div>
-                                <div class="mc-row"><span>Interval</span><span class="mc-val">${ui.formatTime(L.nextFundingTime)}</span></div>
+                                <div class="mc-row"><span>Next In</span><span class="mc-val">${fmtRemaining(longNextTime - now)}</span></div>
+                                <div class="mc-row"><span>Interval</span><span class="mc-val">${longInterval}h</span></div>
                             </div>
                         </div>
                         <div class="mc-side">
@@ -966,23 +1005,33 @@
                             <div class="mc-price">$${Number(S.markPrice).toFixed(4)}</div>
                             <div class="mc-grid">
                                 <div class="mc-row"><span>Funding</span><span class="mc-val ${sf > 0 ? 'pos' : 'neg'}">${sf.toFixed(4)}%</span></div>
-                                <div class="mc-row"><span>Interval</span><span class="mc-val">${ui.formatTime(S.nextFundingTime)}</span></div>
+                                <div class="mc-row"><span>Next In</span><span class="mc-val">${fmtRemaining(shortNextTime - now)}</span></div>
+                                <div class="mc-row"><span>Interval</span><span class="mc-val">${shortInterval}h</span></div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- First Cycle Funding Breakdown -->
-                    <div class="mc-breakdown" style="border-bottom:1px solid var(--border-color); padding-bottom:10px; margin-bottom:10px;">
-                        <div style="font-size:0.65rem; font-weight:700; color:#666; margin-bottom:8px; text-transform:uppercase;">First Cycle Funding (${cycle.durationHours || 8}h)</div>
-                        <div class="mcb-row">
-                            <span class="mcb-lbl">Long ${longExName} <span style="color:#555;">(${longInterval}h int. × ${longPayments} pay)</span></span>
-                            <span class="mcb-val ${longFundingPnL >= 0 ? 'pos' : 'neg'}">${longFundingPnL >= 0 ? '+' : ''}$${longFundingPnL.toFixed(3)}</span>
+                    <!-- Funding Breakdown: Next vs Standard 8h -->
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px;">
+                        <!-- Next Funding Profit (Dynamic) -->
+                        <div style="padding:10px; background:rgba(139,92,246,0.03); border-radius:8px; border:1px solid rgba(139,92,246,0.08);">
+                            <div style="font-size:0.6rem; font-weight:700; color:rgba(139,92,246,0.8); margin-bottom:6px; text-transform:uppercase;">
+                                Next Funding <span style="font-weight:400;">(${fmtRemaining(hoursUntilCommon * 3600000)})</span>
+                            </div>
+                            <div class="mcb-row"><span class="mcb-lbl" style="font-size:0.55rem;">L: ${longExName} ×${longNextPayments}</span><span class="mcb-val ${nextLongPnL >= 0 ? 'pos' : 'neg'}" style="font-size:0.65rem;">${nextLongPnL >= 0 ? '+' : ''}$${nextLongPnL.toFixed(2)}</span></div>
+                            <div class="mcb-row"><span class="mcb-lbl" style="font-size:0.55rem;">S: ${shortExName} ×${shortNextPayments}</span><span class="mcb-val ${nextShortPnL >= 0 ? 'pos' : 'neg'}" style="font-size:0.65rem;">${nextShortPnL >= 0 ? '+' : ''}$${nextShortPnL.toFixed(2)}</span></div>
+                            <div style="margin-top:4px; padding-top:4px; border-top:1px solid rgba(139,92,246,0.1);"><div style="display:flex; justify-content:space-between;"><span style="font-size:0.6rem; color:#888;">Total</span><span style="font-size:0.75rem; font-weight:700;" class="${nextFundingTotal >= 0 ? 'pos' : 'neg'}">${nextFundingTotal >= 0 ? '+' : ''}$${nextFundingTotal.toFixed(2)}</span></div></div>
                         </div>
-                        <div class="mcb-row">
-                            <span class="mcb-lbl">Short ${shortExName} <span style="color:#555;">(${shortInterval}h int. × ${shortPayments} pay)</span></span>
-                            <span class="mcb-val ${shortFundingPnL >= 0 ? 'pos' : 'neg'}">${shortFundingPnL >= 0 ? '+' : ''}$${shortFundingPnL.toFixed(3)}</span>
+
+                        <!-- Standard 8h Cycle -->
+                        <div style="padding:10px; background:rgba(100,116,139,0.03); border-radius:8px; border:1px solid rgba(100,116,139,0.08);">
+                            <div style="font-size:0.6rem; font-weight:700; color:rgba(100,116,139,0.8); margin-bottom:6px; text-transform:uppercase;">
+                                Standard 8h Cycle
+                            </div>
+                            <div class="mcb-row"><span class="mcb-lbl" style="font-size:0.55rem;">L: ${longExName} ×${std8hLongPayments}</span><span class="mcb-val ${std8hLongPnL >= 0 ? 'pos' : 'neg'}" style="font-size:0.65rem;">${std8hLongPnL >= 0 ? '+' : ''}$${std8hLongPnL.toFixed(2)}</span></div>
+                            <div class="mcb-row"><span class="mcb-lbl" style="font-size:0.55rem;">S: ${shortExName} ×${std8hShortPayments}</span><span class="mcb-val ${std8hShortPnL >= 0 ? 'pos' : 'neg'}" style="font-size:0.65rem;">${std8hShortPnL >= 0 ? '+' : ''}$${std8hShortPnL.toFixed(2)}</span></div>
+                            <div style="margin-top:4px; padding-top:4px; border-top:1px solid rgba(100,116,139,0.1);"><div style="display:flex; justify-content:space-between;"><span style="font-size:0.6rem; color:#888;">Total</span><span style="font-size:0.75rem; font-weight:700;" class="${std8hFundingTotal >= 0 ? 'pos' : 'neg'}">${std8hFundingTotal >= 0 ? '+' : ''}$${std8hFundingTotal.toFixed(2)}</span></div></div>
                         </div>
-                        <div class="mcb-row" style="margin-top:4px;"><span class="mcb-lbl" style="font-weight:700;">Total Funding</span><span class="mcb-val ${fundingIncome >= 0 ? 'pos' : 'neg'}" style="font-weight:700;">${fundingIncome >= 0 ? '+' : ''}$${fundingIncome.toFixed(3)}</span></div>
                     </div>
 
                     <!-- Maker vs Taker Comparison (Blue / Orange) -->
@@ -992,7 +1041,7 @@
                             <div style="font-size:0.65rem; font-weight:700; color:rgba(59,130,246,0.8); margin-bottom:8px;">MAKER (Limit)</div>
                             <div class="mcb-row"><span class="mcb-lbl" style="font-size:0.6rem;">Fees (4×0.02%)</span><span class="mcb-val neg" style="font-size:0.7rem;">-$${makerFeeTotal.toFixed(3)}</span></div>
                             <div class="mcb-row"><span class="mcb-lbl" style="font-size:0.6rem;">Price Diff</span><span class="mcb-val ${priceDiff > 0 ? 'pos' : 'neg'}" style="font-size:0.7rem;">${priceDiff >= 0 ? '+' : ''}$${priceDiff.toFixed(3)}</span></div>
-                            <div class="mcb-row"><span class="mcb-lbl" style="font-size:0.6rem;">Funding</span><span class="mcb-val ${fundingIncome >= 0 ? 'pos' : 'neg'}" style="font-size:0.7rem;">${fundingIncome >= 0 ? '+' : ''}$${fundingIncome.toFixed(3)}</span></div>
+                            <div class="mcb-row"><span class="mcb-lbl" style="font-size:0.6rem;">Funding (8h)</span><span class="mcb-val ${std8hFundingTotal >= 0 ? 'pos' : 'neg'}" style="font-size:0.7rem;">${std8hFundingTotal >= 0 ? '+' : ''}$${std8hFundingTotal.toFixed(3)}</span></div>
                             <div style="margin-top:8px; padding-top:8px; border-top:1px solid rgba(59,130,246,0.1);">
                                 <div style="display:flex; justify-content:space-between; font-weight:700;">
                                     <span style="font-size:0.65rem; color:#888;">Net Profit</span>
@@ -1006,7 +1055,7 @@
                             <div style="font-size:0.65rem; font-weight:700; color:rgba(249,115,22,0.8); margin-bottom:8px;">TAKER (Market)</div>
                             <div class="mcb-row"><span class="mcb-lbl" style="font-size:0.6rem;">Fees (4×0.05%)</span><span class="mcb-val neg" style="font-size:0.7rem;">-$${takerFeeTotal.toFixed(3)}</span></div>
                             <div class="mcb-row"><span class="mcb-lbl" style="font-size:0.6rem;">Price Diff</span><span class="mcb-val ${priceDiff > 0 ? 'pos' : 'neg'}" style="font-size:0.7rem;">${priceDiff >= 0 ? '+' : ''}$${priceDiff.toFixed(3)}</span></div>
-                            <div class="mcb-row"><span class="mcb-lbl" style="font-size:0.6rem;">Funding</span><span class="mcb-val ${fundingIncome >= 0 ? 'pos' : 'neg'}" style="font-size:0.7rem;">${fundingIncome >= 0 ? '+' : ''}$${fundingIncome.toFixed(3)}</span></div>
+                            <div class="mcb-row"><span class="mcb-lbl" style="font-size:0.6rem;">Funding (8h)</span><span class="mcb-val ${std8hFundingTotal >= 0 ? 'pos' : 'neg'}" style="font-size:0.7rem;">${std8hFundingTotal >= 0 ? '+' : ''}$${std8hFundingTotal.toFixed(3)}</span></div>
                             <div style="margin-top:8px; padding-top:8px; border-top:1px solid rgba(249,115,22,0.1);">
                                 <div style="display:flex; justify-content:space-between; font-weight:700;">
                                     <span style="font-size:0.65rem; color:#888;">Net Profit</span>
