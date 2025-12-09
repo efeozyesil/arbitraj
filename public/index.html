@@ -898,11 +898,42 @@
                     const lf = Number(L.fundingRate || 0);
                     const sf = Number(S.fundingRate || 0);
 
+                    // Get detailed cycle info from backend
+                    const det = an.detailed || {};
+                    const cycle = det.cycle || {};
+                    const intervals = det.intervals || { a: 8, b: 8 };
+                    const paymentsA = cycle.paymentsCountA || 1;
+                    const paymentsB = cycle.paymentsCountB || 1;
+
+                    // Calculate fees per trade
+                    const tradeSize = an.tradeSize || 100;
+                    const makerFeeRate = 0.0002; // 0.02%
+                    const takerFeeRate = 0.0005; // 0.05%
+
+                    // Open + Close fee for both sides
+                    const makerFeeTotal = tradeSize * makerFeeRate * 4; // 2 sides x 2 trades
+                    const takerFeeTotal = tradeSize * takerFeeRate * 4;
+
+                    const priceDiff = an.priceDiffPnL || 0;
+                    const fundingIncome = an.fundingIncomeCycle || 0;
+
+                    // Calculate profit for each scenario
+                    const makerProfit = fundingIncome + priceDiff - makerFeeTotal;
+                    const takerProfit = fundingIncome + priceDiff - takerFeeTotal;
+
+                    // Determine Long/Short exchanges based on strategy
+                    const longEx = L.name;
+                    const shortEx = S.name;
+                    const longPayments = isA_Long ? paymentsA : paymentsB;
+                    const shortPayments = isA_Long ? paymentsB : paymentsA;
+                    const longInterval = isA_Long ? intervals.a : intervals.b;
+                    const shortInterval = isA_Long ? intervals.b : intervals.a;
+
                     return `<div class="master-card">
                     <div class="mc-header">
                         <div>
                             <div class="mc-title">${d.symbol}</div>
-                            <div class="mc-sub">Next Profit: <span class="pos">$${netProfit.toFixed(4)}</span></div>
+                            <div class="mc-sub">Cycle: ${cycle.durationHours || 8}h</div>
                         </div>
                         <div>
                             <div class="mc-apr">${(an.annualAPR || 0).toFixed(0)}%</div>
@@ -931,15 +962,42 @@
                         </div>
                     </div>
 
-                    <div class="mc-breakdown">
-                        <div class="mcb-row"><span class="mcb-lbl">Est. Maker Fee</span><span class="mcb-val neg">-$${makerFee.toFixed(3)}</span></div>
-                        <div class="mcb-row"><span class="mcb-lbl">Est. Taker Fee</span><span class="mcb-val neg">-$${takerFee.toFixed(3)}</span></div>
-                        <div class="mcb-row"><span class="mcb-lbl">Price Diff PnL</span><span class="mcb-val ${(an.priceDiffPnL || 0) > 0 ? 'pos' : 'neg'}">$${(an.priceDiffPnL || 0).toFixed(3)}</span></div>
-                        <div class="mcb-row"><span class="mcb-lbl">Funding Income</span><span class="mcb-val pos">+$${(an.fundingIncomeCycle || 0).toFixed(3)}</span></div>
+                    <!-- First Cycle Funding Breakdown -->
+                    <div class="mc-breakdown" style="border-bottom:1px solid var(--border-color); padding-bottom:10px; margin-bottom:10px;">
+                        <div style="font-size:0.65rem; font-weight:700; color:#666; margin-bottom:8px; text-transform:uppercase;">First Cycle Funding (${cycle.durationHours || 8}h)</div>
+                        <div class="mcb-row"><span class="mcb-lbl">${longEx} (${longInterval}h × ${longPayments})</span><span class="mcb-val ${lf > 0 ? 'pos' : 'neg'}">$${(tradeSize * lf / 100 * longPayments * -1).toFixed(3)}</span></div>
+                        <div class="mcb-row"><span class="mcb-lbl">${shortEx} (${shortInterval}h × ${shortPayments})</span><span class="mcb-val ${sf < 0 ? 'neg' : 'pos'}">$${(tradeSize * sf / 100 * shortPayments * 1).toFixed(3)}</span></div>
+                        <div class="mcb-row" style="margin-top:4px;"><span class="mcb-lbl" style="font-weight:700;">Total Funding</span><span class="mcb-val pos" style="font-weight:700;">+$${fundingIncome.toFixed(3)}</span></div>
+                    </div>
 
-                        <div class="mcb-total">
-                            <span class="mcb-tot-lbl">Net Cycle Profit</span>
-                            <span class="mcb-tot-val ${netProfit > 0 ? 'pos' : 'neg'}">$${netProfit.toFixed(4)}</span>
+                    <!-- Maker vs Taker Comparison -->
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                        <!-- Maker Column -->
+                        <div style="padding:10px; background:rgba(46,189,133,0.05); border-radius:8px; border:1px solid rgba(46,189,133,0.1);">
+                            <div style="font-size:0.65rem; font-weight:700; color:var(--pos); margin-bottom:8px;">MAKER (Limit)</div>
+                            <div class="mcb-row"><span class="mcb-lbl" style="font-size:0.6rem;">Fees (4×0.02%)</span><span class="mcb-val neg" style="font-size:0.7rem;">-$${makerFeeTotal.toFixed(3)}</span></div>
+                            <div class="mcb-row"><span class="mcb-lbl" style="font-size:0.6rem;">Price Diff</span><span class="mcb-val ${priceDiff > 0 ? 'pos' : 'neg'}" style="font-size:0.7rem;">${priceDiff >= 0 ? '+' : ''}$${priceDiff.toFixed(3)}</span></div>
+                            <div class="mcb-row"><span class="mcb-lbl" style="font-size:0.6rem;">Funding</span><span class="mcb-val pos" style="font-size:0.7rem;">+$${fundingIncome.toFixed(3)}</span></div>
+                            <div style="margin-top:8px; padding-top:8px; border-top:1px solid rgba(46,189,133,0.2);">
+                                <div style="display:flex; justify-content:space-between; font-weight:700;">
+                                    <span style="font-size:0.65rem; color:#888;">Net Profit</span>
+                                    <span style="font-size:0.8rem;" class="${makerProfit > 0 ? 'pos' : 'neg'}">$${makerProfit.toFixed(3)}</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Taker Column -->
+                        <div style="padding:10px; background:rgba(246,70,93,0.05); border-radius:8px; border:1px solid rgba(246,70,93,0.1);">
+                            <div style="font-size:0.65rem; font-weight:700; color:var(--neg); margin-bottom:8px;">TAKER (Market)</div>
+                            <div class="mcb-row"><span class="mcb-lbl" style="font-size:0.6rem;">Fees (4×0.05%)</span><span class="mcb-val neg" style="font-size:0.7rem;">-$${takerFeeTotal.toFixed(3)}</span></div>
+                            <div class="mcb-row"><span class="mcb-lbl" style="font-size:0.6rem;">Price Diff</span><span class="mcb-val ${priceDiff > 0 ? 'pos' : 'neg'}" style="font-size:0.7rem;">${priceDiff >= 0 ? '+' : ''}$${priceDiff.toFixed(3)}</span></div>
+                            <div class="mcb-row"><span class="mcb-lbl" style="font-size:0.6rem;">Funding</span><span class="mcb-val pos" style="font-size:0.7rem;">+$${fundingIncome.toFixed(3)}</span></div>
+                            <div style="margin-top:8px; padding-top:8px; border-top:1px solid rgba(246,70,93,0.2);">
+                                <div style="display:flex; justify-content:space-between; font-weight:700;">
+                                    <span style="font-size:0.65rem; color:#888;">Net Profit</span>
+                                    <span style="font-size:0.8rem;" class="${takerProfit > 0 ? 'pos' : 'neg'}">$${takerProfit.toFixed(3)}</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>`;
@@ -958,11 +1016,18 @@
                     return;
                 }
 
-                // Helper for decimal formatting (3 digits for Paribu/BTCTurk, 2 for others)
+                // Helper for decimal formatting (3 digits for Paribu/BTCTurk with smaller 3rd digit)
                 const formatPrice = (price, name) => {
                     if (!price || price === 0) return '-';
-                    const decimals = (name === 'Paribu' || name === 'BTCTurk') ? 3 : 2;
-                    return price.toFixed(decimals);
+                    if (name === 'Paribu' || name === 'BTCTurk') {
+                        // 3 digits, but 3rd digit is smaller
+                        const str = price.toFixed(3);
+                        const parts = str.split('.');
+                        const intPart = parts[0];
+                        const decPart = parts[1] || '000';
+                        return `${intPart}.${decPart.substring(0, 2)}<span style="font-size:0.7em;opacity:0.7;">${decPart.substring(2)}</span>`;
+                    }
+                    return price.toFixed(2);
                 };
 
                 // Helper for volume formatting (K for thousands, M for millions)
@@ -1068,24 +1133,78 @@
             },
 
             renderSettings: (v) => {
-                v.innerHTML = `
-                <div style="font-size:0.7rem; font-weight:800; color:#444; margin-bottom:20px; text-transform:uppercase;">Settings</div>
-                <div class="usdc-card">
-                    <div style="margin-bottom:16px;">
-                        <label style="display:block; font-size:0.8rem; color:#888; margin-bottom:6px;">Maker Fee (%)</label>
-                        <input type="number" value="0.02" step="0.01" style="width:100%; padding:10px; background:#1a1a1a; border:1px solid #333; border-radius:6px; color:#fff; font-family:var(--font-mono);">
-                    </div>
-                    <div style="margin-bottom:16px;">
-                        <label style="display:block; font-size:0.8rem; color:#888; margin-bottom:6px;">Taker Fee (%)</label>
-                        <input type="number" value="0.05" step="0.01" style="width:100%; padding:10px; background:#1a1a1a; border:1px solid #333; border-radius:6px; color:#fff; font-family:var(--font-mono);">
-                    </div>
+                const exchanges = ['Binance', 'OKX', 'Bybit', 'Hyperliquid', 'Asterdex'];
+                const defaultFees = {
+                    Binance: { maker: 0.02, taker: 0.05 },
+                    OKX: { maker: 0.02, taker: 0.05 },
+                    Bybit: { maker: 0.02, taker: 0.055 },
+                    Hyperliquid: { maker: 0.02, taker: 0.05 },
+                    Asterdex: { maker: 0.01, taker: 0.03 }
+                };
+
+                let h = `<div style="font-size:0.7rem; font-weight:800; color:#444; margin-bottom:20px; text-transform:uppercase;">Exchange Fee Settings</div>`;
+
+                // Per-exchange fee cards
+                exchanges.forEach(ex => {
+                    const fees = defaultFees[ex];
+                    h += `<div class="usdc-card" style="margin-bottom:12px;">
+                        <div class="usdc-header" style="margin-bottom:12px;">
+                            <span class="usdc-pair">${ex}</span>
+                        </div>
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                            <div>
+                                <label style="display:block; font-size:0.65rem; color:#666; margin-bottom:4px;">Maker (%)</label>
+                                <input type="number" id="fee-${ex.toLowerCase()}-maker" value="${fees.maker}" step="0.001" style="width:100%; padding:8px; background:#1a1a1a; border:1px solid #333; border-radius:6px; color:#fff; font-family:var(--font-mono); font-size:0.8rem;">
+                            </div>
+                            <div>
+                                <label style="display:block; font-size:0.65rem; color:#666; margin-bottom:4px;">Taker (%)</label>
+                                <input type="number" id="fee-${ex.toLowerCase()}-taker" value="${fees.taker}" step="0.001" style="width:100%; padding:8px; background:#1a1a1a; border:1px solid #333; border-radius:6px; color:#fff; font-family:var(--font-mono); font-size:0.8rem;">
+                            </div>
+                        </div>
+                    </div>`;
+                });
+
+                // Trade size
+                h += `<div class="usdc-card" style="margin-bottom:12px; margin-top:20px;">
+                    <div style="font-size:0.7rem; font-weight:700; color:#888; margin-bottom:10px;">Trade Configuration</div>
                     <div>
-                        <label style="display:block; font-size:0.8rem; color:#888; margin-bottom:6px;">Trade Size (USD)</label>
-                        <input type="number" value="100" step="10" style="width:100%; padding:10px; background:#1a1a1a; border:1px solid #333; border-radius:6px; color:#fff; font-family:var(--font-mono);">
+                        <label style="display:block; font-size:0.65rem; color:#666; margin-bottom:4px;">Trade Size (USD)</label>
+                        <input type="number" id="trade-size" value="100" step="10" style="width:100%; padding:10px; background:#1a1a1a; border:1px solid #333; border-radius:6px; color:#fff; font-family:var(--font-mono);">
                     </div>
-                </div>
-                <button style="width:100%; padding:14px; background:var(--text-accent); border:none; border-radius:8px; color:#000; font-weight:700; font-size:0.9rem; cursor:pointer; margin-top:10px;">Save Settings</button>
-            `;
+                </div>`;
+
+                h += `<button onclick="ui.saveSettings()" style="width:100%; padding:14px; background:var(--text-accent); border:none; border-radius:8px; color:#000; font-weight:700; font-size:0.9rem; cursor:pointer; margin-top:10px;">Save Settings</button>`;
+                h += `<div id="settings-status" style="text-align:center; font-size:0.75rem; color:#666; margin-top:10px;"></div>`;
+
+                v.innerHTML = h;
+            },
+
+            saveSettings: () => {
+                const exchanges = ['binance', 'okx', 'bybit', 'hyperliquid', 'asterdex'];
+                const settings = { fees: {}, tradeSize: 100 };
+
+                exchanges.forEach(ex => {
+                    const maker = parseFloat(document.getElementById(`fee-${ex}-maker`)?.value) || 0.02;
+                    const taker = parseFloat(document.getElementById(`fee-${ex}-taker`)?.value) || 0.05;
+                    settings.fees[ex] = { maker, taker };
+                });
+                settings.tradeSize = parseFloat(document.getElementById('trade-size')?.value) || 100;
+
+                localStorage.setItem('rbit-settings', JSON.stringify(settings));
+                document.getElementById('settings-status').textContent = '✓ Settings saved!';
+                setTimeout(() => {
+                    document.getElementById('settings-status').textContent = '';
+                }, 2000);
+            },
+
+            loadSettings: () => {
+                try {
+                    const saved = localStorage.getItem('rbit-settings');
+                    if (saved) {
+                        return JSON.parse(saved);
+                    }
+                } catch (e) { }
+                return null;
             },
 
             updateLiveData: () => {
